@@ -3,6 +3,14 @@ uuid = "6214ee8e-79dc-449b-ae00-4c9ff82a02a9"
 authors = ["Frederik Baymler Mathiesen"]
 version = "1.0.0-DEV"
 
+[deps]
+IntervalMDP = "051c988a-e73c-45a4-90ec-875cac0402c7"
+IrrationalConstants = "92d709cd-6900-40b7-9082-c6be49f344b6"
+LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+
 [compat]
 julia = "1.6.7"
 
