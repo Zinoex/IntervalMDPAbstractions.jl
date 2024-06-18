@@ -1,0 +1,13 @@
+name = "IntervalSySCoRe"
+uuid = "6214ee8e-79dc-449b-ae00-4c9ff82a02a9"
+authors = ["Frederik Baymler Mathiesen"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.6.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
