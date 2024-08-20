@@ -19,7 +19,7 @@ function modified_running_example()
     for j in 1:l[2] + 1
         for i in 1:l[1] + 1
             if i == 1 || j == 1
-                X_split[i, j] = Complement(X)  # We can only do this because we know that the regions is going to the avoid set.
+                X_split[i, j] = Complement(X)  # We can only do this because we know that the region is transitioning to the avoid set.
             else
                 x1 = X1_split[i - 1]
                 x2 = X2_split[j - 1]
