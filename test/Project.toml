@@ -1,0 +1,5 @@
+[deps]
+IntervalSySCoRe = "6214ee8e-79dc-449b-ae00-4c9ff82a02a9"
+LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"

@@ -1,6 +1,6 @@
 using IntervalSySCoRe
 using Test
 
-@testset "IntervalSySCoRe.jl" begin
-    # Write your tests here.
+@testset verbose = true "IntervalSySCoRe.jl" begin
+    @testset verbose = true "systems" include("systems/systems.jl")
 end
