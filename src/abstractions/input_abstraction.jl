@@ -1,3 +1,5 @@
+export InputAbstraction, InputGridSplit, InputLinRange, InputRandom, InputDiscrete
+export inputs, numinputs
 
 abstract type InputAbstraction end
 
@@ -10,12 +12,13 @@ struct InputGridSplit <: InputAbstraction
     input_space::Hyperrectangle
     splits
 end
-
+numinputs(input::InputGridSplit) = prod(input.splits)
 function inputs(input::InputGridSplit)
     regions = LazySets.split(input.input_space, input.splits)
     
     return regions
 end
+
 
 """
     InputLinRange
@@ -26,7 +29,7 @@ struct InputLinRange <: InputAbstraction
     input_space::Hyperrectangle
     ranges
 end
-
+numinputs(input::InputLinRange) = prod(input.ranges)
 function inputs(input::InputLinRange)
     l = low(input.input_space)
     h = high(input.input_space)
@@ -46,7 +49,7 @@ struct InputRandom <: InputAbstraction
     input_space::Hyperrectangle
     num_points::Int
 end
-
+numinputs(input::InputRandom) = input.num_points
 function inputs(input::InputRandom)
     regions = [Singleton(rand(input.input_space)) for _ in 1:input.num_points]
     
@@ -61,7 +64,7 @@ Input abstraction for a set of discrete points in the input space.
 struct InputDiscrete{S <: LazySet} <: InputAbstraction
     inputs::Vector{S}
 end
-
+numinputs(input::InputDiscrete) = length(input.inputs)
 function inputs(input::InputDiscrete)
     return input.inputs
 end

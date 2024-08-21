@@ -8,6 +8,7 @@ IntervalMDP = "051c988a-e73c-45a4-90ec-875cac0402c7"
 IrrationalConstants = "92d709cd-6900-40b7-9082-c6be49f344b6"
 LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 
 [compat]

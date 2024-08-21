@@ -2,8 +2,11 @@
 
 ```@docs
 DiscreteTimeStochasticSystem
+dimstate
+diminput
+dimnoise
 AdditiveNoiseSystem
 nominal_dynamics
-AdditiveGaussianSystem
-stddev
+AdditiveNoiseStructure
+AdditiveDiagonalGaussianNoise
 ```
