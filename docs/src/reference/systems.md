@@ -1,12 +1,12 @@
-# System
+# Dynamics
 
 ```@docs
-DiscreteTimeStochasticSystem
+DiscreteTimeStochasticDynamics
 dimstate
 diminput
 dimnoise
-AdditiveNoiseSystem
-nominal_dynamics
+AdditiveNoiseDynamics
+nominal
 AdditiveNoiseStructure
 AdditiveDiagonalGaussianNoise
 ```

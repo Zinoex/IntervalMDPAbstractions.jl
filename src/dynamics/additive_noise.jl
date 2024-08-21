@@ -1,31 +1,31 @@
-export AdditiveNoiseSystem, nominaldynamics, noise
+export AdditiveNoiseDynamics, nominal, noise
 
 """
-    AdditiveNoiseSystem
+    AdditiveNoiseDynamics
 
-System with additive noise, i.e. `x_{k+1} = f(x_k, u_k) + w_k`.
+Dynamics with additive noise, i.e. `x_{k+1} = f(x_k, u_k) + w_k`.
 """
-abstract type AdditiveNoiseSystem <: DiscreteTimeStochasticSystem end
-dimnoise(sys::AdditiveNoiseSystem) = dimstate(sys)
+abstract type AdditiveNoiseDynamics <: DiscreteTimeStochasticDynamics end
+dimnoise(dyn::AdditiveNoiseDynamics) = dimstate(dyn)
 
 """
-nominaldynamics(sys::AdditiveNoiseSystem, X::LazySet, U::LazySet)
+nominal(dyn::AdditiveNoiseDynamics, X::LazySet, U::LazySet)
 
-Compute the reachable set under the nominal dynamics of the system `sys` over the state region `X` and control region `U`.
-The nominal dynamics are given by `x_{k+1} = f(x_k, u_k)`, i.e. only well-defined for systems with additive noise.
+Compute the reachable set under the nominal dynamics of the dynamics `dyn` over the state region `X` and control region `U`.
+The nominal dynamics are given by `x_{k+1} = f(x_k, u_k)`, i.e. only well-defined for dynamicss with additive noise.
 Since for some non-linear dynamics, no analytical formula exists for the one-step reachable set under the nominal dynamics,
-the function `nominaldynamics` only guarantees that the returned set is a superset of the one-step true reachable set, i.e. an over-approximation.
+the function `nominal` only guarantees that the returned set is a superset of the one-step true reachable set, i.e. an over-approximation.
 """
-function nominaldynamics end
+function nominal end
 function noise end
 
 #### Noise structures
-export AdditiveNoiseStructure
+export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise
 
 """
     AdditiveNoiseStructure
 
-Structure to represent the additive noise of a system.
+Structure to represent the noise of additive noise dynamics.
 """
 abstract type AdditiveNoiseStructure end
 
@@ -51,10 +51,10 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
     pl = 1.0
     pu = 1.0
 
-    for (hy, ly, hz, lz, σ) in zip(low(Y), high(Y), low(Z), high(Z), stddev(w))
+    for (ly, hy, lz, hz, σ) in zip(low(Y), high(Y), low(Z), high(Z), stddev(w))
         # Compute the transition probability bounds for each dimension
-        cy = (hy + ly) * 0.5
-        cz = (hz + lz) * 0.5
+        cy = (ly + hy) * 0.5
+        cz = (lz + hz) * 0.5
 
         min_point = ifelse(cz ≥ cy, ly, hy)
         pl *= gaussian_transition(min_point, lz, hz, σ)

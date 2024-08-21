@@ -35,7 +35,7 @@ function inputs(input::InputLinRange)
     h = high(input.input_space)
     ranges = [LinRange(l, h, num_steps) for (l, h, num_steps) in zip(l, h, input.ranges)]
 
-    regions = [Singleton([x]) for x in Iterators.product(ranges...)]
+    regions = [Singleton([xᵢ for xᵢ in x]) for x in Iterators.product(ranges...)]
     
     return regions
 end

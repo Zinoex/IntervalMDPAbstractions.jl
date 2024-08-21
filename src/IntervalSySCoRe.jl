@@ -5,10 +5,12 @@ using SpecialFunctions: erf
 using IrrationalConstants: invsqrt2
 using LazySets, IntervalMDP
 
-# Systems
-include("systems/base.jl")
-include("systems/additive_noise.jl")
-include("systems/AffineAdditiveNoise.jl")
+# Dynamics
+include("dynamics/base.jl")
+include("dynamics/additive_noise.jl")
+include("dynamics/AffineAdditiveNoiseDynamics.jl")
+
+include("systems.jl")
 
 # Abstractions
 include("abstractions/input_abstraction.jl")

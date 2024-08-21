@@ -1,3 +1,4 @@
+export StateGridSplit, numregions, statespace
 
 abstract type StateAbstraction end
 

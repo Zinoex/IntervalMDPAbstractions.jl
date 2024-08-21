@@ -1,3 +1,5 @@
+export TargetAbstractionModel, DirectIMDP, SparseDirectIMDP, DecoupledIMDP
+
 """
     TargetAbstractionModel
 
