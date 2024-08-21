@@ -18,7 +18,7 @@ function inputs(input::InputGridSplit)
 end
 
 """
-    InputGridSplit
+    InputLinRange
 
 Input abstraction for _points_ on a grid of the input space.
 """
@@ -35,4 +35,33 @@ function inputs(input::InputLinRange)
     regions = [Singleton([x]) for x in Iterators.product(ranges...)]
     
     return regions
+end
+
+"""
+    InputRandom
+
+Input abstraction for random points in the input space.
+"""
+struct InputRandom <: InputAbstraction
+    input_space::Hyperrectangle
+    num_points::Int
+end
+
+function inputs(input::InputRandom)
+    regions = [Singleton(rand(input.input_space)) for _ in 1:input.num_points]
+    
+    return regions
+end
+
+"""
+    InputDiscrete
+
+Input abstraction for a set of discrete points in the input space.
+"""
+struct InputDiscrete{S <: LazySet} <: InputAbstraction
+    inputs::Vector{S}
+end
+
+function inputs(input::InputDiscrete)
+    return input.inputs
 end
