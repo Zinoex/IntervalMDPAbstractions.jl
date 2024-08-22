@@ -12,7 +12,7 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
     nregions = numregions(state_abstraction) + 1
     ninputs = numinputs(input_abstraction)
 
-    prob_lower, prob_upper = direct_initprob(target_model, nregions, ninputs)
+    prob_lower, prob_upper = initprob(target_model, nregions, ninputs)
 
     # Absorbing
     prob_lower[1, 1] = 1.0
@@ -23,8 +23,8 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         for (j, input) in enumerate(inputs(input_abstraction))
-            Y = nominal(dyn, source_region, input)
             srcact_idx = (i - 1) * ninputs + j + 1
+            Y = nominal(dyn, source_region, input)
 
             # Transition to outside the partitioned region
             pl, pu = transition_prob_bounds(Y, statespace(state_abstraction), noise(dyn))
@@ -61,7 +61,7 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
             push!(initial_states, i + 1)
         end
 
-        if reach(sys) ⊆ source_region
+        if source_region ⊆ reach(sys)
             push!(reach_states, i + 1)
         end
 
@@ -74,14 +74,14 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
     return IntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
 end
 
-function direct_initprob(target::DirectIMDP, nregions, ninputs) 
+function initprob(target::DirectIMDP, nregions, ninputs) 
     prob_lower = zeros(Float64, nregions, (nregions - 1) * ninputs + 1)
     prob_upper = copy(prob_lower)
 
     return prob_lower, prob_upper
 end
 
-function direct_initprob(target::SparseDirectIMDP, nregions, ninputs) 
+function initprob(target::SparseDirectIMDP, nregions, ninputs) 
     prob_lower = spzeros(Float64, Int32, nregions, (nregions - 1) * ninputs + 1)
     prob_upper = copy(prob_lower)
 
@@ -94,71 +94,122 @@ end
 Abstract function for creating an abstraction of a system with additive noise with a decoupled IMDP as the target model.
 """
 function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstraction::StateGridSplit, input_abstraction::InputAbstraction, target_model::DecoupledIMDP)
-    # The first state is absorbing, representing transitioning to outside the partitioned.
-    nregions = numregions(state_abstraction) + 1
+    dyn = dynamics(sys)
+    if !candecouple(noise(dyn))
+        throw(ArgumentError("Cannot decouple system with non-diagonal noise covariance matrix"))
+    end
+    
+    # The first state along each axis is absorbing, representing transitioning to outside the partitioned along that axis.
     ninputs = numinputs(input_abstraction)
 
-    prob_lower, prob_upper = direct_initprob(target_model, nregions, ninputs)
-
-    # Absorbing
-    prob_lower[1, 1] = 1.0
-    prob_upper[1, 1] = 1.0
+    prob_lower, prob_upper = initprob(target_model, state_abstraction, ninputs)
 
     # Transition probabilities
-    dyn = dynamics(sys)
+    region_indices = LinearIndices(splits(state_abstraction))
 
-    # TODO: Ensure enumeration order is correct!! 
-    for (i, source_region) in enumerate(regions(state_abstraction))
-        for (j, input) in enumerate(inputs(input_abstraction))
-            Y = nominal(dyn, source_region, input)
-            srcact_idx = (i - 1) * ninputs + j + 1
+    srcact_idx = 1
+    for Icart in CartesianIndices(splits(state_abstraction) .+ 1)
+        # Absorbing
+        if any(Tuple(Icart) .== 1)
+            for axis in eachindex(splits(state_abstraction))
+                prob_lower[axis][1, srcact_idx] = 1.0
+                prob_upper[axis][1, srcact_idx] = 1.0
+            end
+            srcact_idx += 1
+
+            continue
+        end
+
+        # Other states
+        Iregion = CartesianIndex(Tuple(Icart) .- 1)
+        source_region = regions(state_abstraction)[region_indices[Iregion]]
+        for input in inputs(input_abstraction)
+            # To decouple, we need to construct a hyperrectangle around the nominal one-step reachable region
+            Y = box_approximation(nominal(dyn, source_region, input))
 
             # For each axis... 
-            
-            # Transition to outside the partitioned region
-            pl, pu = transition_prob_bounds(Y, statespace(state_abstraction), noise(dyn))
-            prob_lower[1, srcact_idx] = 1.0 - pu
-            prob_upper[1, srcact_idx] = 1.0 - pl
+            for (axis, axisregions) in enumerate(splits(state_abstraction))
+                # Transition to outside the partitioned region
+                pl, pu = axis_transition_prob_bounds(Y, statespace(state_abstraction), noise(dyn), axis)
+                prob_lower[axis][1, srcact_idx] = 1.0 - pu
+                prob_upper[axis][1, srcact_idx] = 1.0 - pl
 
-            # Transition to other states
-            for (tar_idx, target_region) in enumerate(regions(state_abstraction))
-                pl, pu = transition_prob_bounds(Y, target_region, noise(dyn))
+                # Transition to other states
+                axis_statespace = Interval(extrema(statespace(state_abstraction), axis)...)
+                split_axis = LazySets.split(axis_statespace, [axisregions])
+                
+                for (tar_idx, target_region) in enumerate(split_axis)
+                    pl, pu = axis_transition_prob_bounds(Y, target_region, noise(dyn), axis)
 
-                if includetransition(target_model, pu)
-                    prob_lower[tar_idx + 1, srcact_idx] = pl
-                    prob_upper[tar_idx + 1, srcact_idx] = pu
-                else  # Allow sparsifying via adding probability to the absorbing avoid state
-                    prob_lower[1, srcact_idx] += pl
-                    prob_upper[1, srcact_idx] += pu
+                    prob_lower[axis][tar_idx + 1, srcact_idx] = pl
+                    prob_upper[axis][tar_idx + 1, srcact_idx] = pu
                 end
             end
+
+            srcact_idx += 1
         end
     end
 
-    prob = IntervalProbabilities(;lower=prob_lower, upper=prob_upper)
+    prob = ProductIntervalProbabilities(
+        Tuple(IntervalProbabilities(;lower=pl, upper=pu) for (pl, pu) in zip(prob_lower, prob_upper)),
+        Int32.(Tuple(splits(state_abstraction) .+ 1))
+    )
 
     # State pointer
-    stateptr = Int32[[1, 2]; (1:nregions-1) .* ninputs .+ 2]
+    stateptr = Int32[1]
+
+    for I in CartesianIndices(splits(state_abstraction) .+ 1)
+        if any(Tuple(I) .== 1)
+            push!(stateptr, stateptr[end] + 1)
+        else
+            push!(stateptr, stateptr[end] + ninputs)
+        end
+    end
 
     # Properties
-    initial_states = Int32[]
-    reach_states = Int32[]
-    avoid_states = Int32[1] # Absorbing state
+    initial_states = NTuple{dimstate(dyn), Int32}[]
+    reach_states = NTuple{dimstate(dyn), Int32}[]
+    avoid_states = NTuple{dimstate(dyn), Int32}[] # Absorbing state
 
-    for (i, source_region) in enumerate(regions(state_abstraction))
+    for I in CartesianIndices(splits(state_abstraction) .+ 1)
+        if any(Tuple(I) .== 1)
+            push!(avoid_states, Tuple(I))
+        end
+    end
+
+    for (I, source_region) in zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
         if !isdisjoint(initial(sys), source_region)
-            push!(initial_states, i + 1)
+            push!(initial_states, Tuple(I) .+ 1)
         end
 
-        if reach(sys) ⊆ source_region
-            push!(reach_states, i + 1)
+        if source_region ⊆ reach(sys)
+            push!(reach_states, Tuple(I) .+ 1)
         end
 
         if !isdisjoint(avoid(sys), source_region)
-            push!(avoid_states, i + 1)
+            push!(avoid_states, Tuple(I) .+ 1)
         end
     end
 
     # Final construction
-    return IntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
+    return ProductIntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
 end
+
+function initprob(target::DecoupledIMDP, state_abstraction::StateGridSplit, ninputs) 
+    prob_lower = Matrix{Float64}[]
+    prob_upper = Matrix{Float64}[]
+
+    # One action for non-absorbing states is already included in the first term.
+    nchoices = prod(splits(state_abstraction) .+ 1) + numregions(state_abstraction) * (ninputs - 1)
+
+    for axisregions in splits(state_abstraction)
+        local_prob_lower = zeros(Float64, axisregions + 1, nchoices)
+        local_prob_upper = copy(local_prob_lower)
+
+        push!(prob_lower, local_prob_lower)
+        push!(prob_upper, local_prob_upper)
+    end
+
+    return prob_lower, prob_upper
+end
+

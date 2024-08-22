@@ -8,7 +8,7 @@ function simple_1d_decoupled()
     sys = simple_1d_sys()
 
     X = Hyperrectangle(; low=[-2.5], high=[2.5])
-    state_abs = StateGridSplit(X, [10])
+    state_abs = StateGridSplit(X, (10,))
     input_abs = InputDiscrete([Singleton([0.0])])
     target_model = DecoupledIMDP()
 
@@ -28,11 +28,11 @@ prob_decoupled = Problem(mdp_decoupled, spec_decoupled)
 V_dense_grid, k, res = value_iteration(prob_decoupled)
 @test k == 10
 
-function running_example_decoupled(; range_vs_grid=:grid)
-    sys = running_example_sys()
+function modified_running_example_decoupled(; range_vs_grid=:grid)
+    sys = modified_running_example_sys()
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
-    state_abs = StateGridSplit(X, [20, 20])
+    state_abs = StateGridSplit(X, (10, 10))
 
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     if range_vs_grid == :range
@@ -51,9 +51,9 @@ function running_example_decoupled(; range_vs_grid=:grid)
 end
 
 # Input grid
-mdp_decoupled, reach_decoupled, avoid_decoupled = running_example_decoupled()
-@test num_states(mdp_decoupled) == 401
-@test stateptr(mdp_decoupled)[end] == 20 * 20 * 9 + 2
+mdp_decoupled, reach_decoupled, avoid_decoupled = modified_running_example_decoupled()
+@test num_states(mdp_decoupled) == 121
+@test stateptr(mdp_decoupled)[end] == 11 * 11 + 10 * 10 * 8 + 1
 
 prop_decoupled = FiniteTimeReachAvoid(reach_decoupled, avoid_decoupled, 10)
 spec_decoupled = Specification(prop_decoupled, Pessimistic, Maximize)
@@ -63,9 +63,9 @@ V_grid, k, res = value_iteration(prob_decoupled)
 @test k == 10
 
 # Input range
-mdp_decoupled, reach_decoupled, avoid_decoupled = running_example_decoupled(; range_vs_grid=:range)
-@test num_states(mdp_decoupled) == 401
-@test stateptr(mdp_decoupled)[end] == 20 * 20 * 9 + 2
+mdp_decoupled, reach_decoupled, avoid_decoupled = modified_running_example_decoupled(; range_vs_grid=:range)
+@test num_states(mdp_decoupled) == 121
+@test stateptr(mdp_decoupled)[end] == 11 * 11 + 10 * 10 * 8 + 1
 
 prop_decoupled = FiniteTimeReachAvoid(reach_decoupled, avoid_decoupled, 10)
 spec_decoupled = Specification(prop_decoupled, Pessimistic, Maximize)

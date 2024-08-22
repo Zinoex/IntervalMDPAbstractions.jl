@@ -1,34 +1,38 @@
 using IntervalSySCoRe, LazySets
 
-function simple_1d_sys()
+if !@isdefined example_systems_included
+    example_systems_included = true
 
-    A = [0.95][:, :]
-    B = [0.0][:, :]
-    w_stddev = [0.05]
+    function simple_1d_sys()
 
-    dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+        A = [0.95][:, :]
+        B = [0.0][:, :]
+        w_stddev = [0.05]
 
-    initial_region = EmptySet(1)
-    reach_region = Hyperrectangle(; low=[-0.5], high=[0.5])
-    avoid_region = EmptySet(1)
+        dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
-    sys = System(dyn, initial_region, reach_region, avoid_region)
+        initial_region = EmptySet(1)
+        reach_region = Hyperrectangle(; low=[-0.5], high=[0.5])
+        avoid_region = EmptySet(1)
 
-    return sys
-end
+        sys = System(dyn, initial_region, reach_region, avoid_region)
 
-function running_example_sys()
-    A = 0.9I(2)
-    B = 0.7I(2)
-    w_stddev = [1.0, 1.0]
+        return sys
+    end
 
-    dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+    function modified_running_example_sys()
+        A = 0.9I(2)
+        B = 0.7I(2)
+        w_stddev = [1.0, 1.0]
 
-    initial_region = EmptySet(2)
-    reach_region = Hyperrectangle(; low=[4.0, -4.0], high=[10.0, 0.0])
-    avoid_region = Hyperrectangle(; low=[4.0, 0.0], high=[10.0, 4.0])
+        dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
-    sys = System(dyn, initial_region, reach_region, avoid_region)
+        initial_region = EmptySet(2)
+        reach_region = Hyperrectangle(; low=[4.0, -6.0], high=[10.0, -2.0])
+        avoid_region = EmptySet(2)
 
-    return sys
+        sys = System(dyn, initial_region, reach_region, avoid_region)
+
+        return sys
+    end
 end

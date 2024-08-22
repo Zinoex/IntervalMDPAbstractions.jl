@@ -39,8 +39,9 @@ struct AdditiveDiagonalGaussianNoise <: AdditiveNoiseStructure
     w_stddev::Vector{Float64}
 end
 stddev(w::AdditiveDiagonalGaussianNoise) = w.w_stddev
+stddev(w::AdditiveDiagonalGaussianNoise, i) = w.w_stddev[i]
 dim(w::AdditiveDiagonalGaussianNoise) = length(w.w_stddev)
-
+candecouple(w::AdditiveDiagonalGaussianNoise) = true
 
 function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussianNoise)
     # Use the box approximation for the transition probability bounds, as 
@@ -52,16 +53,36 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
     pu = 1.0
 
     for (ly, hy, lz, hz, σ) in zip(low(Y), high(Y), low(Z), high(Z), stddev(w))
-        # Compute the transition probability bounds for each dimension
-        cy = (ly + hy) * 0.5
-        cz = (lz + hz) * 0.5
-
-        min_point = ifelse(cz ≥ cy, ly, hy)
-        pl *= gaussian_transition(min_point, lz, hz, σ)
-
-        max_point = min(hy, max(cz, ly))
-        pu *= gaussian_transition(max_point, lz, hz, σ)
+        axis_pl, axis_pu = axis_transition_prob_bounds(Interval(ly, hy), Interval(lz, hz), w, σ)
+        pl *= axis_pl
+        pu *= axis_pu
     end
+
+    return pl, pu
+end
+
+function axis_transition_prob_bounds(Y::Hyperrectangle, Z::Hyperrectangle, w::AdditiveDiagonalGaussianNoise, axis::Int)
+    z = Interval(extrema(Z, axis)...)
+
+    return axis_transition_prob_bounds(Y, z, w, axis)
+end
+
+function axis_transition_prob_bounds(Y::Hyperrectangle, z::Interval, w::AdditiveDiagonalGaussianNoise, axis::Int)
+    y = Interval(extrema(Y, axis)...)
+    σ = stddev(w, axis)
+
+    return axis_transition_prob_bounds(y, z, w, σ)
+end
+
+function axis_transition_prob_bounds(y::Interval, z::Interval, w::AdditiveDiagonalGaussianNoise, σ::Real)
+    # Compute the transition probability bounds for each dimension
+    cy, cz = center(y, 1), center(z, 1)
+
+    min_point = ifelse(cz ≥ cy, low(y, 1), high(y, 1))
+    pl = gaussian_transition(min_point, low(z, 1), high(z, 1), σ)
+
+    max_point = min(high(y, 1), max(cz, low(y, 1)))
+    pu = gaussian_transition(max_point, low(z, 1), high(z, 1), σ)
 
     return pl, pu
 end
