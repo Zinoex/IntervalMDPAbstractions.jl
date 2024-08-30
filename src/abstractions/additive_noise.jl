@@ -61,12 +61,10 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
             push!(initial_states, i + 1)
         end
 
-        if source_region ⊆ reach(sys)
-            push!(reach_states, i + 1)
-        end
-
         if !isdisjoint(avoid(sys), source_region)
             push!(avoid_states, i + 1)
+        elseif source_region ⊆ reach(sys)
+            push!(reach_states, i + 1)
         end
     end
 
@@ -182,12 +180,10 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
             push!(initial_states, Tuple(I) .+ 1)
         end
 
-        if source_region ⊆ reach(sys)
-            push!(reach_states, Tuple(I) .+ 1)
-        end
-
         if !isdisjoint(avoid(sys), source_region)
             push!(avoid_states, Tuple(I) .+ 1)
+        elseif source_region ⊆ reach(sys)
+            push!(reach_states, Tuple(I) .+ 1)
         end
     end
 
