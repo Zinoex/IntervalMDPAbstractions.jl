@@ -14,7 +14,7 @@ struct InputGridSplit <: InputAbstraction
 end
 numinputs(input::InputGridSplit) = prod(input.splits)
 function inputs(input::InputGridSplit)
-    regions = LazySets.split(input.input_space, input.splits)
+    regions = LazySets.split(input.input_space, [input.splits...])
     
     return regions
 end
