@@ -1,0 +1,5 @@
+[deps]
+IntervalMDP = "051c988a-e73c-45a4-90ec-875cac0402c7"
+IntervalSySCoRe = "6214ee8e-79dc-449b-ae00-4c9ff82a02a9"
+LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
