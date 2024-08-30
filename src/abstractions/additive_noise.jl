@@ -150,7 +150,7 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
         end
     end
 
-    prob = ProductIntervalProbabilities(
+    prob = OrthogonalIntervalProbabilities(
         Tuple(IntervalProbabilities(;lower=pl, upper=pu) for (pl, pu) in zip(prob_lower, prob_upper)),
         Int32.(Tuple(splits(state_abstraction) .+ 1))
     )
@@ -192,7 +192,7 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
     end
 
     # Final construction
-    return ProductIntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
+    return OrthogonalIntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
 end
 
 function initprob(target::DecoupledIMDP, state_abstraction::StateGridSplit, ninputs) 
