@@ -19,7 +19,6 @@ function inputs(input::InputGridSplit)
     return regions
 end
 
-
 """
     InputLinRange
 
