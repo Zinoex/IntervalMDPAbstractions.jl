@@ -1,5 +1,9 @@
 [deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 IntervalMDP = "051c988a-e73c-45a4-90ec-875cac0402c7"
 IntervalSySCoRe = "6214ee8e-79dc-449b-ae00-4c9ff82a02a9"
 LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"

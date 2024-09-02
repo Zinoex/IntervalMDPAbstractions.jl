@@ -74,6 +74,22 @@ function robot_2d_decoupled(; spec=:reachavoid, state_split=(40, 40), input_spli
     return mdp, reach, avoid
 end
 
+function robot_2d_direct(; spec=:reachavoid, state_split=(40, 40), input_split=(20, 20))
+    sys = robot_2d_sys(;spec=spec)
+
+    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
+    state_abs = StateGridSplit(X, state_split)
+
+    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
+    input_abs = InputRobot(U, input_split)
+
+    target_model = DirectIMDP()
+
+    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+
+    return mdp, reach, avoid
+end
+
 function main()
     mdp_reachavoid, reach_reachavoid, avoid_reachavoid = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(20, 20))
 
