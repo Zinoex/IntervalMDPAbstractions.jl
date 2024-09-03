@@ -52,8 +52,8 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
     pl = 1.0
     pu = 1.0
 
-    for (ly, hy, lz, hz, σ) in zip(low(Y), high(Y), low(Z), high(Z), stddev(w))
-        axis_pl, axis_pu = axis_transition_prob_bounds(Interval(ly, hy), Interval(lz, hz), w, σ)
+    for i in 1:LazySets.dim(Y)
+        axis_pl, axis_pu = axis_transition_prob_bounds(Y, Z, w, i)
         pl *= axis_pl
         pu *= axis_pu
     end
@@ -93,4 +93,86 @@ function gaussian_transition(v, l, h, σ)
     a = (v - l) * invsqrt2 / σ
     b = (v - h) * invsqrt2 / σ
     return 0.5 * erf(b, a)
+end
+
+"""
+    AdditiveDiagonalUniformNoise
+
+Additive diagonal uniform noise structure, i.e. `w_k ~ U(a, b)`.
+"""
+struct AdditiveDiagonalUniformNoise <: AdditiveNoiseStructure
+    a::Vector{Float64}
+    b::Vector{Float64}
+
+    function AdditiveDiagonalUniformNoise(a::Vector{Float64}, b::Vector{Float64})
+        if length(a) != length(b)
+            throw(ArgumentError("The dimensionality of a and b must match"))
+        end
+
+        return new(a, b)
+    end
+end
+dim(w::AdditiveDiagonalUniformNoise) = length(w.a)
+candecouple(w::AdditiveDiagonalUniformNoise) = true
+
+function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalUniformNoise)
+    # Use the box approximation for the transition probability bounds, as 
+    # that makes the computation of the bounds more efficient (altought slightly more conservative).
+
+    Y = box_approximation(Y)
+
+    pl = 1.0
+    pu = 1.0
+
+    for i in 1:LazySets.dim(Y)
+        axis_pl, axis_pu = axis_transition_prob_bounds(Y, Z, w, i)
+        pl *= axis_pl
+        pu *= axis_pu
+    end
+
+    return pl, pu
+end
+
+function axis_transition_prob_bounds(Y::Hyperrectangle, Z::Hyperrectangle, w::AdditiveDiagonalUniformNoise, axis::Int)
+    z = Interval(extrema(Z, axis)...)
+
+    return axis_transition_prob_bounds(Y, z, w, axis)
+end
+
+function axis_transition_prob_bounds(Y::Hyperrectangle, z::Interval, w::AdditiveDiagonalUniformNoise, axis::Int)
+    y = Interval(extrema(Y, axis)...)
+    a, b = w.a[axis], w.b[axis]
+
+    return axis_transition_prob_bounds(y, z, w, a, b)
+end
+
+function axis_transition_prob_bounds(y::Interval, z::Interval, w::AdditiveDiagonalUniformNoise, a::Real, b::Real)
+    cw = (a + b) / 2
+    yprime = y + cw
+    aprime, bprime = a - cw, b - cw
+    
+    # Compute the transition probability bounds for each dimension
+    cy, cz = center(yprime, 1), center(z, 1)
+
+    min_point = ifelse(cz ≥ cy, low(yprime, 1), high(yprime, 1))
+    pl = uniform_transition(min_point, low(z, 1), high(z, 1), aprime, bprime)
+
+    max_point = min(high(yprime, 1), max(cz, low(yprime, 1)))
+    pu = uniform_transition(max_point, low(z, 1), high(z, 1), aprime, bprime)
+
+    # Just in case the numerical computation is slightly off
+    return max(pl, 0.0), min(pu, 1.0)
+end
+
+function uniform_transition(v, l, h, a, b)
+    a, b = v + a, v + b
+
+    if a ≥ h || b ≤ l
+        return 0.0
+    end
+
+    l = max(l, a)
+    h = min(h, b)
+
+    return (h - l) / (b - a)
 end
