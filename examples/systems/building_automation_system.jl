@@ -34,7 +34,7 @@ function building_automation_system_decoupled(; state_split=(10, 10, 10, 10, 10,
     state_abs = StateUniformGridSplit(X, state_split)
 
     U = Hyperrectangle(; low=[15.0], high=[30.0])
-    input_abs = Input(U, input_split)
+    input_abs = InputLinRange(U, input_split)
 
     target_model = DecoupledIMDP()
 

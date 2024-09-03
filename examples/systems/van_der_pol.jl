@@ -1,0 +1,48 @@
+using LinearAlgebra, LazySets
+using IntervalMDP, IntervalSySCoRe
+
+
+function building_automation_system(; sampling_time=0.1)
+    # TODO: Control?
+    f(x, u) = [x[1] + x[2] * sampling_time, x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * sampling_time + u[1]]
+
+    w_variance = [0.2, 0.2]
+    w_stddev = sqrt.(w_variance)
+
+    dyn = LinearAdditiveNoiseDynamics(f, 2, 0, AdditiveDiagonalGaussianNoise(w_stddev))
+
+    initial_region = EmptySet(2)
+    reach_region = Hyperrectangle(; low=[-1.4, -2.9], high=[-0.7, -2.0])
+    avoid_region = EmptySet(2)
+
+    sys = System(dyn, initial_region, reach_region, avoid_region)
+
+    return sys
+end
+
+function building_automation_system_decoupled(; state_split=(50, 50), input_split=10)
+    sys = c()
+
+    X = Hyperrectangle(; low=[-3.0, -3.0], high=[3.0, 3.0])
+    state_abs = StateUniformGridSplit(X, state_split)
+
+    U = Hyperrectangle(; low=[-1.0], high=[1.0])
+    input_abs = InputLinRange(U, input_split)
+
+    target_model = DecoupledIMDP()
+
+    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+
+    return mdp, reach, avoid
+end
+
+function main()
+    mdp, reach, avoid = van_der_pol_decoupled(; state_split=(50, 50), input_split=10)
+
+    prop = FiniteTimeReachAvoid(reach, avoid, 6)
+    spec = Specification(prop, Optimistic, Minimize)
+    prob = Problem(mdp, spec)
+
+    V_unsafety, k, res = value_iteration(prob)
+    V_safety = 1.0 .- V_unsafety
+end

@@ -18,7 +18,7 @@ I.e. `x_{k+1} = A x_k + B u_k + w_k`, where `w_k ~ N(0, diag(w_stddev))`.
 
 # Stochastic Van der Pol Oscillator with additive uniform noise, but no inputs.
 τ = 0.1
-f(x, u) = [x[1] + x[2] * τ; x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * τ]
+f(x, u) = [x[1] + x[2] * τ, x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * τ]
 
 w_stddev = [0.1, 0.1]
 w = AdditiveDiagonalUniformNoise(w_stddev)
