@@ -9,59 +9,63 @@ input_split = (20, 20)
 time_horizon = 10
 
 function benchmark_direct(state_split)
-    abstraction_time = @benchmark robot_2d_direct(;state_split=$state_split, input_split=$input_split)
+    @info "Benchmarking direct"
 
-    GC.gc()
-    GC.enable(false)
+    @info "Measuring abstraction time"
+    abstraction_time = @benchmark robot_2d_direct(;state_split=$state_split, input_split=$input_split)
+    abstraction_median_seconds = time(median(abstraction_time)) / 1e9
+    @info "Abstraction time" abstraction_median_seconds
+
     mdp, reach, avoid = robot_2d_direct(;state_split=state_split, input_split=input_split)
-    abstraction_mem = Base.gc_live_bytes()
-    GC.enable(true)
 
     prop = FiniteTimeReachAvoid(reach, avoid, time_horizon)
     spec = Specification(prop, Pessimistic, Maximize)
     prob = Problem(mdp, spec)
 
+    @info "Measuring certification time"
     certification_time = @benchmark value_iteration($prob)
-
-    abstraction_median_seconds = time(median(abstraction_time)) / 1e9
     certification_median_seconds = time(median(certification_time)) / 1e9
+    @info "Certification time" certification_median_seconds
 
-    GC.gc()
+    @info "Measuring peak mem"
+    BenchmarkTools.gcscrub()
     GC.enable(false)
     V, k, res = value_iteration(prob)
-    certification_mem = Base.gc_live_bytes()
+    peak_mem = Base.gc_live_bytes() / 1024^2
     GC.enable(true)
+    @info "Peak mem" peak_mem
 
-    return (abstraction_time=abstraction_median_seconds, abstraction_mem=abstraction_mem,
-            certification_time=certification_median_seconds, certification_mem=certification_mem, V=V)
+    return (abstraction_time=abstraction_median_seconds, certification_time=certification_median_seconds, peak_mem=peak_mem, V=V)
 end
 
 function benchmark_decoupled(state_split)
-    abstraction_time = @benchmark robot_2d_decoupled(;state_split=$state_split, input_split=$input_split)
+    @info "Benchmarking decoupled"
 
-    GC.gc()
-    GC.enable(false)
+    @info "Measuring abstraction time"
+    abstraction_time = @benchmark robot_2d_decoupled(;state_split=$state_split, input_split=$input_split)
+    abstraction_median_seconds = time(median(abstraction_time)) / 1e9
+    @info "Abstraction time" abstraction_median_seconds
+
     mdp, reach, avoid = robot_2d_decoupled(;state_split=state_split, input_split=input_split)
-    abstraction_mem = Base.gc_live_bytes()
-    GC.enable(true)
 
     prop = FiniteTimeReachAvoid(reach, avoid, time_horizon)
     spec = Specification(prop, Pessimistic, Maximize)
     prob = Problem(mdp, spec)
 
+    @info "Measuring certification time"
     certification_time = @benchmark value_iteration($prob)
-
-    abstraction_median_seconds = time(median(abstraction_time)) / 1e9
     certification_median_seconds = time(median(certification_time)) / 1e9
+    @info "Certification time" certification_median_seconds
 
-    GC.gc()
+    @info "Measuring peak mem"
+    BenchmarkTools.gcscrub()
     GC.enable(false)
     V, k, res = value_iteration(prob)
-    certification_mem = Base.gc_live_bytes()
+    peak_mem = Base.gc_live_bytes() / 1024^2
     GC.enable(true)
+    @info "Peak mem" peak_mem
 
-    return (abstraction_time=abstraction_median_seconds, abstraction_mem=abstraction_mem,
-            certification_time=certification_median_seconds, certification_mem=certification_mem, V=V)
+    return (abstraction_time=abstraction_median_seconds, certification_time=certification_median_seconds, peak_mem=peak_mem, V=V)
 end
 
 function compare()
@@ -69,7 +73,9 @@ function compare()
 
     res = []
 
-    @showprogress for state_split in state_splits
+    @showprogress dt=1 desc="Benchmarking..." for state_split in state_splits
+        @info "Benchmarking state_split" state_split
+
         direct = benchmark_direct(state_split)
         decoupled = benchmark_decoupled(state_split)
 
