@@ -84,7 +84,8 @@ function axis_transition_prob_bounds(y::Interval, z::Interval, w::AdditiveDiagon
     max_point = min(high(y, 1), max(cz, low(y, 1)))
     pu = gaussian_transition(max_point, low(z, 1), high(z, 1), σ)
 
-    return pl, pu
+    # Just in case the numerical computation is slightly off
+    return max(pl, 0.0), min(pu, 1.0)
 end
 
 # Use two parameter erf function for higher numerical precision

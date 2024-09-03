@@ -39,8 +39,10 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
                     prob_lower[tar_idx + 1, srcact_idx] = pl
                     prob_upper[tar_idx + 1, srcact_idx] = pu
                 else  # Allow sparsifying via adding probability to the absorbing avoid state
-                    prob_lower[1, srcact_idx] += pl
-                    prob_upper[1, srcact_idx] += pu
+
+                    # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
+                    prob_lower[1, srcact_idx] = clamp(prob_lower[1, srcact_idx] + pl, 0.0, 1.0)
+                    prob_upper[1, srcact_idx] = clamp(prob_upper[1, srcact_idx] + pu, 0.0, 1.0)
                 end
             end
         end
