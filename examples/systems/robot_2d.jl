@@ -83,7 +83,7 @@ function robot_2d_direct(; spec=:reachavoid, state_split=(40, 40), input_split=(
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputRobot(U, input_split)
 
-    target_model = DirectIMDP()
+    target_model = SparseDirectIMDP()
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
 
