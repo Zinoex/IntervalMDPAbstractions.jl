@@ -55,4 +55,8 @@ function main(n)
     prob_decoupled = Problem(mdp_decoupled, spec_decoupled)
 
     V_decoupled, k_decoupled, res_decoupled = value_iteration(prob_decoupled)
+
+    V_decoupled = V_decoupled[V_decoupled .> 0.0]
+    V_decoupled = V_decoupled[V_decoupled .< 0.99]
+    println(maximum(V_decoupled))
 end
