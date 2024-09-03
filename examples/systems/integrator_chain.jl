@@ -35,7 +35,7 @@ function integrator_chain_decoupled(num_dims::Int; state_split_per_dim=50, input
     sys = integrator_chain_sys(num_dims)
 
     X = Hyperrectangle(; low=[-10.0 for _ in 1:num_dims], high=[10.0 for _ in 1:num_dims])
-    state_abs = StateGridSplit(X, Tuple(state_split_per_dim for _ in 1:num_dims))
+    state_abs = StateUniformGridSplit(X, Tuple(state_split_per_dim for _ in 1:num_dims))
 
     U = Hyperrectangle(; low=[-1.0], high=[1.0])
     input_abs = InputLinRange(U, input_split)

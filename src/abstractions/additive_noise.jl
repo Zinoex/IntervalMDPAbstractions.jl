@@ -3,11 +3,11 @@ using SparseArrays
 export abstraction
 
 """
-    abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstraction::StateGridSplit, input_abstraction::InputAbstraction, target_model::Union{DirectIMDP, SparseDirectIMDP})
+    abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::Union{DirectIMDP, SparseDirectIMDP})
 
 Abstract function for creating an abstraction of a system with additive noise with an IMDP as the target model.
 """
-function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstraction::StateGridSplit, input_abstraction::InputAbstraction, target_model::Union{DirectIMDP, SparseDirectIMDP})
+function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::Union{DirectIMDP, SparseDirectIMDP})
     # The first state is absorbing, representing transitioning to outside the partitioned.
     nregions = numregions(state_abstraction) + 1
     ninputs = numinputs(input_abstraction)
@@ -89,11 +89,11 @@ function initprob(target::SparseDirectIMDP, nregions, ninputs)
 end
 
 """
-    abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstraction::StateGridSplit, input_abstraction::InputAbstraction, target_model::DecoupledIMDP)
+    abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::DecoupledIMDP)
 
 Abstract function for creating an abstraction of a system with additive noise with a decoupled IMDP as the target model.
 """
-function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstraction::StateGridSplit, input_abstraction::InputAbstraction, target_model::DecoupledIMDP)
+function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::DecoupledIMDP)
     dyn = dynamics(sys)
     if !candecouple(noise(dyn))
         throw(ArgumentError("Cannot decouple system with non-diagonal noise covariance matrix"))
@@ -193,7 +193,7 @@ function abstraction(sys::System{<:AffineAdditiveNoiseDynamics}, state_abstracti
     return OrthogonalIntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
 end
 
-function initprob(target::DecoupledIMDP, state_abstraction::StateGridSplit, ninputs) 
+function initprob(target::DecoupledIMDP, state_abstraction::StateUniformGridSplit, ninputs) 
     prob_lower = Matrix{Float64}[]
     prob_upper = Matrix{Float64}[]
 

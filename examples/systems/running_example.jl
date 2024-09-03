@@ -23,7 +23,7 @@ function running_example_decoupled(;range_vs_grid=:grid, state_split=(20, 20), i
     sys = running_example_sys()
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
-    state_abs = StateGridSplit(X, state_split)
+    state_abs = StateUniformGridSplit(X, state_split)
 
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     if range_vs_grid == :range
@@ -45,7 +45,7 @@ function running_example_direct(; sparse=false, range_vs_grid=:grid, state_split
     sys = running_example_sys()
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
-    state_abs = StateGridSplit(X, state_split)
+    state_abs = StateUniformGridSplit(X, state_split)
 
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     if range_vs_grid == :range

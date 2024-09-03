@@ -62,7 +62,7 @@ function robot_2d_decoupled(; spec=:reachavoid, state_split=(40, 40), input_spli
     sys = robot_2d_sys(;spec=spec)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
-    state_abs = StateGridSplit(X, state_split)
+    state_abs = StateUniformGridSplit(X, state_split)
 
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputRobot(U, input_split)
@@ -78,7 +78,7 @@ function robot_2d_direct(; spec=:reachavoid, state_split=(40, 40), input_split=(
     sys = robot_2d_sys(;spec=spec)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
-    state_abs = StateGridSplit(X, state_split)
+    state_abs = StateUniformGridSplit(X, state_split)
 
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputRobot(U, input_split)

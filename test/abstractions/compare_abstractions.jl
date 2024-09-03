@@ -8,7 +8,7 @@ function modified_running_example_compare()
     sys = modified_running_example_sys()
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
-    state_abs = StateGridSplit(X, (10, 10))
+    state_abs = StateUniformGridSplit(X, (10, 10))
 
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputGridSplit(U, [3, 3])

@@ -8,7 +8,7 @@ function simple_1d_decoupled()
     sys = simple_1d_sys()
 
     X = Hyperrectangle(; low=[-2.5], high=[2.5])
-    state_abs = StateGridSplit(X, (10,))
+    state_abs = StateUniformGridSplit(X, (10,))
     input_abs = InputDiscrete([Singleton([0.0])])
     target_model = DecoupledIMDP()
 
@@ -32,7 +32,7 @@ function modified_running_example_decoupled(; range_vs_grid=:grid)
     sys = modified_running_example_sys()
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
-    state_abs = StateGridSplit(X, (10, 10))
+    state_abs = StateUniformGridSplit(X, (10, 10))
 
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     if range_vs_grid == :range
