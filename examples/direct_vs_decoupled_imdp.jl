@@ -1,6 +1,7 @@
 module DirectVsDecoupledIMDP
 
 using BenchmarkTools, ProgressMeter
+using DataFrames, CSV, Statistics
 using IntervalMDP, IntervalSySCoRe
 
 include("systems/robot_2d.jl")
@@ -68,8 +69,8 @@ function benchmark_decoupled(state_split)
     return (abstraction_time=abstraction_median_seconds, certification_time=certification_median_seconds, peak_mem=peak_mem, V=V)
 end
 
-function compare()
-    state_splits = [(s, s) for s in 10:10:200]
+function benchmark()
+    state_splits = [(s, s) for s in 5:5:50]
 
     res = []
 
@@ -82,8 +83,52 @@ function compare()
         push!(res, (state_split=state_split, direct=direct, decoupled=decoupled))
     end
 
-    # TODO: save results to CSV
-    # TODO: plot results
+    return res
+end
+
+function to_dataframe(res)
+    res = map(res) do row
+        # Remove the first element of the value function, which is the absorbing avoid state
+        V_diff = vec(row.decoupled.V[2:end, 2:end]) - row.direct.V[2:end] 
+
+        (
+            state_split=row.state_split[1],
+            direct_abstraction_time=row.direct.abstraction_time,
+            direct_certification_time=row.direct.certification_time,
+            direct_peak_mem=row.direct.peak_mem,
+            direct_Psat_min=minimum(row.direct.V[2:end]),
+            decoupled_abstraction_time=row.decoupled.abstraction_time,
+            decoupled_certification_time=row.decoupled.certification_time,
+            decoupled_peak_mem=row.decoupled.peak_mem,
+            decoupled_Psat_min=minimum(row.decoupled.V[2:end, 2:end]),
+            Psat_diff_max=maximum(V_diff),
+            Psat_diff_median=median(V_diff),
+            Psat_diff_mean=mean(V_diff),
+        )
+    end
+
+    df = DataFrame(res)
+    return df
+end
+
+function save_results(df)
+    # Read-write permissions for user and group, read-only for others
+    # No execute permissions for anyone (since it is only data files anyways)
+    mkpath("results", mode=0o664)
+    CSV.write("results/direct_vs_decoupled_imdp.csv", df)
+end
+
+function read_results()
+    df = CSV.read("results/direct_vs_decoupled_imdp.csv", DataFrame)
+    return df
+end
+
+# TODO: plot results
+
+function compare()
+    res = benchmark()
+    df = to_dataframe(res)
+    save_results(df)
 end
 
 end
