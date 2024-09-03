@@ -41,7 +41,7 @@ function robot_2d_sys(;spec=:reachavoid)
     w_variance = [0.75, 0.75]
     w_stddev = sqrt.(w_variance)
 
-    dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+    dyn = LinearAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(2)
     reach_region = Hyperrectangle(; low=[5.0, 5.0], high=[7.0, 7.0])

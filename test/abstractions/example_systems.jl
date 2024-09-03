@@ -9,7 +9,7 @@ if !@isdefined example_systems_included
         B = [0.0][:, :]
         w_stddev = [0.05]
 
-        dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+        dyn = LinearAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
         initial_region = EmptySet(1)
         reach_region = Hyperrectangle(; low=[-0.5], high=[0.5])
@@ -25,7 +25,7 @@ if !@isdefined example_systems_included
         B = 0.7I(2)
         w_stddev = [1.0, 1.0]
 
-        dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+        dyn = LinearAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
         initial_region = EmptySet(2)
         reach_region = Hyperrectangle(; low=[4.0, -6.0], high=[10.0, -2.0])

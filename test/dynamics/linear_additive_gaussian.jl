@@ -7,7 +7,7 @@ B = reshape([0.0; 1.0], (2, 1))
 
 w_stddev = [0.1, 0.1]
 
-dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+dyn = LinearAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
 # Hyperrectangular regions
 X = Hyperrectangle(low=[0.0, 0.0], high=[1.0, 1.0])

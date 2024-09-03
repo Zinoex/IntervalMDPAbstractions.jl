@@ -1,8 +1,8 @@
 
-export AffineAdditiveNoiseDynamics
+export LinearAdditiveNoiseDynamics
 
 """
-    AffineAdditiveNoiseDynamics
+    LinearAdditiveNoiseDynamics
 
 A struct representing dynamics with additive Gaussian noise.
 I.e. `x_{k+1} = A x_k + B u_k + w_k`, where `w_k ~ N(0, diag(w_stddev))`.
@@ -22,16 +22,16 @@ B = [0.0; 1.0]
 w_stddev = [0.1, 0.1]
 w = AdditiveDiagonalGaussianNoise(w_stddev)
 
-dyn = AffineAdditiveNoiseDynamics(A, B, w)
+dyn = LinearAdditiveNoiseDynamics(A, B, w)
 ```
 
 """
-struct AffineAdditiveNoiseDynamics{TA<:AbstractMatrix{Float64}, TB<:AbstractMatrix{Float64}, TW<:AdditiveNoiseStructure} <: AdditiveNoiseDynamics
+struct LinearAdditiveNoiseDynamics{TA<:AbstractMatrix{Float64}, TB<:AbstractMatrix{Float64}, TW<:AdditiveNoiseStructure} <: AdditiveNoiseDynamics
     A::TA
     B::TB
     w::TW
 
-    function AffineAdditiveNoiseDynamics(A::TA, B::TB, w::TW) where {TA<:AbstractMatrix{Float64}, TB<:AbstractMatrix{Float64}, TW<:AdditiveNoiseStructure}
+    function LinearAdditiveNoiseDynamics(A::TA, B::TB, w::TW) where {TA<:AbstractMatrix{Float64}, TB<:AbstractMatrix{Float64}, TW<:AdditiveNoiseStructure}
         n = LinearAlgebra.checksquare(A)
         
         if n != size(B, 1)
@@ -46,7 +46,7 @@ struct AffineAdditiveNoiseDynamics{TA<:AbstractMatrix{Float64}, TB<:AbstractMatr
     end
 end
 
-nominal(dyn::AffineAdditiveNoiseDynamics, X::LazySet, U::LazySet) = dyn.A * X + dyn.B * U
-noise(dyn::AffineAdditiveNoiseDynamics) = dyn.w
-dimstate(dyn::AffineAdditiveNoiseDynamics) = size(dyn.A, 1)
-diminput(dyn::AffineAdditiveNoiseDynamics) = size(dyn.B, 2)
+nominal(dyn::LinearAdditiveNoiseDynamics, X::LazySet, U::LazySet) = dyn.A * X + dyn.B * U
+noise(dyn::LinearAdditiveNoiseDynamics) = dyn.w
+dimstate(dyn::LinearAdditiveNoiseDynamics) = size(dyn.A, 1)
+diminput(dyn::LinearAdditiveNoiseDynamics) = size(dyn.B, 2)

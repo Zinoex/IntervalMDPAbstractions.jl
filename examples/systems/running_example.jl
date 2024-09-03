@@ -7,7 +7,7 @@ function running_example_sys()
     B = 0.7I(2)
     w_stddev = [1.0, 1.0]
 
-    dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+    dyn = LinearAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(2)
     reach_region = Hyperrectangle(; low=[4.0, -4.0], high=[10.0, 0.0])
