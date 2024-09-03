@@ -35,7 +35,7 @@ struct AffineAdditiveNoiseDynamics{TA<:AbstractMatrix{Float64}, TB<:AbstractMatr
         n = LinearAlgebra.checksquare(A)
         
         if n != size(B, 1)
-            throw(ArgumentError("The number of rows of B must match the dynamics dimension"))
+            throw(ArgumentError("The number of rows of B must match the state dimension"))
         end
 
         if n != dim(w)
