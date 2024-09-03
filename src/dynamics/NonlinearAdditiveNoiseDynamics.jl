@@ -1,8 +1,8 @@
 
-export AffineAdditiveNoiseDynamics
+export NonlinearAdditiveNoiseDynamics
 
 """
-    AffineAdditiveNoiseDynamics
+    NonlinearAdditiveNoiseDynamics
 
 A struct representing dynamics with additive Gaussian noise.
 I.e. `x_{k+1} = A x_k + B u_k + w_k`, where `w_k ~ N(0, diag(w_stddev))`.
