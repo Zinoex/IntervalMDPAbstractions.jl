@@ -4,12 +4,21 @@ export NonlinearAdditiveNoiseDynamics
 """
     NonlinearAdditiveNoiseDynamics
 
-A struct representing dynamics with additive Gaussian noise.
-I.e. `x_{k+1} = A x_k + B u_k + w_k`, where `w_k ~ N(0, diag(w_stddev))`.
+A struct representing dynamics with additive noise.
+I.e. `x_{k+1} = f(x_k, u_k) + w_k`, where `w_k ~ p_w` and `p_w` is multivariate probability distribution.
+
+!!! note
+    The nominal dynamics of this class are _assumed_ to be infinitely differentiable, i.e. 
+    the Taylor expansion of the dynamics function `f` is well-defined. This is because to over-approximate
+    the one-step reachable set, we rely on Taylor models, which are Taylor expansions + a remainder term.
+    If you are dealing wit a non-differentiable dynamics function, consider using `PiecewiseNonlinearAdditiveNoiseDynamics` instead.
+    The one-step reachable set of `PiecewiseNonlinearAdditiveNoiseDynamics` is over-approximated using
+    Linear Bound Propagation.
 
 ### Fields
-- `A::AbstractMatrix{Float64}`: The state transition matrix.
-- `B::AbstractMatrix{Float64}`: The control input matrix.
+- `f::Function`: A function taking `x::Vector` and `u::Vector` as input and returns a `Vector` of the dynamics output.
+- `nstate::Int`: The state dimension.
+- `ninput::Int`: The input dimension.
 - `w::AdditiveNoiseStructure`: The additive noise.
 
 ### Examples
@@ -23,7 +32,7 @@ f(x, u) = [x[1] + x[2] * τ, x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * τ]
 w_stddev = [0.1, 0.1]
 w = AdditiveDiagonalUniformNoise(w_stddev)
 
-dyn = NonlinearAdditiveNoiseDynamics(A, B, w)
+dyn = NonlinearAdditiveNoiseDynamics(f, 2, 0, w)
 ```
 
 """

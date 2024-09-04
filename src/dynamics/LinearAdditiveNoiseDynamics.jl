@@ -4,8 +4,8 @@ export LinearAdditiveNoiseDynamics
 """
     LinearAdditiveNoiseDynamics
 
-A struct representing dynamics with additive Gaussian noise.
-I.e. `x_{k+1} = A x_k + B u_k + w_k`, where `w_k ~ N(0, diag(w_stddev))`.
+A struct representing dynamics with additive noise.
+I.e. `x_{k+1} = A x_k + B u_k + w_k`, where `w_k ~ p_w` and `p_w` is multivariate probability distribution.
 
 ### Fields
 - `A::AbstractMatrix{Float64}`: The state transition matrix.
