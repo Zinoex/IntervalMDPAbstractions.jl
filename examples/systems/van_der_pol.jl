@@ -2,14 +2,13 @@ using LinearAlgebra, LazySets
 using IntervalMDP, IntervalSySCoRe
 
 
-function building_automation_system(; sampling_time=0.1)
-    # TODO: Control?
+function van_der_pol_sys(; sampling_time=0.1)
     f(x, u) = [x[1] + x[2] * sampling_time, x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * sampling_time + u[1]]
 
     w_variance = [0.2, 0.2]
     w_stddev = sqrt.(w_variance)
 
-    dyn = LinearAdditiveNoiseDynamics(f, 2, 0, AdditiveDiagonalGaussianNoise(w_stddev))
+    dyn = LinearAdditiveNoiseDynamics(f, 2, 1, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(2)
     reach_region = Hyperrectangle(; low=[-1.4, -2.9], high=[-0.7, -2.0])
@@ -20,10 +19,10 @@ function building_automation_system(; sampling_time=0.1)
     return sys
 end
 
-function building_automation_system_decoupled(; state_split=(50, 50), input_split=10)
-    sys = c()
+function van_der_pol_decoupled(; state_split=(50, 50), input_split=10)
+    sys = van_der_pol_sys()
 
-    X = Hyperrectangle(; low=[-3.0, -3.0], high=[3.0, 3.0])
+    X = Hyperrectangle(; low=[-4.0, -4.0], high=[4.0, 4.0])
     state_abs = StateUniformGridSplit(X, state_split)
 
     U = Hyperrectangle(; low=[-1.0], high=[1.0])
