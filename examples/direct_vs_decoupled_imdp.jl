@@ -6,7 +6,7 @@ using IntervalMDP, IntervalSySCoRe
 
 include("systems/robot_2d.jl")
 
-input_split = (20, 20)
+input_split = (21, 21)
 time_horizon = 10
 
 function benchmark_direct(state_split)
@@ -70,7 +70,7 @@ function benchmark_decoupled(state_split)
 end
 
 function benchmark()
-    state_splits = [(s, s) for s in 5:5:50]
+    state_splits = [(s, s) for s in 5:5:40]
 
     res = []
 

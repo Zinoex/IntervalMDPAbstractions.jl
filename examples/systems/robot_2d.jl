@@ -91,7 +91,7 @@ function robot_2d_direct(; spec=:reachavoid, state_split=(40, 40), input_split=(
 end
 
 function main()
-    mdp_reachavoid, reach_reachavoid, avoid_reachavoid = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(20, 20))
+    mdp_reachavoid, reach_reachavoid, avoid_reachavoid = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
 
     prop_reachavoid = FiniteTimeReachAvoid(reach_reachavoid, avoid_reachavoid, 10)
     spec_reachavoid = Specification(prop_reachavoid, Pessimistic, Maximize)
@@ -99,7 +99,7 @@ function main()
 
     V_reachavoid, k_reachavoid, res_reachavoid = value_iteration(prob_reachavoid)
 
-    mdp_reachability, reach_reachability, avoid_reachability = robot_2d_decoupled(;spec=:reachability, state_split=(20, 20), input_split=(10, 10))
+    mdp_reachability, reach_reachability, avoid_reachability = robot_2d_decoupled(;spec=:reachability, state_split=(20, 20), input_split=(11, 11))
 
     prop_reachability = FiniteTimeReachAvoid(reach_reachability, avoid_reachability, 10)
     spec_reachability = Specification(prop_reachability, Pessimistic, Maximize)
