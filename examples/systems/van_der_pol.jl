@@ -1,3 +1,5 @@
+using Revise
+
 using LinearAlgebra, LazySets
 using IntervalMDP, IntervalSySCoRe
 
@@ -8,7 +10,7 @@ function van_der_pol_sys(; sampling_time=0.1)
     w_variance = [0.2, 0.2]
     w_stddev = sqrt.(w_variance)
 
-    dyn = LinearAdditiveNoiseDynamics(f, 2, 1, AdditiveDiagonalGaussianNoise(w_stddev))
+    dyn = NonlinearAdditiveNoiseDynamics(f, 2, 1, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(2)
     reach_region = Hyperrectangle(; low=[-1.4, -2.9], high=[-0.7, -2.0])
@@ -36,12 +38,12 @@ function van_der_pol_decoupled(; state_split=(50, 50), input_split=10)
 end
 
 function main()
-    mdp, reach, avoid = van_der_pol_decoupled(; state_split=(50, 50), input_split=10)
+    @time "abstraction" mdp, reach, avoid = van_der_pol_decoupled(; state_split=(200, 200), input_split=21)
 
-    prop = FiniteTimeReachAvoid(reach, avoid, 6)
+    prop = FiniteTimeReachAvoid(reach, avoid, 10)
     spec = Specification(prop, Optimistic, Minimize)
     prob = Problem(mdp, spec)
 
-    V_unsafety, k, res = value_iteration(prob)
-    V_safety = 1.0 .- V_unsafety
+    @time "value iteration" V, k, res = value_iteration(prob)
+    V[2:end, 2:end]
 end

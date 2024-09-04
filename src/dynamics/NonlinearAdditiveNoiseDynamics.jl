@@ -15,6 +15,9 @@ I.e. `x_{k+1} = f(x_k, u_k) + w_k`, where `w_k ~ p_w` and `p_w` is multivariate 
     The one-step reachable set of `PiecewiseNonlinearAdditiveNoiseDynamics` is over-approximated using
     Linear Bound Propagation.
 
+!!! warning
+    The `nominal_dynamics` is _not_ thread-safe. This is because the TaylorSeries.jl package modifies its global state.
+
 ### Fields
 - `f::Function`: A function taking `x::Vector` and `u::Vector` as input and returns a `Vector` of the dynamics output.
 - `nstate::Int`: The state dimension.
@@ -51,7 +54,81 @@ struct NonlinearAdditiveNoiseDynamics{F<:Function, TW<:AdditiveNoiseStructure} <
     end
 end
 
-nominal(dyn::NonlinearAdditiveNoiseDynamics, X::LazySet, U::LazySet) = dyn.f(X, U)
+function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Hyperrectangle)
+    # Use the Taylor model to over-approximate the reachable set
+    order = 1
+
+    z0 = [center(X); center(U)]
+    dom = IntervalBox([low(X); low(U)], [high(X); high(U)])
+
+    # TaylorSeries.jl modifieds the global state - eww...
+    # It also means that this function is not thread-safe!!
+    set_variables(Float64, "z"; order=2order, numvars=dimstate(dyn) + diminput(dyn))
+
+    z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i in 1:dimstate(dyn) + diminput(dyn)]
+    x, u = z[1:dimstate(dyn)], z[dimstate(dyn)+1:end]
+
+    # Perform the Taylor expansion
+    y = dyn.f(x, u)
+
+    # Extract the linear and constant terms + the remainder
+    C = [constant_term(y[i]) for i in 1:dimstate(dyn)]
+    AB = [linear_polynomial(y[i])[1][j] for i in 1:dimstate(dyn), j in 1:dimstate(dyn) + diminput(dyn)]
+    A = AB[:, 1:dimstate(dyn)]
+    B = AB[:, dimstate(dyn)+1:end]
+
+    D = [remainder(y[i]) for i in 1:dimstate(dyn)]
+    Dlower = [inf(d) for d in D]
+    Dupper = [sup(d) for d in D]
+
+    Y = A * x + B * u + C
+    Y1 = Y + Dlower
+    Y2 = Y + Dupper
+
+    Yconv = ConvexHull(Y1, Y2)
+
+    return Yconv
+end
+
+function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Singleton)
+    # Use the Taylor model to over-approximate the reachable set
+    order = 1
+
+    x0 = center(X)
+    dom = IntervalBox(low(X), high(X))
+
+    # TaylorSeries.jl modifieds the global state - eww...
+    # It also means that this function is not thread-safe!!
+    set_variables(Float64, "x"; order=2order, numvars=dimstate(dyn))
+
+    x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i in 1:dimstate(dyn)]
+    u = element(U)
+
+    # Perform the Taylor expansion
+    y = dyn.f(x, u)
+
+    # Extract the linear and constant terms + the remainder
+    C = [constant_term(y[i]) for i in 1:dimstate(dyn)]
+    Clow = inf.(C)
+    Cupper = sup.(C)
+    A = [linear_polynomial(y[i])[1][j] for i in 1:dimstate(dyn), j in 1:dimstate(dyn)]
+    Alow = inf.(A)
+    Aupper = sup.(A)
+
+    D = [remainder(y[i]) for i in 1:dimstate(dyn)]
+    Dlower = inf.(D)
+    Dupper = sup.(D)
+
+    Y1 = Alow * X + Clow + Dlower
+    Y2 = Aupper * X + Cupper + Dupper
+
+    Yconv = ConvexHull(Y1, Y2)
+
+    return Yconv
+end
+
+
+
 noise(dyn::NonlinearAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::NonlinearAdditiveNoiseDynamics) = dyn.nstate
 diminput(dyn::NonlinearAdditiveNoiseDynamics) = dyn.ninput

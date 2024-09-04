@@ -4,12 +4,14 @@ authors = ["Frederik Baymler Mathiesen"]
 version = "0.1.0"
 
 [deps]
+IntervalArithmetic = "d1acc4aa-44c8-5952-acd4-ba5d80a2a253"
 IntervalMDP = "051c988a-e73c-45a4-90ec-875cac0402c7"
 IrrationalConstants = "92d709cd-6900-40b7-9082-c6be49f344b6"
 LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
+TaylorModels = "314ce334-5f6e-57ae-acf6-00b6e903104a"
 
 [compat]
 julia = "1.6.7"

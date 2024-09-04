@@ -3,12 +3,15 @@ module IntervalSySCoRe
 using LinearAlgebra
 using SpecialFunctions: erf
 using IrrationalConstants: invsqrt2
+using TaylorModels: TaylorModelN, set_variables, constant_term, linear_polynomial, remainder
+using IntervalArithmetic: IntervalBox, inf, sup
 using LazySets, IntervalMDP
 
 # Dynamics
 include("dynamics/base.jl")
 include("dynamics/additive_noise.jl")
 include("dynamics/LinearAdditiveNoiseDynamics.jl")
+include("dynamics/NonlinearAdditiveNoiseDynamics.jl")
 
 include("systems.jl")
 
