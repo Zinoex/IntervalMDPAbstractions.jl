@@ -80,6 +80,9 @@ function benchmark()
         direct = benchmark_direct(state_split)
         decoupled = benchmark_decoupled(state_split)
 
+        V_diff = vec(decoupled.V[2:end, 2:end]) - direct.V[2:end] 
+        @info "V_diff" maximum(V_diff) median(V_diff) mean(V_diff) minimum(V_diff)
+
         push!(res, (state_split=state_split, direct=direct, decoupled=decoupled))
     end
 
@@ -112,9 +115,7 @@ function to_dataframe(res)
 end
 
 function save_results(df)
-    # Read-write permissions for user and group, read-only for others
-    # No execute permissions for anyone (since it is only data files anyways)
-    mkpath("results", mode=0o664)
+    mkpath("results", mode=0o754)
     CSV.write("results/direct_vs_decoupled_imdp.csv", df)
 end
 
