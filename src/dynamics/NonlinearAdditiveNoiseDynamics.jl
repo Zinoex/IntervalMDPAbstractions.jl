@@ -90,7 +90,9 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Hype
     return Yconv
 end
 
-function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Singleton)
+nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Singleton) = nominal(dyn, X, element(U))
+
+function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, u::AbstractVector)
     # Use the Taylor model to over-approximate the reachable set
     order = 1
 
@@ -102,7 +104,6 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Sing
     set_variables(Float64, "x"; order=2order, numvars=dimstate(dyn))
 
     x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i in 1:dimstate(dyn)]
-    u = element(U)
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
@@ -127,7 +128,17 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Sing
     return Yconv
 end
 
+function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Singleton, U::Singleton)
+    x = element(X)
+    u = element(U)
 
+    y = dyn.f(x, u)
+
+    return Singleton(y)
+end
+
+
+nominal(dyn::NonlinearAdditiveNoiseDynamics, x::AbstractVector, u::AbstractVector) = dyn.f(x, u)
 
 noise(dyn::NonlinearAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::NonlinearAdditiveNoiseDynamics) = dyn.nstate

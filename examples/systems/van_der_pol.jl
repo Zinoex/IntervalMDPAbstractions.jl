@@ -1,6 +1,6 @@
 using Revise
 
-using LinearAlgebra, LazySets
+using LinearAlgebra, LazySets, Plots
 using IntervalMDP, IntervalSySCoRe
 
 
@@ -35,6 +35,31 @@ function van_der_pol_decoupled(; state_split=(50, 50), input_split=10)
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
 
     return mdp, reach, avoid
+end
+
+function van_der_pol_plot_nominal()
+    sys = van_der_pol_sys()
+
+    X = Hyperrectangle(low=[-4.0, -4.0], high=[4.0, 4.0])
+    state_abs = StateUniformGridSplit(X, (50, 50))
+
+    U = Hyperrectangle(low=[-1.0], high=[1.0])
+    input_abs = InputLinRange(U, 10)
+
+    R = IntervalSySCoRe.regions(state_abs)[837]
+    u = IntervalSySCoRe.inputs(input_abs)[3]
+
+    Y = nominal(dynamics(sys), R, u)
+
+    xs = sample(R, 10)
+    ys = [nominal(dynamics(sys), x, element(u)) for x in xs]
+
+    p = plot(R, color=:blue, label="X")
+    scatter!(p, Plots.unzip(Tuple.(xs)), color=:blue, label="Xhat", markershape=:xcross)
+    plot!(p, Y, color=:red, label="Y")
+    scatter!(p, Plots.unzip(Tuple.(ys)), color=:red, label="Yhat", markershape=:xcross)
+
+    display(p)
 end
 
 function main()
