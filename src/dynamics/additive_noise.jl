@@ -98,24 +98,18 @@ end
 """
     AdditiveDiagonalUniformNoise
 
-Additive diagonal uniform noise structure, i.e. `w_k ~ U(a, b)`.
+Additive diagonal uniform noise structure, i.e. `w_k ~ U(-r, r)`. 
+This is without loss of generality, since the mean can be absorbed into the nominal dynamics.
+That is, `w_k ~ U(a, b)` is equivalent to `c + w_k` where `w_k ~ U(-r, r)` with `c = (a + b) / 2`
+and `r = (b - a) / 2`, such that `c` can be absorbed into the nominal dynamics.
 """
-struct AdditiveDiagonalUniformNoise <: AdditiveNoiseStructure
-    a::Vector{Float64}
-    b::Vector{Float64}
-
-    function AdditiveDiagonalUniformNoise(a::Vector{Float64}, b::Vector{Float64})
-        if length(a) != length(b)
-            throw(ArgumentError("The dimensionality of a and b must match"))
-        end
-
-        return new(a, b)
-    end
+struct AdditiveDiagonalCentralUniformNoise <: AdditiveNoiseStructure
+    r::Vector{Float64}
 end
-dim(w::AdditiveDiagonalUniformNoise) = length(w.a)
-candecouple(w::AdditiveDiagonalUniformNoise) = true
+dim(w::AdditiveDiagonalCentralUniformNoise) = length(w.r)
+candecouple(w::AdditiveDiagonalCentralUniformNoise) = true
 
-function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalUniformNoise)
+function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalCentralUniformNoise)
     # Use the box approximation for the transition probability bounds, as 
     # that makes the computation of the bounds more efficient (altought slightly more conservative).
 
@@ -133,39 +127,35 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalUniform
     return pl, pu
 end
 
-function axis_transition_prob_bounds(Y::Hyperrectangle, Z::Hyperrectangle, w::AdditiveDiagonalUniformNoise, axis::Int)
+function axis_transition_prob_bounds(Y::Hyperrectangle, Z::Hyperrectangle, w::AdditiveDiagonalCentralUniformNoise, axis::Int)
     z = Interval(extrema(Z, axis)...)
 
     return axis_transition_prob_bounds(Y, z, w, axis)
 end
 
-function axis_transition_prob_bounds(Y::Hyperrectangle, z::Interval, w::AdditiveDiagonalUniformNoise, axis::Int)
+function axis_transition_prob_bounds(Y::Hyperrectangle, z::Interval, w::AdditiveDiagonalCentralUniformNoise, axis::Int)
     y = Interval(extrema(Y, axis)...)
-    a, b = w.a[axis], w.b[axis]
+    r = w.r[axis]
 
-    return axis_transition_prob_bounds(y, z, w, a, b)
+    return axis_transition_prob_bounds(y, z, w, r)
 end
 
-function axis_transition_prob_bounds(y::Interval, z::Interval, w::AdditiveDiagonalUniformNoise, a::Real, b::Real)
-    cw = (a + b) / 2
-    yprime = y + cw
-    aprime, bprime = a - cw, b - cw
-    
+function axis_transition_prob_bounds(y::Interval, z::Interval, w::AdditiveDiagonalCentralUniformNoise, r::Real)    
     # Compute the transition probability bounds for each dimension
-    cy, cz = center(yprime, 1), center(z, 1)
+    cy, cz = center(y, 1), center(z, 1)
 
-    min_point = ifelse(cz ≥ cy, low(yprime, 1), high(yprime, 1))
-    pl = uniform_transition(min_point, low(z, 1), high(z, 1), aprime, bprime)
+    min_point = ifelse(cz ≥ cy, low(y, 1), high(y, 1))
+    pl = uniform_transition(min_point, low(z, 1), high(z, 1), r)
 
-    max_point = min(high(yprime, 1), max(cz, low(yprime, 1)))
-    pu = uniform_transition(max_point, low(z, 1), high(z, 1), aprime, bprime)
+    max_point = min(high(y, 1), max(cz, low(y, 1)))
+    pu = uniform_transition(max_point, low(z, 1), high(z, 1), r)
 
     # Just in case the numerical computation is slightly off
     return max(pl, 0.0), min(pu, 1.0)
 end
 
-function uniform_transition(v, l, h, a, b)
-    a, b = v + a, v + b
+function uniform_transition(v, l, h, r)
+    a, b = v - r, v + r
 
     if a ≥ h || b ≤ l
         return 0.0
