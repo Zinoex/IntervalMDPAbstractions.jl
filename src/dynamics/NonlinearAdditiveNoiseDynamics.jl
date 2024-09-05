@@ -58,7 +58,9 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Hype
     # Use the Taylor model to over-approximate the reachable set
     order = 1
 
-    z0 = [center(X); center(U)]
+    x0 = center(X)
+    u0 = center(U)
+    z0 = [x0; u0]
     dom = IntervalBox([low(X); low(U)], [high(X); high(U)])
 
     # TaylorSeries.jl modifieds the global state - eww...
@@ -73,17 +75,25 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Hype
 
     # Extract the linear and constant terms + the remainder
     C = [constant_term(y[i]) for i in 1:dimstate(dyn)]
+    Clow = inf.(C)
+    Cupper = sup.(C)
+    
     AB = [linear_polynomial(y[i])[1][j] for i in 1:dimstate(dyn), j in 1:dimstate(dyn) + diminput(dyn)]
+    
     A = AB[:, 1:dimstate(dyn)]
+    Alow = inf.(A)
+    Aupper = sup.(A)
+    
     B = AB[:, dimstate(dyn)+1:end]
+    Blow = inf.(B)
+    Bupper = sup.(B)
 
     D = [remainder(y[i]) for i in 1:dimstate(dyn)]
-    Dlower = [inf(d) for d in D]
-    Dupper = [sup(d) for d in D]
+    Dlower = inf.(D)
+    Dupper = sup.(D)
 
-    Y = A * x + B * u + C
-    Y1 = Y + Dlower
-    Y2 = Y + Dupper
+    Y1 = Alow * Translation(X, -x0) + Blow * Translation(U, -u0) + Clow + Dlower
+    Y2 = Aupper * Translation(X, -x0) + Bupper * Translation(U, -u0) + Cupper + Dupper
 
     Yconv = ConvexHull(Y1, Y2)
 
@@ -108,12 +118,13 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, u::Abst
     x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i in 1:dimstate(dyn)]
 
     # Perform the Taylor expansion
-    y = dyn.f(x - x0, u)
+    y = dyn.f(x, u)
 
     # Extract the linear and constant terms + the remainder
     C = [constant_term(y[i]) for i in 1:dimstate(dyn)]
     Clow = inf.(C)
     Cupper = sup.(C)
+
     A = [linear_polynomial(y[i])[1][j] for i in 1:dimstate(dyn), j in 1:dimstate(dyn)]
     Alow = inf.(A)
     Aupper = sup.(A)
@@ -122,8 +133,8 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, u::Abst
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alow * X + Clow + Dlower
-    Y2 = Aupper * X + Cupper + Dupper
+    Y1 = Alow * Translation(X, -x0) + Clow + Dlower
+    Y2 = Aupper * Translation(X, -x0) + Cupper + Dupper
 
     Yconv = ConvexHull(Y1, Y2)
 

@@ -51,7 +51,7 @@ function van_der_pol_plot_nominal()
 
     Y = nominal(dynamics(sys), R, u)
 
-    xs = sample(R, 10)
+    xs = sample(R, 100)
     ys = [nominal(dynamics(sys), x, element(u)) for x in xs]
 
     p = plot(R, color=:blue, label="X")
