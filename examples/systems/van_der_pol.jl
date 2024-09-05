@@ -30,6 +30,22 @@ function van_der_pol_decoupled(; state_split=(50, 50), input_split=10)
     U = Hyperrectangle(; low=[-1.0], high=[1.0])
     input_abs = InputLinRange(U, input_split)
 
+    target_model = decoupled()
+
+    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+
+    return mdp, reach, avoid
+end
+
+function van_der_pol_direct(; state_split=(50, 50), input_split=10)
+    sys = van_der_pol_sys()
+
+    X = Hyperrectangle(; low=[-4.0, -4.0], high=[4.0, 4.0])
+    state_abs = StateUniformGridSplit(X, state_split)
+
+    U = Hyperrectangle(; low=[-1.0], high=[1.0])
+    input_abs = InputLinRange(U, input_split)
+
     target_model = SparseDirectIMDP()
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
