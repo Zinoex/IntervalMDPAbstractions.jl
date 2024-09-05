@@ -69,20 +69,22 @@ end
 
 function main()
     # Direct
-    mdp_direct, reach_direct, avoid_direct = running_example_direct()
+    @time "abstraction direct" mdp_direct, reach_direct, avoid_direct = running_example_direct()
     prop_direct = FiniteTimeReachAvoid(reach_direct, avoid_direct, 10)
     spec_direct = Specification(prop_direct, Pessimistic, Maximize)
     prob_direct = Problem(mdp_direct, spec_direct)
 
-    V_direct, k_direct, res_direct = value_iteration(prob_direct)
+    @time "value iteration direct" V_direct, k_direct, res_direct = value_iteration(prob_direct)
 
     # Decoupled
-    mdp_decoupled, reach_decoupled, avoid_decoupled = running_example_decoupled()
+    @time "abstraction decoupled" mdp_decoupled, reach_decoupled, avoid_decoupled = running_example_decoupled()
     prop_decoupled = FiniteTimeReachAvoid(reach_decoupled, avoid_decoupled, 10)
     spec_decoupled = Specification(prop_decoupled, Pessimistic, Maximize)
     prob_decoupled = Problem(mdp_decoupled, spec_decoupled)
 
-    V_decoupled, k_decoupled, res_decoupled = value_iteration(prob_decoupled)
+    @time "value iteration decoupled" V_decoupled, k_decoupled, res_decoupled = value_iteration(prob_decoupled)
 
-    println(maximum(V_decoupled[2:end, 2:end] - reshape(V_direct[2:end], 20, 20)))
+    V_diff = V_decoupled[2:end, 2:end] - reshape(V_direct[2:end], 20, 20)
+
+    return V_diff
 end

@@ -91,19 +91,23 @@ function robot_2d_direct(; spec=:reachavoid, state_split=(40, 40), input_split=(
 end
 
 function main()
-    mdp_reachavoid, reach_reachavoid, avoid_reachavoid = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
+    @time "abstraction reach-avoid" mdp_reachavoid, reach_reachavoid, avoid_reachavoid = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
 
     prop_reachavoid = FiniteTimeReachAvoid(reach_reachavoid, avoid_reachavoid, 10)
     spec_reachavoid = Specification(prop_reachavoid, Pessimistic, Maximize)
     prob_reachavoid = Problem(mdp_reachavoid, spec_reachavoid)
 
-    V_reachavoid, k_reachavoid, res_reachavoid = value_iteration(prob_reachavoid)
+    @time "value-iteration reach-avoid" V_reachavoid, k_reachavoid, res_reachavoid = value_iteration(prob_reachavoid)
+    V_reachavoid = V_reachavoid[2:end, 2:end]
 
-    mdp_reachability, reach_reachability, avoid_reachability = robot_2d_decoupled(;spec=:reachability, state_split=(20, 20), input_split=(11, 11))
+    @time "abstraction reachability" mdp_reachability, reach_reachability, avoid_reachability = robot_2d_decoupled(;spec=:reachability, state_split=(20, 20), input_split=(11, 11))
 
     prop_reachability = FiniteTimeReachAvoid(reach_reachability, avoid_reachability, 10)
     spec_reachability = Specification(prop_reachability, Pessimistic, Maximize)
     prob_reachability = Problem(mdp_reachability, spec_reachability)
 
-    V_reachability, k_reachability, res_reachability = value_iteration(prob_reachability)
+    @time "value-iteration reachability" V_reachability, k_reachability, res_reachability = value_iteration(prob_reachability)
+    V_reachability = V_reachability[2:end, 2:end]
+
+    return V_reachavoid, V_reachability
 end

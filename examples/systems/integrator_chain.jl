@@ -48,15 +48,16 @@ function integrator_chain_decoupled(num_dims::Int; state_split_per_dim=50, input
 end
 
 function main(n)
-    mdp_decoupled, reach_decoupled, avoid_decoupled = integrator_chain_decoupled(n)
+    @time "abstraction" mdp, reach, avoid = integrator_chain_decoupled(n)
 
-    prop_decoupled = ExactTimeReachAvoid(reach_decoupled, avoid_decoupled, 5)
-    spec_decoupled = Specification(prop_decoupled, Pessimistic, Maximize)
-    prob_decoupled = Problem(mdp_decoupled, spec_decoupled)
+    prop = ExactTimeReachAvoid(reach, avoid, 5)
+    spec = Specification(prop, Pessimistic, Maximize)
+    prob = Problem(mdp, spec)
 
-    V_decoupled, k_decoupled, res_decoupled = value_iteration(prob_decoupled)
+    @time "value iteration" V, k, res = value_iteration(prob)
 
-    V_decoupled = V_decoupled[V_decoupled .> 0.0]
-    V_decoupled = V_decoupled[V_decoupled .< 0.99]
-    println(maximum(V_decoupled))
+    # Remove the first state from each axis (the avoid state, whose value is always 0).
+    V = V[(2:s for s in size(V))...]
+
+    return V
 end

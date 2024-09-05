@@ -44,12 +44,12 @@ function building_automation_system_decoupled(; state_split=(10, 10, 10, 10, 10,
 end
 
 function main()
-    mdp, _, avoid = building_automation_system_decoupled(; state_split=(10, 10, 10, 10, 10, 10, 10), input_split=20)
+    @time "abstraction" mdp, _, avoid = building_automation_system_decoupled(; state_split=(10, 10, 10, 10, 10, 10, 10), input_split=20)
 
     prop = FiniteTimeReachability(avoid, 6)
     spec = Specification(prop, Optimistic, Minimize)
     prob = Problem(mdp, spec)
 
-    V_unsafety, k, res = value_iteration(prob)
+    @time "value iteration" V_unsafety, k, res = value_iteration(prob)
     V_safety = 1.0 .- V_unsafety
 end
