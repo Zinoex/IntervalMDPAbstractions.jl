@@ -86,5 +86,5 @@ function main()
 
     V_diff = V_decoupled[2:end, 2:end] - reshape(V_direct[2:end], 20, 20)
 
-    return V_diff
+    return V_diff, V_decoupled[2:end, 2:end], reshape(V_direct[2:end], 20, 20)
 end
