@@ -20,7 +20,7 @@ function integrator_chain_sys(num_dims::Int; sampling_time=0.1)
     w_variance = [0.01 for _ in 1:num_dims]
     w_stddev = sqrt.(w_variance)
 
-    dyn = LinearAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+    dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(num_dims)
     reach_region = Hyperrectangle(; low=[-8.0 for _ in 1:num_dims], high=[8.0 for _ in 1:num_dims])

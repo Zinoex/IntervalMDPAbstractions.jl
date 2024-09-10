@@ -10,7 +10,7 @@ using LazySets, IntervalMDP
 # Dynamics
 include("dynamics/base.jl")
 include("dynamics/additive_noise.jl")
-include("dynamics/LinearAdditiveNoiseDynamics.jl")
+include("dynamics/AffineAdditiveNoiseDynamics.jl")
 include("dynamics/NonlinearAdditiveNoiseDynamics.jl")
 
 include("systems.jl")
