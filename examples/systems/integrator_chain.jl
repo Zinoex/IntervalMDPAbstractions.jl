@@ -31,7 +31,7 @@ function integrator_chain_sys(num_dims::Int; sampling_time=0.1)
     return sys
 end
 
-function integrator_chain_decoupled(num_dims::Int; state_split_per_dim=50, input_split=11)
+function integrator_chain_decoupled(num_dims::Int; sparse=false, state_split_per_dim=50, input_split=11)
     sys = integrator_chain_sys(num_dims)
 
     X = Hyperrectangle(; low=[-10.0 for _ in 1:num_dims], high=[10.0 for _ in 1:num_dims])
@@ -40,7 +40,11 @@ function integrator_chain_decoupled(num_dims::Int; state_split_per_dim=50, input
     U = Hyperrectangle(; low=[-1.0], high=[1.0])
     input_abs = InputLinRange(U, input_split)
 
-    target_model = DecoupledIMDP()
+    if sparse
+        target_model = SparseOrthogonalIMDPTarget()
+    else
+        target_model = OrthogonalIMDPTarget()
+    end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
 

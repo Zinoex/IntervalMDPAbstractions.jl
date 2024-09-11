@@ -29,7 +29,7 @@ function building_automation_system_7d()
     return sys
 end
 
-function building_automation_system_7d_decoupled(; state_split=(20, 20, 2, 2, 2, 2, 2))
+function building_automation_system_7d_decoupled(; sparse=false, state_split=(20, 20, 2, 2, 2, 2, 2))
     sys = c()
 
     X = Hyperrectangle(; low=fill(-0.5, 7), high=fill(0.5, 7))
@@ -37,7 +37,11 @@ function building_automation_system_7d_decoupled(; state_split=(20, 20, 2, 2, 2,
 
     input_abs = InputDiscrete([Singleton(zero(7))])
 
-    target_model = DecoupledIMDP()
+    if sparse
+        target_model = SparseOrthogonalIMDPTarget()
+    else
+        target_model = OrthogonalIMDPTarget()
+    end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
 

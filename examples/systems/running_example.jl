@@ -19,7 +19,7 @@ function running_example_sys()
 end
 
 
-function running_example_decoupled(;range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
+function running_example_decoupled(; sparse=false, range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
     sys = running_example_sys()
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
@@ -34,7 +34,11 @@ function running_example_decoupled(;range_vs_grid=:grid, state_split=(20, 20), i
         throw(ArgumentError("Invalid range_vs_grid argument"))
     end
 
-    target_model = DecoupledIMDP()
+    if sparse
+        target_model = SparseOrthogonalIMDPTarget()
+    else
+        target_model = OrthogonalIMDPTarget()
+    end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
 
@@ -57,9 +61,9 @@ function running_example_direct(; sparse=false, range_vs_grid=:grid, state_split
     end
 
     if sparse
-        target_model = SparseDirectIMDP()
+        target_model = SparseIMDPTarget()
     else
-        target_model = DirectIMDP()
+        target_model = IMDPTarget()
     end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)

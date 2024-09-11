@@ -58,7 +58,7 @@ function robot_2d_sys(;spec=:reachavoid)
     return sys
 end
 
-function robot_2d_decoupled(; spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
+function robot_2d_decoupled(; sparse=true, spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
     sys = robot_2d_sys(;spec=spec)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
@@ -67,14 +67,18 @@ function robot_2d_decoupled(; spec=:reachavoid, state_split=(40, 40), input_spli
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputRobot(U, input_split)
 
-    target_model = DecoupledIMDP()
+    if sparse
+        target_model = SparseOrthogonalIMDPTarget()
+    else
+        target_model = OrthogonalIMDPTarget()
+    end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
 
     return mdp, reach, avoid
 end
 
-function robot_2d_direct(; spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
+function robot_2d_direct(; sparse=true, spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
     sys = robot_2d_sys(;spec=spec)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
@@ -83,7 +87,11 @@ function robot_2d_direct(; spec=:reachavoid, state_split=(40, 40), input_split=(
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputRobot(U, input_split)
 
-    target_model = SparseDirectIMDP()
+    if sparse
+        target_model = SparseIMDPTarget()
+    else
+        target_model = IMDPTarget()
+    end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
 

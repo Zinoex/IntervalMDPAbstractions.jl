@@ -21,7 +21,7 @@ function van_der_pol_sys(; sampling_time=0.1)
     return sys
 end
 
-function van_der_pol_decoupled(; state_split=(50, 50), input_split=10)
+function van_der_pol_decoupled(; sparse=false, state_split=(50, 50), input_split=10)
     sys = van_der_pol_sys()
 
     X = Hyperrectangle(; low=[-4.0, -4.0], high=[4.0, 4.0])
@@ -30,7 +30,11 @@ function van_der_pol_decoupled(; state_split=(50, 50), input_split=10)
     U = Hyperrectangle(; low=[-1.0], high=[1.0])
     input_abs = InputLinRange(U, input_split)
 
-    target_model = DecoupledIMDP()
+    if sparse
+        target_model = SparseOrthogonalIMDPTarget()
+    else
+        target_model = OrthogonalIMDPTarget()
+    end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
 

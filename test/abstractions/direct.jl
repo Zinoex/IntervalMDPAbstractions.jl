@@ -13,9 +13,9 @@ function simple_1d_direct(; sparse=false)
     input_abs = InputDiscrete([Singleton([0.0])])
 
     if sparse
-        target_model = SparseDirectIMDP()
+        target_model = SparseIMDPTarget()
     else
-        target_model = DirectIMDP()
+        target_model = IMDPTarget()
     end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
@@ -64,9 +64,9 @@ function modified_running_example_direct(; sparse=false, range_vs_grid=:grid)
     end
 
     if sparse
-        target_model = SparseDirectIMDP()
+        target_model = SparseIMDPTarget()
     else
-        target_model = DirectIMDP()
+        target_model = IMDPTarget()
     end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)

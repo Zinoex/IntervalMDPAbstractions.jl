@@ -3,11 +3,11 @@ using SparseArrays
 export abstraction
 
 """
-    abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::Union{DirectIMDP, SparseDirectIMDP})
+    abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractIMDPTarget)
 
 Abstract function for creating an abstraction of a system with additive noise with an IMDP as the target model.
 """
-function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::Union{DirectIMDP, SparseDirectIMDP})
+function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractIMDPTarget)
     # The first state is absorbing, representing transitioning to outside the partitioned.
     nregions = numregions(state_abstraction) + 1
     ninputs = numinputs(input_abstraction)
@@ -74,14 +74,14 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
     return IntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
 end
 
-function initprob(target::DirectIMDP, nregions, ninputs) 
+function initprob(::IMDPTarget, nregions, ninputs) 
     prob_lower = zeros(Float64, nregions, (nregions - 1) * ninputs + 1)
     prob_upper = copy(prob_lower)
 
     return prob_lower, prob_upper
 end
 
-function initprob(target::SparseDirectIMDP, nregions, ninputs) 
+function initprob(::SparseIMDPTarget, nregions, ninputs) 
     prob_lower = spzeros(Float64, Int32, nregions, (nregions - 1) * ninputs + 1)
     prob_upper = copy(prob_lower)
 
@@ -89,11 +89,11 @@ function initprob(target::SparseDirectIMDP, nregions, ninputs)
 end
 
 """
-    abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::DecoupledIMDP)
+    abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractOrthogonalIMDPTarget)
 
 Abstract function for creating an abstraction of a system with additive noise with a decoupled IMDP as the target model.
 """
-function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::DecoupledIMDP)
+function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractOrthogonalIMDPTarget)
     dyn = dynamics(sys)
     if !candecouple(noise(dyn))
         throw(ArgumentError("Cannot decouple system with non-diagonal noise covariance matrix"))
@@ -141,8 +141,15 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
                 for (tar_idx, target_region) in enumerate(split_axis)
                     pl, pu = axis_transition_prob_bounds(Y, target_region, noise(dyn), axis)
 
-                    prob_lower[axis][tar_idx + 1, srcact_idx] = pl
-                    prob_upper[axis][tar_idx + 1, srcact_idx] = pu
+                    if includetransition(target_model, pu)
+                        prob_lower[axis][tar_idx + 1, srcact_idx] = pl
+                        prob_upper[axis][tar_idx + 1, srcact_idx] = pu
+                    else  # Allow sparsifying via adding probability to the absorbing avoid state
+
+                        # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
+                        prob_lower[axis][1, srcact_idx] = clamp(prob_lower[axis][1, srcact_idx] + pl, 0.0, 1.0)
+                        prob_upper[axis][1, srcact_idx] = clamp(prob_upper[axis][1, srcact_idx] + pu, 0.0, 1.0)
+                    end
                 end
             end
 
@@ -193,7 +200,7 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
     return OrthogonalIntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
 end
 
-function initprob(target::DecoupledIMDP, state_abstraction::StateUniformGridSplit, ninputs) 
+function initprob(::OrthogonalIMDPTarget, state_abstraction::StateUniformGridSplit, ninputs) 
     prob_lower = Matrix{Float64}[]
     prob_upper = Matrix{Float64}[]
 
@@ -211,3 +218,20 @@ function initprob(target::DecoupledIMDP, state_abstraction::StateUniformGridSpli
     return prob_lower, prob_upper
 end
 
+function initprob(::SparseOrthogonalIMDPTarget, state_abstraction::StateUniformGridSplit, ninputs) 
+    prob_lower = SparseMatrixCSC{Float64, Int32}[]
+    prob_upper = SparseMatrixCSC{Float64, Int32}[]
+
+    # One action for non-absorbing states is already included in the first term.
+    nchoices = prod(splits(state_abstraction) .+ 1) + numregions(state_abstraction) * (ninputs - 1)
+
+    for axisregions in splits(state_abstraction)
+        local_prob_lower = spzeros(Float64, Int32, axisregions + 1, nchoices)
+        local_prob_upper = copy(local_prob_lower)
+
+        push!(prob_lower, local_prob_lower)
+        push!(prob_upper, local_prob_upper)
+    end
+
+    return prob_lower, prob_upper
+end

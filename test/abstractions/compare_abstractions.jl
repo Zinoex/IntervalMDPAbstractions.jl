@@ -13,10 +13,10 @@ function modified_running_example_compare()
     U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputGridSplit(U, [3, 3])
 
-    target_model_direct = DirectIMDP()
+    target_model_direct = IMDPTarget()
     mdp_direct, reach_direct, avoid_direct = abstraction(sys, state_abs, input_abs, target_model_direct)
 
-    target_model_decoupled = DecoupledIMDP()
+    target_model_decoupled = OrthogonalIMDPTarget()
     mdp_decoupled, reach_decoupled, avoid_decoupled = abstraction(sys, state_abs, input_abs, target_model_decoupled)
 
     return mdp_direct, reach_direct, avoid_direct, mdp_decoupled, reach_decoupled, avoid_decoupled
