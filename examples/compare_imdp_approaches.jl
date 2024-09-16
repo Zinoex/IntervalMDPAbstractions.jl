@@ -125,7 +125,7 @@ function benchmark_intervalsyscore(problem::ComparisonProblem, constructor::Func
     @info "Abstraction time" abstraction_median_seconds
 
     mdp, reach, avoid = constructor(problem.state_split, problem.input_split)
-    prob_mem = Base.summarysize(mdp)
+    prob_mem = Base.summarysize(mdp) / 1000^2
 
     prob = problem.problem_constructor(mdp, reach, avoid, problem.time_horizon)
 
@@ -134,17 +134,10 @@ function benchmark_intervalsyscore(problem::ComparisonProblem, constructor::Func
     certification_median_seconds = time(median(certification_time)) / 1e9
     @info "Certification time" certification_median_seconds
 
-    @info "Measuring peak mem"
-    BenchmarkTools.gcscrub()
-    GC.enable(false)
     V, k, res = value_iteration(prob)
-    peak_mem = Base.gc_live_bytes() / 1000^2
-    GC.enable(true)
-    @info "Peak mem" peak_mem
-
     V = problem.post_process_value_function(V)
 
-    return abstraction_median_seconds, certification_median_seconds, peak_mem, prob_mem, V
+    return abstraction_median_seconds, certification_median_seconds, prob_mem, V
 end
 
 function to_impact_format(V)
@@ -161,7 +154,7 @@ end
 function benchmark_direct(problem::ComparisonProblem)
     @info "Benchmarking direct"
     try
-        abstraction_time, certification_time, peak_mem, prob_mem, V = benchmark_intervalsyscore(problem, problem.direct_constructor)
+        abstraction_time, certification_time, prob_mem, V = benchmark_intervalsyscore(problem, problem.direct_constructor)
 
         # Remove the first element of the value function, which is the absorbing avoid state
         V = reshape(V[2:end], problem.state_split...)
@@ -171,7 +164,6 @@ function benchmark_direct(problem::ComparisonProblem)
             "oom" => false,
             "abstraction_time" => abstraction_time,
             "certification_time" => certification_time,
-            "peak_mem" => peak_mem,
             "prob_mem" => prob_mem,
             "value_function" => V
         )
@@ -183,7 +175,6 @@ function benchmark_direct(problem::ComparisonProblem)
                 "oom" => true,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
-                "peak_mem" => NaN,
                 "prob_mem" => NaN,
                 "value_function" => NaN
             )
@@ -196,17 +187,16 @@ end
 function benchmark_decoupled(problem::ComparisonProblem)
     @info "Benchmarking decoupled"
     try
-        abstraction_time, certification_time, peak_mem, prob_mem, V = benchmark_intervalsyscore(problem, problem.decoupled_constructor)
+        abstraction_time, certification_time, prob_mem, V = benchmark_intervalsyscore(problem, problem.decoupled_constructor)
 
         # Remove the first element of the value function, which is the absorbing avoid state
-        V = V[(2:size(V, i) for i in ndims(V))...]
+        V = V[(2:size(V, i) for i in 1:ndims(V))...]
         V = to_impact_format(V)
 
         return Dict(
             "oom" => false,
             "abstraction_time" => abstraction_time,
             "certification_time" => certification_time,
-            "peak_mem" => peak_mem,
             "prob_mem" => prob_mem,
             "value_function" => V
         )
@@ -218,7 +208,6 @@ function benchmark_decoupled(problem::ComparisonProblem)
                 "oom" => true,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
-                "peak_mem" => NaN,
                 "prob_mem" => NaN,
                 "value_function" => NaN
             )

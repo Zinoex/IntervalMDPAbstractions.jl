@@ -1,5 +1,3 @@
-using Revise
-
 using LinearAlgebra, LazySets, Plots
 using IntervalMDP, IntervalSySCoRe
 
