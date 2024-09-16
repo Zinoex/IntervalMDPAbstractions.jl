@@ -18,7 +18,7 @@ struct ComparisonProblem{N, M}
     include_impact::Bool
 
     state_split::NTuple{N, Int}
-    input_split::Tuple{M, Int}
+    input_split::NTuple{M, Int}
     time_horizon::Int
 end
 
@@ -116,16 +116,18 @@ function benchmark_impact(problem::ComparisonProblem)
     return res
 end
 
+run_abstraction_constructor(constructor, state_split, input_split) = constructor(state_split, input_split)
+
 function benchmark_intervalsyscore(problem::ComparisonProblem, constructor::Function)
     @info "Measuring abstraction time"
-    abstraction_time = @benchmark constructor($problem.state_split, $problem.input_split)
+    abstraction_time = @benchmark run_abstraction_constructor($constructor, $problem.state_split, $problem.input_split)
     abstraction_median_seconds = time(median(abstraction_time)) / 1e9
     @info "Abstraction time" abstraction_median_seconds
 
     mdp, reach, avoid = constructor(problem.state_split, problem.input_split)
     prob_mem = Base.summarysize(mdp)
 
-    prob = problem.problem_constructor(mdp, reach, avoid, time_horizon)
+    prob = problem.problem_constructor(mdp, reach, avoid, problem.time_horizon)
 
     @info "Measuring certification time"
     certification_time = @benchmark value_iteration($prob)
@@ -162,7 +164,7 @@ function benchmark_direct(problem::ComparisonProblem)
         abstraction_time, certification_time, peak_mem, prob_mem, V = benchmark_intervalsyscore(problem, problem.direct_constructor)
 
         # Remove the first element of the value function, which is the absorbing avoid state
-        V = reshape(V[2:end], state_split...)
+        V = reshape(V[2:end], problem.state_split...)
         V = to_impact_format(V)
     
         return Dict(
@@ -194,7 +196,7 @@ end
 function benchmark_decoupled(problem::ComparisonProblem)
     @info "Benchmarking decoupled"
     try
-        abstraction_time, certification_time, peak_mem, prob_mem, V = benchmark_intervalsyscore(problem, problem.direct_constructor)
+        abstraction_time, certification_time, peak_mem, prob_mem, V = benchmark_intervalsyscore(problem, problem.decoupled_constructor)
 
         # Remove the first element of the value function, which is the absorbing avoid state
         V = V[(2:size(V, i) for i in ndims(V))...]
@@ -230,8 +232,8 @@ function benchmark()
     @showprogress dt=1 desc="Benchmarking..." for problem in problems
         @info "Benchmarking problem: $(problem.name)"
 
-        direct = benchmark_direct(state_split)
-        decoupled = benchmark_decoupled(state_split)
+        direct = benchmark_direct(problem)
+        decoupled = benchmark_decoupled(problem)
 
         impact = if problem.include_impact
             benchmark_impact(problem)
