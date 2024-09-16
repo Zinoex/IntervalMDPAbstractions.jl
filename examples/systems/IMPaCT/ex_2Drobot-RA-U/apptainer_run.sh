@@ -1,3 +1,3 @@
 #! /bin/bash
 
-apptainer exec --bind $PWD/systems/IMPaCT/ex_2Drobot-RA-U:/app/examples/ex_2Drobot-RA-U ../impact_container.sif examples/ex_2Drobot-RA-U/apptainer_run.sh
+apptainer exec --cwd=/app --bind $PWD/systems/IMPaCT/ex_2Drobot-RA-U:/app/examples/ex_2Drobot-RA-U $PWD/systems/IMPaCT/impact_main.sif /app/examples/ex_2Drobot-RA-U/run_benchmark.sh

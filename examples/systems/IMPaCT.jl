@@ -1,8 +1,16 @@
 using HDF5
 
-function run_impact(name; lower_bound=true)
+function run_impact(name; lower_bound=true, container=:apptainer)
     try 
-        cmd = `$(@__DIR__)/IMPaCT/$name/docker_run.sh`
+        if container == :docker
+            script = "docker_run.sh"
+        elseif container == :apptainer
+            script = "apptainer_run.sh"
+        else
+            error("Unknown container type: $container")
+        end
+
+        cmd = `$(@__DIR__)/IMPaCT/$name/$script`
 
         stdout = read(cmd, String)
 
