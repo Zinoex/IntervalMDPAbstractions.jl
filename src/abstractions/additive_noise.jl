@@ -75,14 +75,14 @@ end
 
 function initprob(::IMDPTarget, nregions, ninputs) 
     prob_lower = [zeros(Float64, nregions) for _ in 1:((nregions - 1) * ninputs + 1)]
-    prob_upper = deepcopy(prob_lower)
+    prob_upper = [zeros(Float64, nregions) for _ in 1:((nregions - 1) * ninputs + 1)]
 
     return prob_lower, prob_upper
 end
 
 function initprob(::SparseIMDPTarget, nregions, ninputs) 
     prob_lower = [spzeros(Float64, nregions) for _ in 1:((nregions - 1) * ninputs + 1)]
-    prob_upper = deepcopy(prob_lower)
+    prob_upper = [spzeros(Float64, nregions) for _ in 1:((nregions - 1) * ninputs + 1)]
 
     return prob_lower, prob_upper
 end
@@ -166,7 +166,7 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
                     end
                 end
             end
-
+            
             srcact_idx += 1
         end
     end
@@ -212,7 +212,7 @@ function initprob(::OrthogonalIMDPTarget, state_abstraction::StateUniformGridSpl
 
     for axisregions in splits(state_abstraction)
         local_prob_lower = [zeros(Float64, axisregions + 1) for _ in 1:nchoices]
-        local_prob_upper = deepcopy(local_prob_lower)
+        local_prob_upper = [zeros(Float64, axisregions + 1) for _ in 1:nchoices]
 
         push!(prob_lower, local_prob_lower)
         push!(prob_upper, local_prob_upper)
@@ -230,7 +230,7 @@ function initprob(::SparseOrthogonalIMDPTarget, state_abstraction::StateUniformG
 
     for axisregions in splits(state_abstraction)
         local_prob_lower = [spzeros(Float64, Int32, axisregions + 1) for _ in 1:nchoices]
-        local_prob_upper = copy(local_prob_lower)
+        local_prob_upper = [spzeros(Float64, Int32, axisregions + 1) for _ in 1:nchoices]
 
         push!(prob_lower, local_prob_lower)
         push!(prob_upper, local_prob_upper)
