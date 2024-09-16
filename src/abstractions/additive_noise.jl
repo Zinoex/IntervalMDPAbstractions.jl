@@ -1,5 +1,4 @@
 using SparseArrays
-
 export abstraction
 
 """
@@ -15,40 +14,40 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
     prob_lower, prob_upper = initprob(target_model, nregions, ninputs)
 
     # Absorbing
-    prob_lower[1, 1] = 1.0
-    prob_upper[1, 1] = 1.0
+    prob_lower[1][1] = 1.0
+    prob_upper[1][1] = 1.0
 
     # Transition probabilities
     dyn = dynamics(sys)
 
-    for (i, source_region) in enumerate(regions(state_abstraction))
+    Threads.@threads for (i, source_region) in collect(enumerate(regions(state_abstraction)))
         for (j, input) in enumerate(inputs(input_abstraction))
             srcact_idx = (i - 1) * ninputs + j + 1
             Y = nominal(dyn, source_region, input)
 
             # Transition to outside the partitioned region
             pl, pu = transition_prob_bounds(Y, statespace(state_abstraction), noise(dyn))
-            prob_lower[1, srcact_idx] = 1.0 - pu
-            prob_upper[1, srcact_idx] = 1.0 - pl
+            prob_lower[srcact_idx][1] = 1.0 - pu
+            prob_upper[srcact_idx][1] = 1.0 - pl
 
             # Transition to other states
             for (tar_idx, target_region) in enumerate(regions(state_abstraction))
                 pl, pu = transition_prob_bounds(Y, target_region, noise(dyn))
 
                 if includetransition(target_model, pu)
-                    prob_lower[tar_idx + 1, srcact_idx] = pl
-                    prob_upper[tar_idx + 1, srcact_idx] = pu
+                    prob_lower[srcact_idx][tar_idx + 1] = pl
+                    prob_upper[srcact_idx][tar_idx + 1] = pu
                 else  # Allow sparsifying via adding probability to the absorbing avoid state
 
                     # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-                    prob_lower[1, srcact_idx] = clamp(prob_lower[1, srcact_idx] + pl, 0.0, 1.0)
-                    prob_upper[1, srcact_idx] = clamp(prob_upper[1, srcact_idx] + pu, 0.0, 1.0)
+                    prob_lower[srcact_idx][1] = clamp(prob_lower[srcact_idx][1] + pl, 0.0, 1.0)
+                    prob_upper[srcact_idx][1] = clamp(prob_upper[srcact_idx][1] + pu, 0.0, 1.0)
                 end
             end
         end
     end
 
-    prob = IntervalProbabilities(;lower=prob_lower, upper=prob_upper)
+    prob = IntervalProbabilities(;lower=efficient_hcat(prob_lower), upper=efficient_hcat(prob_upper))
 
     # State pointer
     stateptr = Int32[[1, 2]; (1:nregions-1) .* ninputs .+ 2]
@@ -75,15 +74,15 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
 end
 
 function initprob(::IMDPTarget, nregions, ninputs) 
-    prob_lower = zeros(Float64, nregions, (nregions - 1) * ninputs + 1)
-    prob_upper = copy(prob_lower)
+    prob_lower = [zeros(Float64, nregions) for _ in 1:((nregions - 1) * ninputs + 1)]
+    prob_upper = deepcopy(prob_lower)
 
     return prob_lower, prob_upper
 end
 
 function initprob(::SparseIMDPTarget, nregions, ninputs) 
-    prob_lower = spzeros(Float64, Int32, nregions, (nregions - 1) * ninputs + 1)
-    prob_upper = copy(prob_lower)
+    prob_lower = [spzeros(Float64, nregions) for _ in 1:((nregions - 1) * ninputs + 1)]
+    prob_upper = deepcopy(prob_lower)
 
     return prob_lower, prob_upper
 end
@@ -102,18 +101,33 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
     # The first state along each axis is absorbing, representing transitioning to outside the partitioned along that axis.
     ninputs = numinputs(input_abstraction)
 
-    prob_lower, prob_upper = initprob(target_model, state_abstraction, ninputs)
+
+    # State pointer
+    stateptr = Int32[1]
+    sizehint!(stateptr, prod(splits(state_abstraction) .+ 1))
+
+    for I in CartesianIndices(splits(state_abstraction) .+ 1)
+        if any(Tuple(I) .== 1)
+            push!(stateptr, stateptr[end] + 1)
+        else
+            push!(stateptr, stateptr[end] + ninputs)
+        end
+    end
 
     # Transition probabilities
+    prob_lower, prob_upper = initprob(target_model, state_abstraction, ninputs)
     region_indices = LinearIndices(splits(state_abstraction))
 
-    srcact_idx = 1
-    for Icart in CartesianIndices(splits(state_abstraction) .+ 1)
+    linear_indices = LinearIndices(splits(state_abstraction) .+ 1)
+    Threads.@threads for Icart in CartesianIndices(splits(state_abstraction) .+ 1)
+        Ilinear = linear_indices[Icart]
+        srcact_idx = stateptr[Ilinear]
+
         # Absorbing
         if any(Tuple(Icart) .== 1)
             for axis in eachindex(splits(state_abstraction))
-                prob_lower[axis][1, srcact_idx] = 1.0
-                prob_upper[axis][1, srcact_idx] = 1.0
+                prob_lower[axis][srcact_idx][1] = 1.0
+                prob_upper[axis][srcact_idx][1] = 1.0
             end
             srcact_idx += 1
 
@@ -131,8 +145,8 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
             for (axis, axisregions) in enumerate(splits(state_abstraction))
                 # Transition to outside the partitioned region
                 pl, pu = axis_transition_prob_bounds(Y, statespace(state_abstraction), noise(dyn), axis)
-                prob_lower[axis][1, srcact_idx] = 1.0 - pu
-                prob_upper[axis][1, srcact_idx] = 1.0 - pl
+                prob_lower[axis][srcact_idx][1] = 1.0 - pu
+                prob_upper[axis][srcact_idx][1] = 1.0 - pl
 
                 # Transition to other states
                 axis_statespace = Interval(extrema(statespace(state_abstraction), axis)...)
@@ -142,13 +156,13 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
                     pl, pu = axis_transition_prob_bounds(Y, target_region, noise(dyn), axis)
 
                     if includetransition(target_model, pu)
-                        prob_lower[axis][tar_idx + 1, srcact_idx] = pl
-                        prob_upper[axis][tar_idx + 1, srcact_idx] = pu
+                        prob_lower[axis][srcact_idx][tar_idx + 1] = pl
+                        prob_upper[axis][srcact_idx][tar_idx + 1] = pu
                     else  # Allow sparsifying via adding probability to the absorbing avoid state
 
                         # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-                        prob_lower[axis][1, srcact_idx] = clamp(prob_lower[axis][1, srcact_idx] + pl, 0.0, 1.0)
-                        prob_upper[axis][1, srcact_idx] = clamp(prob_upper[axis][1, srcact_idx] + pu, 0.0, 1.0)
+                        prob_lower[axis][srcact_idx][1] = clamp(prob_lower[axis][srcact_idx][1] + pl, 0.0, 1.0)
+                        prob_upper[axis][srcact_idx][1] = clamp(prob_upper[axis][srcact_idx][1] + pu, 0.0, 1.0)
                     end
                 end
             end
@@ -158,20 +172,9 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
     end
 
     prob = OrthogonalIntervalProbabilities(
-        Tuple(IntervalProbabilities(;lower=pl, upper=pu) for (pl, pu) in zip(prob_lower, prob_upper)),
+        Tuple(IntervalProbabilities(;lower=efficient_hcat(pl), upper=efficient_hcat(pu)) for (pl, pu) in zip(prob_lower, prob_upper)),
         Int32.(Tuple(splits(state_abstraction) .+ 1))
     )
-
-    # State pointer
-    stateptr = Int32[1]
-
-    for I in CartesianIndices(splits(state_abstraction) .+ 1)
-        if any(Tuple(I) .== 1)
-            push!(stateptr, stateptr[end] + 1)
-        else
-            push!(stateptr, stateptr[end] + ninputs)
-        end
-    end
 
     # Properties
     initial_states = NTuple{dimstate(dyn), Int32}[]
@@ -201,15 +204,15 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
 end
 
 function initprob(::OrthogonalIMDPTarget, state_abstraction::StateUniformGridSplit, ninputs) 
-    prob_lower = Matrix{Float64}[]
-    prob_upper = Matrix{Float64}[]
+    prob_lower = Vector{Vector{Float64}}[]
+    prob_upper = Vector{Vector{Float64}}[]
 
     # One action for non-absorbing states is already included in the first term.
     nchoices = prod(splits(state_abstraction) .+ 1) + numregions(state_abstraction) * (ninputs - 1)
 
     for axisregions in splits(state_abstraction)
-        local_prob_lower = zeros(Float64, axisregions + 1, nchoices)
-        local_prob_upper = copy(local_prob_lower)
+        local_prob_lower = [zeros(Float64, axisregions + 1) for _ in 1:nchoices]
+        local_prob_upper = deepcopy(local_prob_lower)
 
         push!(prob_lower, local_prob_lower)
         push!(prob_upper, local_prob_upper)
@@ -219,14 +222,14 @@ function initprob(::OrthogonalIMDPTarget, state_abstraction::StateUniformGridSpl
 end
 
 function initprob(::SparseOrthogonalIMDPTarget, state_abstraction::StateUniformGridSplit, ninputs) 
-    prob_lower = SparseMatrixCSC{Float64, Int32}[]
-    prob_upper = SparseMatrixCSC{Float64, Int32}[]
+    prob_lower = Vector{SparseVector{Float64, Int32}}[]
+    prob_upper = Vector{SparseVector{Float64, Int32}}[]
 
     # One action for non-absorbing states is already included in the first term.
     nchoices = prod(splits(state_abstraction) .+ 1) + numregions(state_abstraction) * (ninputs - 1)
 
     for axisregions in splits(state_abstraction)
-        local_prob_lower = spzeros(Float64, Int32, axisregions + 1, nchoices)
+        local_prob_lower = [spzeros(Float64, Int32, axisregions + 1) for _ in 1:nchoices]
         local_prob_upper = copy(local_prob_lower)
 
         push!(prob_lower, local_prob_lower)
