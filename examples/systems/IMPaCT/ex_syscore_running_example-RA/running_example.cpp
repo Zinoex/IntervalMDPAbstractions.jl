@@ -24,8 +24,8 @@ const int dim_w = 0;
 
 // Define lower bounds, upper bounds, and step sizes
 // States
-const vec ss_lb = {-10, -10};
-const vec ss_ub = {10, 10};
+const vec ss_lb = {-9.75, -9.75};
+const vec ss_ub = {9.75, 9.75};
 const vec ss_eta = {0.5, 0.5};
 // Inputs
 const vec is_lb = {-1, -1};

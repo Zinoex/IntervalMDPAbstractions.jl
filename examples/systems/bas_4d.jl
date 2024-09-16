@@ -33,10 +33,10 @@ function building_automation_system_4d()
     return sys
 end
 
-function building_automation_system_4d_decoupled(; sparse=false, state_split=(4, 4, 6, 6), input_split=4)
+function building_automation_system_4d_decoupled(; sparse=false, state_split=(5, 5, 7, 7), input_split=4)
     sys = c()
 
-    X = Hyperrectangle(; low=[19.0, 19.0, 30.0, 30.0], high=[21.0, 21.0, 36.0, 36.0])
+    X = Hyperrectangle(; low=[18.75, 18.75, 29.5, 29.5], high=[21.25, 21.25, 36.5, 36.5])
     state_abs = StateUniformGridSplit(X, state_split)
 
     U = Hyperrectangle(; low=[17.0], high=[20.0])
@@ -53,8 +53,28 @@ function building_automation_system_4d_decoupled(; sparse=false, state_split=(4,
     return mdp, reach, avoid
 end
 
+function building_automation_system_4d_direct(; sparse=false, state_split=(5, 5, 7, 7), input_split=4)
+    sys = c()
+
+    X = Hyperrectangle(; low=[18.75, 18.75, 29.5, 29.5], high=[21.25, 21.25, 36.5, 36.5])
+    state_abs = StateUniformGridSplit(X, state_split)
+
+    U = Hyperrectangle(; low=[17.0], high=[20.0])
+    input_abs = InputLinRange(U, input_split)
+
+    if sparse
+        target_model = SparseIMDPTarget()
+    else
+        target_model = IMDPTarget()
+    end
+
+    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+
+    return mdp, reach, avoid
+end
+
 function main()
-    @time "abstraction" mdp, _, avoid = building_automation_system_4d_decoupled(; state_split=(4, 4, 6, 6), input_split=4)
+    @time "abstraction" mdp, _, avoid = building_automation_system_4d_decoupled(; state_split=(5, 5, 7, 7), input_split=4)
 
     prop = FiniteTimeReachability(avoid, 10)
     spec = Specification(prop, Optimistic, Minimize)

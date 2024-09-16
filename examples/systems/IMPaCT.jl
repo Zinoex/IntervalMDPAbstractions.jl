@@ -48,12 +48,25 @@ function run_impact(name; lower_bound=true)
         # Cleanup
         rm("$(@__DIR__)/IMPaCT/$name/controller.h5", force=true)
 
-        return (oom=false, abstraction_time=abstraction_time, certification_time=certification_time, prob_mem=mem, V=V)
+        return Dict(
+            "oom" => false,
+            "abstraction_time" => abstraction_time,
+            "certification_time" => certification_time,
+            "prob_mem" => mem,
+            "value_function" => V
+        )
     catch e
         if isa(e, ProcessFailedException)
             @error "IMPACT failed with exit code $(e.termsignal) for $name"
             
-            return (oom=true, abstraction_time=NaN, certification_time=NaN, prob_mem=NaN, V=NaN)
+            return Dict(
+                "oom" => true,
+                "abstraction_time" => NaN,
+                "certification_time" => NaN,
+                "peak_mem" => NaN,
+                "prob_mem" => NaN,
+                "value_function" => NaN
+            )
         else
             rethrow(e)
         end
