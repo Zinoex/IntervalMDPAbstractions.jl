@@ -1,9 +1,76 @@
 module CompareIMDPApproaches
 
-using ProgressMeter
+using BenchmarkTools, ProgressMeter
 using DataFrames, CSV, JSON, Statistics
 
-include("comparison_problems.jl")
+include("systems/IMPaCT.jl")
+
+struct ComparisonProblem
+    name::String
+    impact_evaluator::Function
+
+    include_impact::Bool
+
+    state_split
+    input_split
+end
+
+robot_2d_reachability = ComparisonProblem(
+    "robot_2d_reachability",
+    () -> run_impact("ex_2Drobot-R-U"),
+    true,
+    (20, 20),
+    (11, 11),
+)
+
+robot_2d_reachavoid = ComparisonProblem(
+    "robot_2d_reachavoid",
+    () -> run_impact("ex_2Drobot-RA-U"),
+    true,
+    (40, 40),
+    (21, 21),
+)
+
+syscore_running_example = ComparisonProblem(
+    "syscore_running_example",
+    () -> run_impact("ex_syscore_running_example-RA"),
+    true,
+    (40, 40),
+    (3, 3),
+)
+
+van_der_pol = ComparisonProblem(
+    "van_der_pol",
+    () -> run_impact("ex_van_der_pol-R"),
+    true,
+    (50, 50),
+    (11,),
+)
+
+bas4d = ComparisonProblem(
+    "bas4d",
+    () -> run_impact("ex_4DBAS-S"),
+    true,
+    (5, 5, 7, 7),
+    (4,),
+)
+
+bas7d = ComparisonProblem(
+    "bas7d",
+    () -> run_impact("ex_7DBAS-S"),
+    true,
+    (21, 21, 3, 3, 3, 3, 3),
+    (1,),
+)
+
+problems = [
+    robot_2d_reachability,
+    robot_2d_reachavoid,
+    syscore_running_example,
+    van_der_pol,
+    bas4d,
+    bas7d
+]
 
 function benchmark_impact(problem::ComparisonProblem)
     @info "Benchmarking IMPaCT"
@@ -26,13 +93,28 @@ end
 function benchmark_direct(problem::ComparisonProblem)
     @info "Benchmarking direct"
     try
+        BenchmarkTools.gcscrub()
         output = read(`julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) true`, String)
 
-        abstraction_time = parse(Float64, match(r"\(Abstraction time, (\d+\.\d+)\)", output).captures[1])
-        certification_time = parse(Float64, match(r"\(Certification time, (\d+\.\d+)\)", output).captures[1])
-        prob_mem = parse(Float64, match(r"\(Transition probability memory, (\d+\.\d+)\)", output).captures[1])
+        m1 = match(r"\(\"Abstraction time\",\s(\d+\.\d+)\)", output)
+        m2 = match(r"\(\"Certification time\",\s(\d+\.\d+)\)", output)
+        m3 = match(r"\(\"Transition probability memory\",\s(\d+\.\d+)\)", output)
+        if m1 === nothing || m2 === nothing || m3 === nothing
+            @warn "Direct failed due to OOM"
+    
+            return Dict(
+                "oom" => true,
+                "abstraction_time" => NaN,
+                "certification_time" => NaN,
+                "prob_mem" => NaN,
+                "value_function" => NaN
+            )
+        end
+        abstraction_time = parse(Float64, m1.captures[1])
+        certification_time = parse(Float64, m2.captures[1])
+        prob_mem = parse(Float64, m3.captures[1])
 
-        lines = split(output, '\n')
+        lines = split(chomp(output), '\n')
         lines = lines[4:end]
 
         V = map(line -> parse(Float64, line), lines)
@@ -49,7 +131,7 @@ function benchmark_direct(problem::ComparisonProblem)
             "value_function" => V
         )
     catch e
-        if isa(e, ProcessExitedException)
+        if isa(e, ProcessFailedException)
             @warn "Direct failed due to OOM"
     
             return Dict(
@@ -68,13 +150,29 @@ end
 function benchmark_decoupled(problem::ComparisonProblem)
     @info "Benchmarking decoupled"
     try
+        BenchmarkTools.gcscrub()
         output = read(`julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) true`, String)
 
-        abstraction_time = parse(Float64, match(r"\(Abstraction time, (\d+\.\d+)\)", output).captures[1])
-        certification_time = parse(Float64, match(r"\(Certification time, (\d+\.\d+)\)", output).captures[1])
-        prob_mem = parse(Float64, match(r"\(Transition probability memory, (\d+\.\d+)\)", output).captures[1])
+        m1 = match(r"\(\"Abstraction time\",\s(\d+\.\d+)\)", output)
+        m2 = match(r"\(\"Certification time\",\s(\d+\.\d+)\)", output)
+        m3 = match(r"\(\"Transition probability memory\",\s(\d+\.\d+)\)", output)
+        println((m1, m2, m3))
+        if m1 === nothing || m2 === nothing || m3 === nothing
+            @warn "Direct failed due to OOM"
+    
+            return Dict(
+                "oom" => true,
+                "abstraction_time" => NaN,
+                "certification_time" => NaN,
+                "prob_mem" => NaN,
+                "value_function" => NaN
+            )
+        end
+        abstraction_time = parse(Float64, m1.captures[1])
+        certification_time = parse(Float64, m2.captures[1])
+        prob_mem = parse(Float64, m3.captures[1])
 
-        lines = split(output, '\n')
+        lines = split(chomp(output), '\n')
         lines = lines[4:end]
 
         V = map(line -> parse(Float64, line), lines)
@@ -92,7 +190,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
             "value_function" => V
         )
     catch e
-        if isa(e, ProcessExitedException)
+        if isa(e, ProcessFailedException)
             @warn "Decoupled failed due to OOM"
     
             return Dict(
