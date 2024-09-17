@@ -14,6 +14,17 @@ function run_impact(name; lower_bound=true, container=:apptainer)
 
         stdout = read(cmd, String)
 
+        if !occursin("Finding control policy", stdout)
+            return Dict(
+                "oom" => true,
+                "abstraction_time" => NaN,
+                "certification_time" => NaN,
+                "peak_mem" => NaN,
+                "prob_mem" => NaN,
+                "value_function" => NaN
+            )
+        end
+
         abstraction_output, certification_output = split(stdout, "Finding control policy")
 
         # Find memory usage
@@ -65,7 +76,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
         )
     catch e
         if isa(e, ProcessFailedException)
-            @error "IMPACT failed with exit code $(e.termsignal) for $name"
+            @warn "IMPACT failed with exit code $(e.termsignal) for $name"
             
             return Dict(
                 "oom" => true,
