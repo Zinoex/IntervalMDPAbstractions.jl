@@ -65,7 +65,7 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Hype
 
     # TaylorSeries.jl modifieds the global state - eww...
     # It also means that this function is not thread-safe!!
-    set_variables(Float64, "z"; order=2order, numvars=dimstate(dyn) + diminput(dyn))
+    # set_variables(Float64, "z"; order=order, numvars=dimstate(dyn) + diminput(dyn))
 
     z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i in 1:dimstate(dyn) + diminput(dyn)]
     x, u = (z - z0)[1:dimstate(dyn)], z[dimstate(dyn)+1:end]
@@ -112,7 +112,7 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, u::Abst
     # It also means that this function is not thread-safe!!
     
     # We set 10 as the maximum order of the Taylor expansion
-    set_variables(Float64, "x"; order=10, numvars=dimstate(dyn))
+    # set_variables(Float64, "x"; order=10, numvars=dimstate(dyn))
 
     order = 1
     x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i in 1:dimstate(dyn)]
