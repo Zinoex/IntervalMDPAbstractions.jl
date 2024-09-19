@@ -79,7 +79,7 @@ int main() {
     // mdp.infiniteHorizonSafeController(true);
     
     /* ###### verification over finite horizon (true = pessimistic, false = optimistic) ######*/
-    mdp.finiteHorizonSafeController(true, 10);
+    mdp.finiteHorizonSafeControllerSorted(true, 10);
     
     /* ###### save controller ######*/
     mdp.saveController();
