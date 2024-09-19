@@ -151,12 +151,11 @@ function benchmark_decoupled(problem::ComparisonProblem)
     @info "Benchmarking decoupled"
     try
         BenchmarkTools.gcscrub()
-        output = read(`julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) true`, String)
+        output = read(`julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) false`, String)
 
         m1 = match(r"\(\"Abstraction time\",\s(\d+\.\d+)\)", output)
         m2 = match(r"\(\"Certification time\",\s(\d+\.\d+)\)", output)
         m3 = match(r"\(\"Transition probability memory\",\s(\d+\.\d+)\)", output)
-        println((m1, m2, m3))
         if m1 === nothing || m2 === nothing || m3 === nothing
             @warn "Direct failed due to OOM"
     
