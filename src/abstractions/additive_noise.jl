@@ -19,7 +19,7 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
 
     # Transition probabilities
     dyn = dynamics(sys)
-    prepare_nominal(dyn)
+    prepare_nominal(dyn, input_abstraction)
 
     Threads.@threads for (i, source_region) in collect(enumerate(regions(state_abstraction)))
         for (j, input) in enumerate(inputs(input_abstraction))
