@@ -48,7 +48,7 @@ function van_der_pol_direct(; state_split=(50, 50), input_split=10)
     U = Hyperrectangle(; low=[-1.0], high=[1.0])
     input_abs = InputLinRange(U, input_split)
 
-    target_model = SparseDirectIMDP()
+    target_model = SparseIMDPTarget()
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
 
