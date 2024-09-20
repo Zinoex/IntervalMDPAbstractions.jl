@@ -101,7 +101,7 @@ int main() {
     // mdp.infiniteHorizonReachController(true);
     
     /* ###### synthesize finite horizon controller (true = pessimistic, false = optimistic) ######*/
-    mdp.finiteHorizonReachController(true, 10);
+    mdp.finiteHorizonReachControllerSorted(true, 10);
     
     /* ###### save controller ######*/
     mdp.saveController();
