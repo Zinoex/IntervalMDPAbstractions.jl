@@ -156,3 +156,16 @@ nominal(dyn::NonlinearAdditiveNoiseDynamics, x::AbstractVector, u::AbstractVecto
 noise(dyn::NonlinearAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::NonlinearAdditiveNoiseDynamics) = dyn.nstate
 diminput(dyn::NonlinearAdditiveNoiseDynamics) = dyn.ninput
+
+function prepare_nominal(dyn::NonlinearAdditiveNoiseDynamics, input_abstraction)
+    n = dimstate(dyn)
+    if issetbased(input_abstraction)
+        m = diminput(dyn)
+        n += m
+    end
+
+    # Set the Taylor model variables
+    set_variables(Float64, "z"; order=2, numvars=n)
+
+    return nothing
+end

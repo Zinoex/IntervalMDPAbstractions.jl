@@ -14,9 +14,6 @@ function __init__()
     @eval @inline function LazySets.default_lp_solver_factory(::Type{<:AbstractFloat})
         return JuMP.optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     end
-
-    # Set the Taylor model variables
-    set_variables(Float64, "z"; order=4, numvars=10)
 end
 
 include("utils.jl")

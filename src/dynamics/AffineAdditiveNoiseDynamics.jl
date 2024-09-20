@@ -63,3 +63,4 @@ nominal(dyn::AffineAdditiveNoiseDynamics, X::AbstractVector, U::AbstractVector) 
 noise(dyn::AffineAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::AffineAdditiveNoiseDynamics) = size(dyn.A, 1)
 diminput(dyn::AffineAdditiveNoiseDynamics) = size(dyn.B, 2)
+prepare_nominal(::AffineAdditiveNoiseDynamics, input_abstraction) = nothing

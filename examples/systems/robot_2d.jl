@@ -11,6 +11,7 @@ struct InputRobot <: IntervalSySCoRe.InputAbstraction
     ranges::NTuple{2, Real}
 end
 IntervalSySCoRe.numinputs(input::InputRobot) = prod(input.ranges)
+IntervalSySCoRe.issetbased(input::InputRobot) = false
 function IntervalSySCoRe.inputs(input::InputRobot)
     l = low(input.input_space)
     h = high(input.input_space)
