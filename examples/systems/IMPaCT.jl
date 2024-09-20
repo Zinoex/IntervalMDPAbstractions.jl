@@ -55,7 +55,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
         end
 
         # Find value function
-        file = "$(@__DIR__)/IMPaCT/ex_2Drobot-R-U/controller.h5"
+        file = "$(@__DIR__)/IMPaCT/$name/controller.h5"
         table = "dataset"
         data = h5read(file, table)
         V = if lower_bound
@@ -65,7 +65,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
         end
 
         # Cleanup
-        rm("$(@__DIR__)/IMPaCT/$name/controller.h5", force=true)
+        rm(file, force=true)
 
         return Dict(
             "oom" => false,
