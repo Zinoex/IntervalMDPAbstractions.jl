@@ -54,7 +54,7 @@ struct NonlinearAdditiveNoiseDynamics{F<:Function, TW<:AdditiveNoiseStructure} <
     end
 end
 
-function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Hyperrectangle)
+function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}, U::Hyperrectangle{Float64})
     # Use the Taylor model to over-approximate the reachable set
     order = 1
 
@@ -100,9 +100,9 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Hype
     return Yconv
 end
 
-nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, U::Singleton) = nominal(dyn, X, element(U))
+nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}, U::Singleton{Float64}) = nominal(dyn, X, element(U))
 
-function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, u::AbstractVector)
+function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}, u::AbstractVector{Float64})
     # Use the Taylor model to over-approximate the reachable set
 
     x0 = center(X)
@@ -141,7 +141,7 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle, u::Abst
     return Yconv
 end
 
-function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Singleton, U::Singleton)
+function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Singleton{Float64}, U::Singleton{Float64})
     x = element(X)
     u = element(U)
 
@@ -151,7 +151,7 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Singleton, U::Singleton
 end
 
 
-nominal(dyn::NonlinearAdditiveNoiseDynamics, x::AbstractVector, u::AbstractVector) = dyn.f(x, u)
+nominal(dyn::NonlinearAdditiveNoiseDynamics, x::AbstractVector{Float64}, u::AbstractVector{Float64}) = dyn.f(x, u)
 
 noise(dyn::NonlinearAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::NonlinearAdditiveNoiseDynamics) = dyn.nstate
