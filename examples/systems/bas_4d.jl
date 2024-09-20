@@ -34,7 +34,7 @@ function building_automation_system_4d()
 end
 
 function building_automation_system_4d_decoupled(; sparse=false, state_split=(5, 5, 7, 7), input_split=4)
-    sys = c()
+    sys = building_automation_system_4d()
 
     X = Hyperrectangle(; low=[18.75, 18.75, 29.5, 29.5], high=[21.25, 21.25, 36.5, 36.5])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -54,7 +54,7 @@ function building_automation_system_4d_decoupled(; sparse=false, state_split=(5,
 end
 
 function building_automation_system_4d_direct(; sparse=false, state_split=(5, 5, 7, 7), input_split=4)
-    sys = c()
+    sys = building_automation_system_4d()
 
     X = Hyperrectangle(; low=[18.75, 18.75, 29.5, 29.5], high=[21.25, 21.25, 36.5, 36.5])
     state_abs = StateUniformGridSplit(X, state_split)

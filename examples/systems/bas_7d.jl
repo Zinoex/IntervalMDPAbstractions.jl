@@ -30,7 +30,7 @@ function building_automation_system_7d()
 end
 
 function building_automation_system_7d_decoupled(; sparse=false, state_split=(21, 21, 3, 3, 3, 3, 3))
-    sys = c()
+    sys = building_automation_system_7d()
 
     X = Hyperrectangle(; low=[-0.525, -0.525, -0.75, -0.75, -0.75, -0.75, -0.75], high=[0.525, 0.525, 0.75, 0.75, 0.75, 0.75, 0.75])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -49,7 +49,7 @@ function building_automation_system_7d_decoupled(; sparse=false, state_split=(21
 end
 
 function building_automation_system_7d_direct(; sparse=false, state_split=(21, 21, 3, 3, 3, 3, 3))
-    sys = c()
+    sys = building_automation_system_7d()
 
     X = Hyperrectangle(; low=[-0.525, -0.525, -0.75, -0.75, -0.75, -0.75, -0.75], high=[0.525, 0.525, 0.75, 0.75, 0.75, 0.75, 0.75])
     state_abs = StateUniformGridSplit(X, state_split)
