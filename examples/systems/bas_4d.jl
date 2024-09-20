@@ -15,7 +15,7 @@ function building_automation_system_4d()
         0.1402;
         0.0;
         0.0
-    ]
+    ][:, :]
     
     C = [3.4378, 2.9272, 13.0207, 10.4166]
 
