@@ -239,10 +239,64 @@ function save_results(name, res)
     end
 end
 
-# function read_results()
-#     df = CSV.read("results/direct_vs_decoupled_imdp.csv", DataFrame)
-#     return df
-# end
+function read_results(name)
+    res = JSON.parsefile("results/compare_imdp_approaches/$name.json")
+    return res
+end
+
+function read_results()
+    res = Dict()
+    for problem in problems
+        res[problem.name] = read_results(problem.name)
+    end
+
+    return res
+end
+
+function to_dataframe(res)
+    rows = []
+    for (name, data) in res
+        n_decoupled = length(data["decoupled"]["value_function"])
+        n_direct = length(data["direct"]["value_function"])
+        n_impact = length(data["impact"]["value_function"])
+
+        if n_decoupled != n_direct
+            @warn "Skipping $name due to different value function sizes (decoupled vs direct)"
+        elseif n_decoupled != n_impact
+            @warn "Skipping $name due to different value function sizes (decoupled vs impact)"
+            continue
+        end
+
+        row = Dict(
+            "name" => name,
+            "state_split" => data["state_split"],
+            "input_split" => data["input_split"],
+            "direct_abstraction_time" => data["direct"]["abstraction_time"],
+            "direct_certification_time" => data["direct"]["certification_time"],
+            "direct_prob_mem" => data["direct"]["prob_mem"],
+            "direct_min_prob" => minimum(data["direct"]["value_function"]),
+            "direct_max_prob" => maximum(data["direct"]["value_function"]),
+            "direct_min_prob_diff" => minimum(data["decoupled"]["value_function"] - data["direct"]["value_function"]),
+            "direct_max_prob_diff" => maximum(data["decoupled"]["value_function"] - data["direct"]["value_function"]),
+            "impact_abstraction_time" => data["impact"]["abstraction_time"],
+            "impact_certification_time" => data["impact"]["certification_time"],
+            "impact_prob_mem" => data["impact"]["prob_mem"],
+            "impact_min_prob" => minimum(data["impact"]["value_function"]),
+            "impact_max_prob" => maximum(data["impact"]["value_function"]),
+            "impact_min_prob_diff" => minimum(data["decoupled"]["value_function"] - data["impact"]["value_function"]),
+            "impact_max_prob_diff" => maximum(data["decoupled"]["value_function"] - data["impact"]["value_function"]),
+            "decoupled_abstraction_time" => data["decoupled"]["abstraction_time"],
+            "decoupled_certification_time" => data["decoupled"]["certification_time"],
+            "decoupled_prob_mem" => data["decoupled"]["prob_mem"],
+            "decoupled_min_prob" => minimum(data["decoupled"]["value_function"]),
+            "decoupled_max_prob" => maximum(data["decoupled"]["value_function"]),
+        )
+        push!(rows, row)
+    end
+
+    df = DataFrame(rows)
+    return df
+end
 
 # TODO: plot results
 
