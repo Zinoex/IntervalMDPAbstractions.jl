@@ -9,4 +9,5 @@ AdditiveNoiseDynamics
 nominal
 AdditiveNoiseStructure
 AdditiveDiagonalGaussianNoise
+AdditiveDiagonalCentralUniformNoise
 ```

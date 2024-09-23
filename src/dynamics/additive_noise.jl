@@ -96,7 +96,7 @@ function gaussian_transition(v, l, h, σ)
 end
 
 """
-    AdditiveDiagonalUniformNoise
+    AdditiveDiagonalCentralUniformNoise
 
 Additive diagonal uniform noise structure, i.e. `w_k ~ U(-r, r)`. 
 This is without loss of generality, since the mean can be absorbed into the nominal dynamics.
