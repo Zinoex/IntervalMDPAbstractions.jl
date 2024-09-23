@@ -66,7 +66,7 @@ van_der_pol = IntervalSySCoReComparisonProblem(
 bas4d = IntervalSySCoReComparisonProblem(
     "bas4d",
     (state_split, input_split) -> building_automation_system_4d_direct(;sparse=true, state_split=state_split, input_split=input_split),
-    (state_split, input_split) -> building_automation_system_4d_decoupled(;sparse=true, state_split=state_split, input_split=input_split),
+    (state_split, input_split) -> building_automation_system_4d_decoupled(;state_split=state_split, input_split=input_split),
     (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
     (V) -> 1.0 .- V,
     (5, 5, 7, 7),
@@ -77,7 +77,7 @@ bas4d = IntervalSySCoReComparisonProblem(
 bas7d = IntervalSySCoReComparisonProblem(
     "bas7d",
     (state_split, input_split) -> building_automation_system_7d_direct(;sparse=true, state_split=state_split),
-    (state_split, input_split) -> building_automation_system_7d_decoupled(;sparse=true, state_split=state_split),
+    (state_split, input_split) -> building_automation_system_7d_decoupled(;state_split=state_split),
     (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
     (V) -> 1.0 .- V,
     (21, 21, 3, 3, 3, 3, 3),
