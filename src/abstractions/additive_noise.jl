@@ -63,7 +63,7 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
             push!(initial_states, i + 1)
         end
 
-        if !isdisjoint(avoid(sys), source_region)
+        if !iszeromeasure(avoid(sys), source_region)
             push!(avoid_states, i + 1)
         elseif source_region ⊆ reach(sys)
             push!(reach_states, i + 1)
@@ -194,7 +194,7 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
             push!(initial_states, Tuple(I) .+ 1)
         end
 
-        if !isdisjoint(avoid(sys), source_region)
+        if !iszeromeasure(avoid(sys), source_region)
             push!(avoid_states, Tuple(I) .+ 1)
         elseif source_region ⊆ reach(sys)
             push!(reach_states, Tuple(I) .+ 1)

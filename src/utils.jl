@@ -31,3 +31,7 @@ function efficient_hcat(X::Vector{SparseVector{Tv, Ti}}) where {Tv, Ti}
     colptr[n+1] = roff
     return SparseMatrixCSC{Tv,Ti}(m, n, colptr, nzrow, nzval)
 end
+
+function iszeromeasure(X::AbstractHyperrectangle, Y::AbstractHyperrectangle)
+    return any(high(Y, i) ≤ low(X, i) || high(X, i) ≤ low(Y, i) for i in 1:LazySets.dim(X))
+end
