@@ -10,10 +10,10 @@ function run_impact(name; lower_bound=true, container=:apptainer)
             error("Unknown container type: $container")
         end
 
-        cmd = `timeout --kill-after=5s --verbose 48h $(@__DIR__)/IMPaCT/$name/$script`
+        cmd = `timeout --signal SIGKILL --verbose 48h $(@__DIR__)/IMPaCT/$name/$script`
 
         stdout = read(cmd, String)
-        
+
         if occursin("timeout", output)
             @warn "Decoupled timeout"
     

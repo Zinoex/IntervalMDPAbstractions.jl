@@ -94,7 +94,7 @@ function benchmark_direct(problem::ComparisonProblem)
     @info "Benchmarking direct"
     try
         BenchmarkTools.gcscrub()
-        output = read(`timeout --kill-after=5s --verbose 48h julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) true`, String)
+        output = read(`timeout --signal SIGKILL --verbose 48h julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) true`, String)
 
         if occursin("timeout", output)
             @warn "Decoupled timeout"
@@ -163,7 +163,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
     @info "Benchmarking decoupled"
     try
         BenchmarkTools.gcscrub()
-        output = read(`timeout --kill-after=5s --verbose 48h julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) false`, String)
+        output = read(`timeout --signal SIGKILL --verbose 48h julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) false`, String)
 
         if occursin("timeout", output)
             @warn "Decoupled timeout"
