@@ -152,8 +152,18 @@ function benchmark_intervalsyscore(name::String, direct=true)
     certification_time, V = measure_certification_time(prob)
     println(("Certification time", certification_time))
 
-    V = problem.post_process_value_function(V)
+    println("reach")
+    for r in reach
+        println(r)
+    end
 
+    println("avoid")
+    for a in avoid
+        println(a)
+    end
+
+    println("V")
+    V = problem.post_process_value_function(V)
     for v in V
         println(v)
     end
