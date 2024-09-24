@@ -12,7 +12,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
 
         cmd = `timeout --signal SIGKILL --verbose 48h $(@__DIR__)/IMPaCT/$name/$script`
 
-        stdout = read(cmd, String)
+        output = read(cmd, String)
 
         if occursin("timeout", output)
             @warn "Decoupled timeout"
@@ -26,7 +26,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
             )
         end
 
-        if !occursin("Finding control policy", stdout)
+        if !occursin("Finding control policy", output)
             return Dict(
                 "oom" => true,
                 "abstraction_time" => NaN,
@@ -37,7 +37,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
             )
         end
 
-        abstraction_output, certification_output = split(stdout, "Finding control policy")
+        abstraction_output, certification_output = split(output, "Finding control policy")
 
         # Find memory usage
         mem = 0.0
