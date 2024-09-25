@@ -137,10 +137,14 @@ function benchmark_direct(problem::ComparisonProblem)
         cartesian_indices = CartesianIndices(problem.state_split)
 
         # Read reach states
+        if reach == ""
+            reach = []
+        else
         reach_lines = split(chomp(reach), '\n')
         reach = map(line -> parse(Int32, line), reach_lines) # Parse each line as an integer
         reach = reach .- 1 # Subtract 1 to match 1-based indexing without the avoid state
         reach = map(x -> cartesian_indices[x], reach) # Convert from a linear index to a CartesianIndex
+        end
 
         # Read avoid states
         avoid_lines = split(chomp(avoid), '\n') 
@@ -223,13 +227,18 @@ function benchmark_decoupled(problem::ComparisonProblem)
         avoid, rest = split(rest, "V\n")
         
         # Read reach states
+        if reach == ""
+            reach = []
+        else
         reach_lines = split(chomp(reach), '\n')
         reach = map(reach_lines) do line # Parse each line as a tuple of indices
             indices = split(line[2:end - 1], ",")
+                println(indices)
             indices = map(index -> parse(Int32, index), indices)
             return Tuple(indices)
         end
         reach = map(x -> CartesianIndex(x .- 1), reach) # Subtract 1 to match 1-based indexing without the avoid states
+        end
 
         # Read avoid states
         avoid_lines = split(chomp(avoid), '\n')
