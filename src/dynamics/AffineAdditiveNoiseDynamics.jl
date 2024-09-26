@@ -58,8 +58,9 @@ function AffineAdditiveNoiseDynamics(A::AbstractMatrix{Float64}, B::AbstractMatr
     return AffineAdditiveNoiseDynamics(A, B, C, w)
 end
 
-nominal(dyn::AffineAdditiveNoiseDynamics, X::LazySet, U::LazySet) = dyn.A * X + dyn.B * U + Singleton(dyn.C)
-nominal(dyn::AffineAdditiveNoiseDynamics, X::AbstractVector, U::AbstractVector) = dyn.A * X + dyn.B * U + dyn.C
+nominal(dyn::AffineAdditiveNoiseDynamics, X::LazySet{Float64}, U::LazySet{Float64}) = dyn.A * X + dyn.B * U + Singleton(dyn.C)
+nominal(dyn::AffineAdditiveNoiseDynamics, X::AbstractVector{Float64}, U::AbstractVector{Float64}) = dyn.A * X + dyn.B * U + dyn.C
 noise(dyn::AffineAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::AffineAdditiveNoiseDynamics) = size(dyn.A, 1)
 diminput(dyn::AffineAdditiveNoiseDynamics) = size(dyn.B, 2)
+prepare_nominal(::AffineAdditiveNoiseDynamics, input_abstraction) = nothing

@@ -13,7 +13,7 @@ function building_automation_system_7d()
         0.0106 0.0097 0.0    0.0    0.0    0.0    0.9794;
     ]
 
-    B = zero(Float64, 7, 1)
+    B = zeros(Float64, 7, 1)
 
     w_variance = [1/51.2821, 1/50.0, 1/21.7865, 1/23.5294, 1/25.1889, 1/26.5252, 1/91.7431]
     w_stddev = sqrt.(w_variance)
@@ -30,12 +30,12 @@ function building_automation_system_7d()
 end
 
 function building_automation_system_7d_decoupled(; sparse=false, state_split=(21, 21, 3, 3, 3, 3, 3))
-    sys = c()
+    sys = building_automation_system_7d()
 
     X = Hyperrectangle(; low=[-0.525, -0.525, -0.75, -0.75, -0.75, -0.75, -0.75], high=[0.525, 0.525, 0.75, 0.75, 0.75, 0.75, 0.75])
     state_abs = StateUniformGridSplit(X, state_split)
 
-    input_abs = InputDiscrete([Singleton(zero(7))])
+    input_abs = InputDiscrete([Singleton([0.0])])
 
     if sparse
         target_model = SparseOrthogonalIMDPTarget()
@@ -49,7 +49,7 @@ function building_automation_system_7d_decoupled(; sparse=false, state_split=(21
 end
 
 function building_automation_system_7d_direct(; sparse=false, state_split=(21, 21, 3, 3, 3, 3, 3))
-    sys = c()
+    sys = building_automation_system_7d()
 
     X = Hyperrectangle(; low=[-0.525, -0.525, -0.75, -0.75, -0.75, -0.75, -0.75], high=[0.525, 0.525, 0.75, 0.75, 0.75, 0.75, 0.75])
     state_abs = StateUniformGridSplit(X, state_split)

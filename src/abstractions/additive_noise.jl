@@ -19,6 +19,7 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
 
     # Transition probabilities
     dyn = dynamics(sys)
+    prepare_nominal(dyn, input_abstraction)
 
     Threads.@threads for (i, source_region) in collect(enumerate(regions(state_abstraction)))
         for (j, input) in enumerate(inputs(input_abstraction))
@@ -62,7 +63,7 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
             push!(initial_states, i + 1)
         end
 
-        if !isdisjoint(avoid(sys), source_region)
+        if !iszeromeasure(avoid(sys), source_region)
             push!(avoid_states, i + 1)
         elseif source_region ⊆ reach(sys)
             push!(reach_states, i + 1)
@@ -97,6 +98,7 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
     if !candecouple(noise(dyn))
         throw(ArgumentError("Cannot decouple system with non-diagonal noise covariance matrix"))
     end
+    prepare_nominal(dyn, input_abstraction)
     
     # The first state along each axis is absorbing, representing transitioning to outside the partitioned along that axis.
     ninputs = numinputs(input_abstraction)
@@ -192,7 +194,7 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
             push!(initial_states, Tuple(I) .+ 1)
         end
 
-        if !isdisjoint(avoid(sys), source_region)
+        if !iszeromeasure(avoid(sys), source_region)
             push!(avoid_states, Tuple(I) .+ 1)
         elseif source_region ⊆ reach(sys)
             push!(reach_states, Tuple(I) .+ 1)

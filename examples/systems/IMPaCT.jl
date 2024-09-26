@@ -10,11 +10,23 @@ function run_impact(name; lower_bound=true, container=:apptainer)
             error("Unknown container type: $container")
         end
 
-        cmd = `$(@__DIR__)/IMPaCT/$name/$script`
+        cmd = `timeout --signal SIGKILL --verbose 48h $(@__DIR__)/IMPaCT/$name/$script`
 
-        stdout = read(cmd, String)
+        output = read(cmd, String)
 
-        if !occursin("Finding control policy", stdout)
+        if occursin("timeout", output)
+            @warn "Decoupled timeout"
+    
+            return Dict(
+                "oom" => false,
+                "abstraction_time" => NaN,
+                "certification_time" => NaN,
+                "prob_mem" => NaN,
+                "value_function" => NaN
+            )
+        end
+
+        if !occursin("Finding control policy", output)
             return Dict(
                 "oom" => true,
                 "abstraction_time" => NaN,
@@ -25,7 +37,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
             )
         end
 
-        abstraction_output, certification_output = split(stdout, "Finding control policy")
+        abstraction_output, certification_output = split(output, "Finding control policy")
 
         # Find memory usage
         mem = 0.0
@@ -55,7 +67,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
         end
 
         # Find value function
-        file = "$(@__DIR__)/IMPaCT/ex_2Drobot-R-U/controller.h5"
+        file = "$(@__DIR__)/IMPaCT/$name/controller.h5"
         table = "dataset"
         data = h5read(file, table)
         V = if lower_bound
@@ -65,7 +77,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
         end
 
         # Cleanup
-        rm("$(@__DIR__)/IMPaCT/$name/controller.h5", force=true)
+        rm(file, force=true)
 
         return Dict(
             "oom" => false,

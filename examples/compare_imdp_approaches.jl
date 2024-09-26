@@ -79,13 +79,16 @@ function benchmark_impact(problem::ComparisonProblem)
     return res
 end
 
-function to_impact_format(V)
+function to_impact_format(V, reach, avoid)
+    V[reach] .= -1.0
+    V[avoid] .= -1.0
+
     # Transpose to match row-major order of IMPaCT
     V = permutedims(V, reverse(1:ndims(V)))
     V = vec(V)
 
-    # Remove reach regions (i.e with probability 1.0) to match IMPaCT
-    V = V[V .< 1.0]
+    # Remove reach and avoid regions to match IMPaCT
+    V = V[V .!= -1.0]
 
     return V
 end
@@ -94,7 +97,19 @@ function benchmark_direct(problem::ComparisonProblem)
     @info "Benchmarking direct"
     try
         BenchmarkTools.gcscrub()
-        output = read(`julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) true`, String)
+        output = read(`timeout --signal SIGKILL --verbose 48h julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) true`, String)
+
+        if occursin("timeout", output)
+            @warn "Decoupled timeout"
+    
+            return Dict(
+                "oom" => false,
+                "abstraction_time" => NaN,
+                "certification_time" => NaN,
+                "prob_mem" => NaN,
+                "value_function" => NaN
+            )
+        end
 
         m1 = match(r"\(\"Abstraction time\",\s(\d+\.\d+)\)", output)
         m2 = match(r"\(\"Certification time\",\s(\d+\.\d+)\)", output)
@@ -114,14 +129,37 @@ function benchmark_direct(problem::ComparisonProblem)
         certification_time = parse(Float64, m2.captures[1])
         prob_mem = parse(Float64, m3.captures[1])
 
-        lines = split(chomp(output), '\n')
-        lines = lines[4:end]
+        # Split output
+        prefix, rest = split(output, "reach\n")
+        reach, rest = split(rest, "avoid\n")
+        avoid, rest = split(rest, "V\n")
 
-        V = map(line -> parse(Float64, line), lines)
+        cartesian_indices = CartesianIndices(problem.state_split)
+
+        # Read reach states
+        if reach == ""
+            reach = []
+        else
+        reach_lines = split(chomp(reach), '\n')
+        reach = map(line -> parse(Int32, line), reach_lines) # Parse each line as an integer
+        reach = reach .- 1 # Subtract 1 to match 1-based indexing without the avoid state
+        reach = map(x -> cartesian_indices[x], reach) # Convert from a linear index to a CartesianIndex
+        end
+
+        # Read avoid states
+        avoid_lines = split(chomp(avoid), '\n') 
+        avoid = map(line -> parse(Int32, line), avoid_lines) # Parse each line as an integer
+        avoid = filter(x -> x != 1, avoid) # Remove the absorbing avoid state (we remove this manually later)
+        avoid = avoid .- 1 # Subtract 1 to match 1-based indexing without the avoid state
+        avoid = map(x -> cartesian_indices[x], avoid) # Convert from a linear index to a CartesianIndex
+
+        # Read value function
+        V_lines = split(chomp(rest), '\n')
+        V = map(line -> parse(Float64, line), V_lines)
 
         # Remove the first element of the value function, which is the absorbing avoid state
         V = reshape(V[2:end], problem.state_split...)
-        V = to_impact_format(V)
+        V = to_impact_format(V, reach, avoid)
     
         return Dict(
             "oom" => false,
@@ -151,7 +189,19 @@ function benchmark_decoupled(problem::ComparisonProblem)
     @info "Benchmarking decoupled"
     try
         BenchmarkTools.gcscrub()
-        output = read(`julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) false`, String)
+        output = read(`timeout --signal SIGKILL --verbose 48h julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) false`, String)
+
+        if occursin("timeout", output)
+            @warn "Decoupled timeout"
+    
+            return Dict(
+                "oom" => false,
+                "abstraction_time" => NaN,
+                "certification_time" => NaN,
+                "prob_mem" => NaN,
+                "value_function" => NaN
+            )
+        end
 
         m1 = match(r"\(\"Abstraction time\",\s(\d+\.\d+)\)", output)
         m2 = match(r"\(\"Certification time\",\s(\d+\.\d+)\)", output)
@@ -171,15 +221,42 @@ function benchmark_decoupled(problem::ComparisonProblem)
         certification_time = parse(Float64, m2.captures[1])
         prob_mem = parse(Float64, m3.captures[1])
 
-        lines = split(chomp(output), '\n')
-        lines = lines[4:end]
+        # Split output
+        prefix, rest = split(output, "reach\n")
+        reach, rest = split(rest, "avoid\n")
+        avoid, rest = split(rest, "V\n")
+        
+        # Read reach states
+        if reach == ""
+            reach = []
+        else
+        reach_lines = split(chomp(reach), '\n')
+        reach = map(reach_lines) do line # Parse each line as a tuple of indices
+            indices = split(line[2:end - 1], ",")
+                println(indices)
+            indices = map(index -> parse(Int32, index), indices)
+            return Tuple(indices)
+        end
+        reach = map(x -> CartesianIndex(x .- 1), reach) # Subtract 1 to match 1-based indexing without the avoid states
+        end
 
-        V = map(line -> parse(Float64, line), lines)
+        # Read avoid states
+        avoid_lines = split(chomp(avoid), '\n')
+        avoid = map(avoid_lines) do line # Parse each line as a tuple of indices
+            indices = split(line[2:end - 1], ",")
+            indices = map(index -> parse(Int32, index), indices)
+            return Tuple(indices)
+        end
+        avoid = filter(x -> !any(isone, x), avoid) # Remove the absorbing avoid states (we remove these manually later)
+        avoid = map(x -> CartesianIndex(x .- 1), avoid) # Subtract 1 to match 1-based indexing without the avoid states
+
+        V_lines = split(chomp(rest), '\n')
+        V = map(line -> parse(Float64, line), V_lines)
 
         # Remove the first element of the value function, which is the absorbing avoid state
         V = reshape(V, (problem.state_split .+ 1)...)
         V = V[(2:size(V, i) for i in 1:ndims(V))...]
-        V = to_impact_format(V)
+        V = to_impact_format(V, reach, avoid)
 
         return Dict(
             "oom" => false,
@@ -239,10 +316,64 @@ function save_results(name, res)
     end
 end
 
-# function read_results()
-#     df = CSV.read("results/direct_vs_decoupled_imdp.csv", DataFrame)
-#     return df
-# end
+function read_results(name)
+    res = JSON.parsefile("results/compare_imdp_approaches/$name.json")
+    return res
+end
+
+function read_results()
+    res = Dict()
+    for problem in problems
+        res[problem.name] = read_results(problem.name)
+    end
+
+    return res
+end
+
+function to_dataframe(res)
+    rows = []
+    for (name, data) in res
+        n_decoupled = length(data["decoupled"]["value_function"])
+        n_direct = length(data["direct"]["value_function"])
+        n_impact = length(data["impact"]["value_function"])
+
+        if n_decoupled != n_direct
+            @warn "Skipping $name due to different value function sizes (decoupled $n_decoupled vs direct $n_direct)"
+        elseif n_decoupled != n_impact
+            @warn "Skipping $name due to different value function sizes (decoupled $n_decoupled vs impact $n_impact)"
+            continue
+        end
+
+        row = Dict(
+            "name" => name,
+            "state_split" => data["state_split"],
+            "input_split" => data["input_split"],
+            "direct_abstraction_time" => data["direct"]["abstraction_time"],
+            "direct_certification_time" => data["direct"]["certification_time"],
+            "direct_prob_mem" => data["direct"]["prob_mem"],
+            "direct_min_prob" => minimum(data["direct"]["value_function"]),
+            "direct_max_prob" => maximum(data["direct"]["value_function"]),
+            "direct_min_prob_diff" => minimum(data["decoupled"]["value_function"] - data["direct"]["value_function"]),
+            "direct_max_prob_diff" => maximum(data["decoupled"]["value_function"] - data["direct"]["value_function"]),
+            "impact_abstraction_time" => data["impact"]["abstraction_time"],
+            "impact_certification_time" => data["impact"]["certification_time"],
+            "impact_prob_mem" => data["impact"]["prob_mem"],
+            "impact_min_prob" => minimum(data["impact"]["value_function"]),
+            "impact_max_prob" => maximum(data["impact"]["value_function"]),
+            "impact_min_prob_diff" => minimum(data["decoupled"]["value_function"] - data["impact"]["value_function"]),
+            "impact_max_prob_diff" => maximum(data["decoupled"]["value_function"] - data["impact"]["value_function"]),
+            "decoupled_abstraction_time" => data["decoupled"]["abstraction_time"],
+            "decoupled_certification_time" => data["decoupled"]["certification_time"],
+            "decoupled_prob_mem" => data["decoupled"]["prob_mem"],
+            "decoupled_min_prob" => minimum(data["decoupled"]["value_function"]),
+            "decoupled_max_prob" => maximum(data["decoupled"]["value_function"]),
+        )
+        push!(rows, row)
+    end
+
+    df = DataFrame(rows)
+    return df
+end
 
 # TODO: plot results
 

@@ -13,6 +13,7 @@ struct InputGridSplit <: InputAbstraction
     splits
 end
 numinputs(input::InputGridSplit) = prod(input.splits)
+issetbased(input::InputGridSplit) = true
 function inputs(input::InputGridSplit)
     regions = LazySets.split(input.input_space, [input.splits...])
     
@@ -29,6 +30,7 @@ struct InputLinRange <: InputAbstraction
     ranges
 end
 numinputs(input::InputLinRange) = prod(input.ranges)
+issetbased(input::InputLinRange) = false
 function inputs(input::InputLinRange)
     l = low(input.input_space)
     h = high(input.input_space)
@@ -49,6 +51,7 @@ struct InputRandom <: InputAbstraction
     num_points::Int
 end
 numinputs(input::InputRandom) = input.num_points
+issetbased(input::InputRandom) = false
 function inputs(input::InputRandom)
     regions = [Singleton(rand(input.input_space)) for _ in 1:input.num_points]
     
@@ -64,6 +67,7 @@ struct InputDiscrete{S <: LazySet} <: InputAbstraction
     inputs::Vector{S}
 end
 numinputs(input::InputDiscrete) = length(input.inputs)
+issetbased(input::InputDiscrete) = false
 function inputs(input::InputDiscrete)
     return input.inputs
 end

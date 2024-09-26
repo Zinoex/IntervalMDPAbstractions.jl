@@ -37,7 +37,7 @@ const vec sigma = {sqrt(1.0), sqrt(1.0)};
 
 // logical expression for target region and avoid region
 auto target_condition = [](const vec& ss) { return (ss[0] >= 4.0 && ss[0] <= 10.0) && (ss[1] >= -4.0 && ss[1] <= 0.0); };
-auto avoid_condition = [](const vec& ss) { return (ss[0] >= 4.0 && ss[0] <= 10.0 ) && (ss[1] >= 0.0 && ss[1] <= 4.0); };
+auto avoid_condition = [](const vec& ss) { return (ss[0] >= 4.0 && ss[0] <= 10.0) && (ss[1] >= 0.0 && ss[1] <= 4.0); };
 
 //dynamics - 2 parameters
 auto dynamics = [](const vec& x, const vec& u) -> vec {

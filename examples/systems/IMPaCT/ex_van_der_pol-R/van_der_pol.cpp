@@ -36,7 +36,7 @@ const vec is_eta = {0.2};
 const vec sigma = {sqrt(0.2), sqrt(0.2)};
 
 // logical expression for target region and avoid region
-auto target_condition = [](const vec& ss) { return (ss[0] >= -1.4 && ss[0] <= -0.7) && (ss[1] >= -2.9 && ss[1] <= -2.0); };
+auto target_condition = [](const vec& ss) { return (ss[0] >= -1.32 && ss[0] <= -0.78) && (ss[1] >= -2.82 && ss[1] <= -2.08); };
 
 //dynamics - 2 parameters
 auto dynamics = [](const vec& x, const vec& u) -> vec {
