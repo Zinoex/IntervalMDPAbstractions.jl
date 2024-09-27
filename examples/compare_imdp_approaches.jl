@@ -104,6 +104,7 @@ function benchmark_direct(problem::ComparisonProblem)
     
             return Dict(
                 "oom" => false,
+                "timeout" => true,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
@@ -119,6 +120,7 @@ function benchmark_direct(problem::ComparisonProblem)
     
             return Dict(
                 "oom" => true,
+                "timeout" => false,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
@@ -140,10 +142,10 @@ function benchmark_direct(problem::ComparisonProblem)
         if reach == ""
             reach = []
         else
-        reach_lines = split(chomp(reach), '\n')
-        reach = map(line -> parse(Int32, line), reach_lines) # Parse each line as an integer
-        reach = reach .- 1 # Subtract 1 to match 1-based indexing without the avoid state
-        reach = map(x -> cartesian_indices[x], reach) # Convert from a linear index to a CartesianIndex
+            reach_lines = split(chomp(reach), '\n')
+            reach = map(line -> parse(Int32, line), reach_lines) # Parse each line as an integer
+            reach = reach .- 1 # Subtract 1 to match 1-based indexing without the avoid state
+            reach = map(x -> cartesian_indices[x], reach) # Convert from a linear index to a CartesianIndex
         end
 
         # Read avoid states
@@ -163,6 +165,7 @@ function benchmark_direct(problem::ComparisonProblem)
     
         return Dict(
             "oom" => false,
+            "timeout" => false,
             "abstraction_time" => abstraction_time,
             "certification_time" => certification_time,
             "prob_mem" => prob_mem,
@@ -174,6 +177,7 @@ function benchmark_direct(problem::ComparisonProblem)
     
             return Dict(
                 "oom" => true,
+                "timeout" => false,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
@@ -196,6 +200,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
     
             return Dict(
                 "oom" => false,
+                "timeout" => true,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
@@ -230,14 +235,14 @@ function benchmark_decoupled(problem::ComparisonProblem)
         if reach == ""
             reach = []
         else
-        reach_lines = split(chomp(reach), '\n')
-        reach = map(reach_lines) do line # Parse each line as a tuple of indices
-            indices = split(line[2:end - 1], ",")
+            reach_lines = split(chomp(reach), '\n')
+            reach = map(reach_lines) do line # Parse each line as a tuple of indices
+                indices = split(line[2:end - 1], ",")
                 println(indices)
-            indices = map(index -> parse(Int32, index), indices)
-            return Tuple(indices)
-        end
-        reach = map(x -> CartesianIndex(x .- 1), reach) # Subtract 1 to match 1-based indexing without the avoid states
+                indices = map(index -> parse(Int32, index), indices)
+                return Tuple(indices)
+            end
+            reach = map(x -> CartesianIndex(x .- 1), reach) # Subtract 1 to match 1-based indexing without the avoid states
         end
 
         # Read avoid states
@@ -260,6 +265,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
 
         return Dict(
             "oom" => false,
+            "timeout" => false,
             "abstraction_time" => abstraction_time,
             "certification_time" => certification_time,
             "prob_mem" => prob_mem,
@@ -271,6 +277,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
     
             return Dict(
                 "oom" => true,
+                "timeout" => false,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
@@ -301,7 +308,8 @@ function benchmark()
             "input_split" => problem.input_split,
             "direct" => direct,
             "decoupled" => decoupled,
-            "impact" => impact
+            "impact" => impact,
+            "include_impact" => problem.include_impact
         )
 
         save_results(problem.name, res)
@@ -334,40 +342,84 @@ function to_dataframe(res)
     rows = []
     for (name, data) in res
         n_decoupled = length(data["decoupled"]["value_function"])
-        n_direct = length(data["direct"]["value_function"])
-        n_impact = length(data["impact"]["value_function"])
-
-        if n_decoupled != n_direct
-            @warn "Skipping $name due to different value function sizes (decoupled $n_decoupled vs direct $n_direct)"
-        elseif n_decoupled != n_impact
-            @warn "Skipping $name due to different value function sizes (decoupled $n_decoupled vs impact $n_impact)"
-            continue
-        end
 
         row = Dict(
             "name" => name,
             "state_split" => data["state_split"],
             "input_split" => data["input_split"],
-            "direct_abstraction_time" => data["direct"]["abstraction_time"],
-            "direct_certification_time" => data["direct"]["certification_time"],
-            "direct_prob_mem" => data["direct"]["prob_mem"],
-            "direct_min_prob" => minimum(data["direct"]["value_function"]),
-            "direct_max_prob" => maximum(data["direct"]["value_function"]),
-            "direct_min_prob_diff" => minimum(data["decoupled"]["value_function"] - data["direct"]["value_function"]),
-            "direct_max_prob_diff" => maximum(data["decoupled"]["value_function"] - data["direct"]["value_function"]),
-            "impact_abstraction_time" => data["impact"]["abstraction_time"],
-            "impact_certification_time" => data["impact"]["certification_time"],
-            "impact_prob_mem" => data["impact"]["prob_mem"],
-            "impact_min_prob" => minimum(data["impact"]["value_function"]),
-            "impact_max_prob" => maximum(data["impact"]["value_function"]),
-            "impact_min_prob_diff" => minimum(data["decoupled"]["value_function"] - data["impact"]["value_function"]),
-            "impact_max_prob_diff" => maximum(data["decoupled"]["value_function"] - data["impact"]["value_function"]),
             "decoupled_abstraction_time" => data["decoupled"]["abstraction_time"],
             "decoupled_certification_time" => data["decoupled"]["certification_time"],
             "decoupled_prob_mem" => data["decoupled"]["prob_mem"],
             "decoupled_min_prob" => minimum(data["decoupled"]["value_function"]),
             "decoupled_max_prob" => maximum(data["decoupled"]["value_function"]),
         )
+
+        if !data["direct"]["oom"] && !data["direct"]["timeout"]
+            if n_decoupled != length(data["direct"]["value_function"])
+                @warn "Direct value function length mismatch" name n_decoupled n_direct=length(data["direct"]["value_function"])
+
+                row["direct_abstraction_time"] = NaN
+                row["direct_certification_time"] = NaN
+                row["direct_prob_mem"] = NaN
+                row["direct_min_prob"] = NaN
+                row["direct_max_prob"] = NaN
+                row["direct_min_prob_diff"] = NaN
+                row["direct_max_prob_diff"] = NaN
+                row["direct_avg_prob_diff"] = NaN
+            else
+                row["direct_abstraction_time"] = data["direct"]["abstraction_time"]
+                row["direct_certification_time"] = data["direct"]["certification_time"]
+                row["direct_prob_mem"] = data["direct"]["prob_mem"]
+                row["direct_min_prob"] = minimum(data["direct"]["value_function"])
+                row["direct_max_prob"] = maximum(data["direct"]["value_function"])
+                row["direct_min_prob_diff"] = minimum(data["decoupled"]["value_function"] - data["direct"]["value_function"])
+                row["direct_max_prob_diff"] = maximum(data["decoupled"]["value_function"] - data["direct"]["value_function"])
+                row["direct_avg_prob_diff"] = mean(data["decoupled"]["value_function"] - data["direct"]["value_function"])
+            end
+        else
+            row["direct_abstraction_time"] = NaN
+            row["direct_certification_time"] = NaN
+            row["direct_prob_mem"] = NaN
+            row["direct_min_prob"] = NaN
+            row["direct_max_prob"] = NaN
+            row["direct_min_prob_diff"] = NaN
+            row["direct_max_prob_diff"] = NaN
+            row["direct_avg_prob_diff"] = NaN
+        end
+
+        if data["include_impact"] && !data["impact"]["oom"] && !data["impact"]["timeout"]
+            if n_decoupled != length(data["impact"]["value_function"])
+                @warn "Impact value function length mismatch" name n_decoupled n_impact=length(data["impact"]["value_function"])
+
+                row["impact_abstraction_time"] = NaN
+                row["impact_certification_time"] = NaN
+                row["impact_prob_mem"] = NaN
+                row["impact_min_prob"] = NaN
+                row["impact_max_prob"] = NaN
+                row["impact_min_prob_diff"] = NaN
+                row["impact_max_prob_diff"] = NaN
+                row["impact_avg_prob_diff"] = NaN
+            else
+                row["impact_abstraction_time"] = data["impact"]["abstraction_time"]
+                row["impact_certification_time"] = data["impact"]["certification_time"]
+                row["impact_prob_mem"] = data["impact"]["prob_mem"]
+                row["impact_min_prob"] = minimum(data["impact"]["value_function"])
+                row["impact_max_prob"] = maximum(data["impact"]["value_function"])
+                row["impact_min_prob_diff"] = minimum(data["decoupled"]["value_function"] - data["impact"]["value_function"])
+                row["impact_max_prob_diff"] = maximum(data["decoupled"]["value_function"] - data["impact"]["value_function"])
+                row["impact_avg_prob_diff"] = mean(data["decoupled"]["value_function"] - data["impact"]["value_function"])
+            end
+        else
+            row["impact_abstraction_time"] = NaN
+            row["impact_certification_time"] = NaN
+            row["impact_prob_mem"] = NaN
+            row["impact_min_prob"] = NaN
+            row["impact_max_prob"] = NaN
+            row["impact_min_prob_diff"] = NaN
+            row["impact_max_prob_diff"] = NaN
+            row["impact_avg_prob_diff"] = NaN
+        end
+
         push!(rows, row)
     end
 

@@ -19,6 +19,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
     
             return Dict(
                 "oom" => false,
+                "timeout" => true,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
@@ -29,6 +30,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
         if !occursin("Finding control policy", output)
             return Dict(
                 "oom" => true,
+                "timeout" => false,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "peak_mem" => NaN,
@@ -81,6 +83,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
 
         return Dict(
             "oom" => false,
+            "timeout" => false,
             "abstraction_time" => abstraction_time,
             "certification_time" => certification_time,
             "prob_mem" => mem,
@@ -92,6 +95,7 @@ function run_impact(name; lower_bound=true, container=:apptainer)
             
             return Dict(
                 "oom" => true,
+                "timeout" => false,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "peak_mem" => NaN,
