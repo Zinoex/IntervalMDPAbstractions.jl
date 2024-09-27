@@ -5,5 +5,6 @@ include("bas_7d.jl")
 
 include("integrator_chain.jl")
 include("van_der_pol.jl")
+include("nndm.jl")
 
 include("IMPaCT.jl")

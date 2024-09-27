@@ -108,3 +108,4 @@ function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, x::AbstractVector, u::A
     
     throw(ArgumentError("The state is not in the domain of the dynamics"))
 end
+prepare_nominal(::UncertainPWAAdditiveNoiseDynamics, input_abstraction) = nothing
