@@ -23,6 +23,7 @@ include("dynamics/base.jl")
 include("dynamics/additive_noise.jl")
 include("dynamics/AffineAdditiveNoiseDynamics.jl")
 include("dynamics/NonlinearAdditiveNoiseDynamics.jl")
+include("dynamics/UncertainPWAAdditiveNoiseDynamics.jl")
 
 include("systems.jl")
 
