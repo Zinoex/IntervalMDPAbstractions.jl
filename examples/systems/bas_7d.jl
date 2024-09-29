@@ -54,7 +54,7 @@ function building_automation_system_7d_direct(; sparse=false, state_split=(21, 2
     X = Hyperrectangle(; low=[-0.525, -0.525, -0.75, -0.75, -0.75, -0.75, -0.75], high=[0.525, 0.525, 0.75, 0.75, 0.75, 0.75, 0.75])
     state_abs = StateUniformGridSplit(X, state_split)
 
-    input_abs = InputDiscrete([Universe(0)])
+    input_abs = InputDiscrete([Singleton([0.0])])
 
     if sparse
         target_model = SparseIMDPTarget()
