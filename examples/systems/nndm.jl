@@ -279,3 +279,23 @@ function action_cartpole_decoupled(; sparse=false)
 
     return mdp, reach, avoid
 end
+
+function action_cartpole_direct(; sparse=false)
+    sys = action_cartpole_sys()
+
+    X = Hyperrectangle(; low=[-1.0, -1.0, deg2rad(-12.0), -1.0], high=[1.0, 1.0, deg2rad(12.0), 1.0])
+    state_split = (20, 20, 24, 20)
+    state_abs = StateUniformGridSplit(X, state_split)
+
+    input_abs = InputDiscrete([1, 2])
+
+    if sparse
+        target_model = SparseOrthogonalIMDPTarget()
+    else
+        target_model = OrthogonalIMDPTarget()
+    end
+
+    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+
+    return mdp, reach, avoid
+end

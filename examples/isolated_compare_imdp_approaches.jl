@@ -85,13 +85,49 @@ bas7d = IntervalSySCoReComparisonProblem(
     10
 )
 
+action_cartpole = IntervalSySCoReComparisonProblem(
+    "action_cartpole",
+    (state_split, input_split) -> action_cartpole_direct(; sparse=true),
+    (state_split, input_split) -> action_cartpole_decoupled(; sparse=false),
+    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
+    (V) -> 1.0 .- V,
+    (20, 20, 24, 20),
+    (1,),
+    10
+)
+
+linear6d = IntervalSySCoReComparisonProblem(
+    "linear6d",
+    (state_split, input_split) -> almost_identity_direct(6; sparse=true, state_split_per_dim=8),
+    (state_split, input_split) -> almost_identity_decoupled(6; sparse=true, state_split_per_dim=8),
+    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
+    (V) -> 1.0 .- V,
+    (8, 8, 8, 8, 8, 8),
+    (1,),
+    10
+)
+
+linear7d = IntervalSySCoReComparisonProblem(
+    "linear7d",
+    (state_split, input_split) -> almost_identity_direct(7; sparse=true, state_split_per_dim=8),
+    (state_split, input_split) -> almost_identity_decoupled(7; sparse=true, state_split_per_dim=8),
+    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
+    (V) -> 1.0 .- V,
+    (8, 8, 8, 8, 8, 8, 8),
+    (1,),
+    10
+)
+
 problems = [
     robot_2d_reachability,
     robot_2d_reachavoid,
     syscore_running_example,
     van_der_pol,
     bas4d,
-    bas7d
+    bas7d,
+    action_cartpole,
+    linear6d,
+    linear7d
 ]
 
 function warmup_abstraction(problem::IntervalSySCoReComparisonProblem, constructor)
