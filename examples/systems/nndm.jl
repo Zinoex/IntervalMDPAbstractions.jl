@@ -1,6 +1,8 @@
 using MAT, MAT.MAT_v4, MAT.MAT_v5, MAT.MAT_HDF5
 const MatlabFile = Union{MAT_v4.Matlabv4File, MAT_v5.Matlabv5File, MAT_HDF5.MatlabHDF5File}
 
+using HDF5
+
 using LinearAlgebra, LazySets
 using IntervalMDP, IntervalSySCoRe
 
@@ -195,6 +197,82 @@ function husky5d_sys_direct(; sparse=false)
         target_model = SparseIMDPTarget()
     else
         target_model = IMDPTarget()
+    end
+
+    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+
+    return mdp, reach, avoid
+end
+
+function load_dynamics(file::HDF5.File)
+    region_lower = read(file, "region_lower")
+    region_upper = read(file, "region_upper")
+
+    regions = [
+        Hyperrectangle(low=convert.(Float64, lower), high=convert.(Float64, upper)) for (lower, upper)
+        in zip(eachcol(region_lower), eachcol(region_upper))
+    ]
+
+    Alower = read(file, "Alower")
+    Clower = read(file, "blower")
+    Aupper = read(file, "Aupper")
+    Cupper = read(file, "bupper")
+
+    dyn = Vector{Vector{UncertainAffineRegion{Float64, Vector{Float64}, Matrix{Float64}, eltype(regions)}}}(undef, size(Alower, 3))
+
+    for action in 1:size(Alower, 3)
+        dyn[action] = Vector{UncertainAffineRegion{Float64, Vector{Float64}, Matrix{Float64}, eltype(regions)}}(undef, length(regions))
+
+        for (i, region) in enumerate(regions)
+            dyn[action][i] = UncertainAffineRegion(
+                region,
+                convert.(Float64, transpose(Alower[:, :, action, i])), convert.(Float64, Clower[:, action, i]),
+                convert.(Float64, transpose(Aupper[:, :, action, i])), convert.(Float64, Cupper[:, action, i])
+            )
+        end
+    end
+
+    return dyn
+end
+
+function load_hdf5_system(system_name::String)
+    filename = joinpath(@__DIR__, "nndm_data/$(system_name)_bounds.h5")
+    file = h5open(joinpath(@__DIR__, filename), "r")
+
+    dynamics = load_dynamics(file)
+
+    close(file)
+
+    return dynamics
+end
+
+function action_cartpole_sys()
+    pwa_dyn = load_hdf5_system("cartpole")
+    w = AdditiveDiagonalGaussianNoise([0.01, 0.01, 0.01, 0.01])
+    dyn = UncertainPWAAdditiveNoiseDynamics(4, pwa_dyn, w)
+
+    initial = EmptySet(4)
+    reach = EmptySet(4)
+    avoid = EmptySet(4)
+
+    sys = System(dyn, initial, reach, avoid)
+
+    return sys
+end
+
+function action_cartpole_decoupled(; sparse=false)
+    sys = action_cartpole_sys()
+
+    X = Hyperrectangle(; low=[-1.0, -1.0, deg2rad(-12.0), -1.0], high=[1.0, 1.0, deg2rad(12.0), 1.0])
+    state_split = (20, 20, 24, 20)
+    state_abs = StateUniformGridSplit(X, state_split)
+
+    input_abs = InputDiscrete([1, 2])
+
+    if sparse
+        target_model = SparseOrthogonalIMDPTarget()
+    else
+        target_model = OrthogonalIMDPTarget()
     end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)

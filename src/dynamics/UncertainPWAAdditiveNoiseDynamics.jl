@@ -61,7 +61,6 @@ I.e. `x_{k+1} = A_i(\\alpha) x_k + B_i(\\alpha) u_k + C_i(\\alpha) + w_k`, where
 """
 struct UncertainPWAAdditiveNoiseDynamics{TU <: UncertainAffineRegion, TW<:AdditiveNoiseStructure} <: AdditiveNoiseDynamics
     dimstate::Int
-    diminput::Int
     dynregions::Vector{Vector{TU}}
     w::TW
 
@@ -86,7 +85,7 @@ struct UncertainPWAAdditiveNoiseDynamics{TU <: UncertainAffineRegion, TW<:Additi
     end
 end
 dimstate(dyn::UncertainPWAAdditiveNoiseDynamics) = dyn.dimstate
-diminput(dyn::UncertainPWAAdditiveNoiseDynamics) = dyn.diminput
+diminput(dyn::UncertainPWAAdditiveNoiseDynamics) = 1
 noise(dyn::UncertainPWAAdditiveNoiseDynamics) = dyn.w
 function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, X::LazySet, a::Integer)
     # Subtract epsilon from set to avoid numerical issues
