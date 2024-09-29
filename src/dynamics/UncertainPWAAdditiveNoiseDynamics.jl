@@ -55,54 +55,56 @@ I.e. `x_{k+1} = A_i(\\alpha) x_k + B_i(\\alpha) u_k + C_i(\\alpha) + w_k`, where
 ### Fields
 - `dimstate::Int`: The dimension of the state space.
 - `diminput::Int`: The dimension of the input space.
-- `dyn::Vector{<:UncertainAffineRegion}`: A list of UncertainAffineRegions to represent an uncertain PWA dynamics.
+- `dyn::Vector{{Vector{<:UncertainAffineRegion}}`: A list (action) of lists (regions) of UncertainAffineRegions to represent an uncertain PWA dynamics.
 - `w::AdditiveNoiseStructure`: The additive noise.
 
 """
 struct UncertainPWAAdditiveNoiseDynamics{TU <: UncertainAffineRegion, TW<:AdditiveNoiseStructure} <: AdditiveNoiseDynamics
     dimstate::Int
     diminput::Int
-    dynregions::Vector{TU}
+    dynregions::Vector{Vector{TU}}
     w::TW
 
-    function UncertainPWAAdditiveNoiseDynamics(dimstate, diminput, dynregions::Vector{TU}, w::TW) where {TU <: UncertainAffineRegion, TW<:AdditiveNoiseStructure}
+    function UncertainPWAAdditiveNoiseDynamics(dimstate, dynregions::Vector{Vector{TU}}, w::TW) where {TU <: UncertainAffineRegion, TW<:AdditiveNoiseStructure}
         if dim(w) != dimstate
             throw(DimensionMismatch("The dimension of the noise must be the same as the dimension of the state"))
         end
 
-        for dynregion in dynregions
-            if inputdim(dynregion) != dimstate + diminput
-                throw(DimensionMismatch("The dimension of the dynamics must be the same as the dimension of the input plus the dimension of the state"))
-            end 
+        for action in dynregions
+            for dynregion in action
+                if inputdim(dynregion) != dimstate
+                    throw(DimensionMismatch("The dimension of the dynamics must be the same as the dimension of the input plus the dimension of the state"))
+                end 
 
-            if outputdim(dynregion) != dimstate
-                throw(DimensionMismatch("The dimension of the dynamics must be the same as the dimension of the noise"))
+                if outputdim(dynregion) != dimstate
+                    throw(DimensionMismatch("The dimension of the dynamics must be the same as the dimension of the noise"))
+                end
             end
         end
 
-        return new{TU, TW}(dimstate, diminput, dynregions, w)
+        return new{TU, TW}(dimstate, dynregions, w)
     end
 end
 dimstate(dyn::UncertainPWAAdditiveNoiseDynamics) = dyn.dimstate
 diminput(dyn::UncertainPWAAdditiveNoiseDynamics) = dyn.diminput
 noise(dyn::UncertainPWAAdditiveNoiseDynamics) = dyn.w
-function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, X::LazySet, U::LazySet)
+function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, X::LazySet, a::Integer)
     # Subtract epsilon from set to avoid numerical issues
     eps_ball = BallInf(zeros(LazySets.dim(X)), 1e-6)
     Xquery = minkowski_difference(X, eps_ball)
 
-    for dynregion in dyn.dynregions
+    for dynregion in dyn.dynregions[a]
         if issubset(Xquery, region(dynregion))
-            return overapproximate(dynregion, CartesianProduct(X, U))
+            return overapproximate(dynregion, X)
         end
     end
 
     throw(ArgumentError("The state is not in the domain of the dynamics"))
 end
-function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, x::AbstractVector, u::AbstractVector)
-    for dynregion in dyn.dynregions
+function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, x::AbstractVector, a::Integer)
+    for dynregion in dyn.dynregions[a]
         if x ∈ region(dynregion)
-            return overapproximate(dynregion, CartesianProduct(Singleton(X), Singleton(U)))
+            return overapproximate(dynregion, Singleton(X))
         end
     end
     

@@ -63,7 +63,7 @@ end
 
 Input abstraction for a set of discrete points in the input space.
 """
-struct InputDiscrete{S <: LazySet} <: InputAbstraction
+struct InputDiscrete{S} <: InputAbstraction
     inputs::Vector{S}
 end
 numinputs(input::InputDiscrete) = length(input.inputs)

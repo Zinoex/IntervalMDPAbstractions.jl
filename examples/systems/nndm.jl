@@ -16,7 +16,7 @@ function load_dynamics(partitions::MatlabFile)
 
     n = size(state_partitions, 1)
 
-    Xs = [
+    mode1 = [
         UncertainAffineRegion(
             Hyperrectangle(low=state_partitions[ii, 1, :], high=state_partitions[ii, 2, :]),
             convert(Matrix{Float64}, transpose(M_lower[ii, :, :])), b_lower[ii, :], 
@@ -24,7 +24,9 @@ function load_dynamics(partitions::MatlabFile)
         ) for ii in 1:n
     ]
 
-    return Xs
+    modes = [mode1]
+
+    return modes
 end
 
 function load_system(system_name::String, number_hypercubes::Int)
@@ -41,7 +43,7 @@ end
 function cartpole_sys()
     pwa_dyn = load_system("cartpole", 3840)
     w = AdditiveDiagonalGaussianNoise([0.01, 0.01, 0.01, 0.01])
-    dyn = UncertainPWAAdditiveNoiseDynamics(4, 0, pwa_dyn, w)
+    dyn = UncertainPWAAdditiveNoiseDynamics(4, pwa_dyn, w)
 
     initial = EmptySet(4)
     reach = EmptySet(4)
@@ -59,7 +61,7 @@ function cartpole_decoupled(; sparse=false)
     state_split = (10, 4, 24, 4)
     state_abs = StateUniformGridSplit(X, state_split)
 
-    input_abs = InputDiscrete([Universe(0)])
+    input_abs = InputDiscrete([1])
 
     if sparse
         target_model = SparseOrthogonalIMDPTarget()
@@ -79,7 +81,7 @@ function cartpole_direct(; sparse=false)
     state_split = (10, 4, 24, 4)
     state_abs = StateUniformGridSplit(X, state_split)
 
-    input_abs = InputDiscrete([Universe(0)])
+    input_abs = InputDiscrete([1])
 
     if sparse
         target_model = SparseIMDPTarget()
@@ -95,7 +97,7 @@ end
 function husky4d_sys()
     pwa_dyn = load_system("husky4d", 4800)
     w = AdditiveDiagonalGaussianNoise([0.01, 0.01, 0.01, 0.01])
-    dyn = UncertainPWAAdditiveNoiseDynamics(4, 0, pwa_dyn, w)
+    dyn = UncertainPWAAdditiveNoiseDynamics(4, pwa_dyn, w)
 
     initial = EmptySet(4)
     reach = EmptySet(4)
@@ -113,7 +115,7 @@ function husky4d_sys_decoupled(; sparse=false)
     state_split = (10, 8, 15, 4)
     state_abs = StateUniformGridSplit(X, state_split)
 
-    input_abs = InputDiscrete([Universe(0)])
+    input_abs = InputDiscrete([1])
 
     if sparse
         target_model = SparseOrthogonalIMDPTarget()
@@ -133,7 +135,7 @@ function husky4d_sys_direct(; sparse=false)
     state_split = (10, 8, 15, 4)
     state_abs = StateUniformGridSplit(X, state_split)
 
-    input_abs = InputDiscrete([Universe(0)])
+    input_abs = InputDiscrete([1])
 
     if sparse
         target_model = SparseIMDPTarget()
@@ -149,7 +151,7 @@ end
 function husky5d_sys()
     pwa_dyn = load_system("husky5d", 1728)
     w = AdditiveDiagonalGaussianNoise([0.01, 0.01, 0.01, 0.01, 0.01])
-    dyn = UncertainPWAAdditiveNoiseDynamics(5, 0, pwa_dyn, w)
+    dyn = UncertainPWAAdditiveNoiseDynamics(5, pwa_dyn, w)
 
     initial = EmptySet(5)
     reach = EmptySet(5)
@@ -167,7 +169,7 @@ function husky5d_sys_decoupled(; sparse=false)
     state_split = (6, 2, 9, 4, 4)
     state_abs = StateUniformGridSplit(X, state_split)
 
-    input_abs = InputDiscrete([Universe(0)])
+    input_abs = InputDiscrete([1])
 
     if sparse
         target_model = SparseOrthogonalIMDPTarget()
@@ -187,7 +189,7 @@ function husky5d_sys_direct(; sparse=false)
     state_split = (6, 2, 9, 4, 4)
     state_abs = StateUniformGridSplit(X, state_split)
 
-    input_abs = InputDiscrete([Universe(0)])
+    input_abs = InputDiscrete([1])
 
     if sparse
         target_model = SparseIMDPTarget()
