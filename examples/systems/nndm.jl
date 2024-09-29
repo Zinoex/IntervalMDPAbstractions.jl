@@ -290,9 +290,9 @@ function action_cartpole_direct(; sparse=false)
     input_abs = InputDiscrete([1, 2])
 
     if sparse
-        target_model = SparseOrthogonalIMDPTarget()
+        target_model = SparseIMDPTarget()
     else
-        target_model = OrthogonalIMDPTarget()
+        target_model = IMDPTarget()
     end
 
     mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
