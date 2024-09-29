@@ -67,6 +67,8 @@ struct InputDiscrete{S} <: InputAbstraction
     inputs::Vector{S}
 end
 numinputs(input::InputDiscrete) = length(input.inputs)
+issetbased(input::InputDiscrete{<:Singleton}) = false
+issetbased(input::InputDiscrete{<:LazySet}) = true
 issetbased(input::InputDiscrete) = false
 function inputs(input::InputDiscrete)
     return input.inputs
