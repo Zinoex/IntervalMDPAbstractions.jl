@@ -46,6 +46,25 @@ function almost_identity_decoupled(num_dims::Int; sparse=false, state_split_per_
     return mdp, reach, avoid
 end
 
+function almost_identity_direct(num_dims::Int; sparse=false, state_split_per_dim=8)
+    sys = almost_identity_sys(num_dims)
+
+    X = Hyperrectangle(; low=[-1.0 for _ in 1:num_dims], high=[1.0 for _ in 1:num_dims])
+    state_abs = StateUniformGridSplit(X, ntuple(i -> state_split_per_dim, num_dims))
+
+    input_abs = InputDiscrete([Singleton([0.0])])
+
+    if sparse
+        target_model = SparseIMDPTarget(1e-9)
+    else
+        target_model = IMDPTarget()
+    end
+
+    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+
+    return mdp, reach, avoid
+end
+
 function main(n)
     @time "abstraction" mdp, reach, avoid = almost_identity_decoupled(n; sparse=true)
 

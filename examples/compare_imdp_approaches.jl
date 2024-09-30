@@ -63,13 +63,40 @@ bas7d = ComparisonProblem(
     (1,),
 )
 
+action_cartpole = ComparisonProblem(
+    "action_cartpole",
+    () -> nothing,
+    false,
+    (20, 20, 24, 20),
+    (1,),
+)
+
+linear6d = ComparisonProblem(
+    "linear6d",
+    () -> nothing,
+    false,
+    (8, 8, 8, 8, 8, 8),
+    (1,),
+)
+
+linear7d = ComparisonProblem(
+    "linear7d",
+    () -> nothing,
+    false,
+    (8, 8, 8, 8, 8, 8, 8),
+    (1,),
+)
+
 problems = [
     robot_2d_reachability,
     robot_2d_reachavoid,
     syscore_running_example,
     van_der_pol,
     bas4d,
-    bas7d
+    bas7d,
+    action_cartpole,
+    linear6d,
+    linear7d
 ]
 
 function benchmark_impact(problem::ComparisonProblem)
