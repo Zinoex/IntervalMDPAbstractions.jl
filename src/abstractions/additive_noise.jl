@@ -2,11 +2,14 @@ using SparseArrays
 export abstraction
 
 """
-    abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractIMDPTarget)
+    abstraction(prob::AbstractionProblem{<:System{<:AdditiveNoiseDynamics}}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractIMDPTarget)
 
 Abstract function for creating an abstraction of a system with additive noise with an IMDP as the target model.
 """
-function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractIMDPTarget)
+function abstraction(prob::AbstractionProblem{<:System{<:AdditiveNoiseDynamics}}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractIMDPTarget)
+    sys = system(prob)
+    spec = specification(prob)
+    
     # The first state is absorbing, representing transitioning to outside the partitioned.
     nregions = numregions(state_abstraction) + 1
     ninputs = numinputs(input_abstraction)
@@ -53,25 +56,20 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
     # State pointer
     stateptr = Int32[[1, 2]; (1:nregions-1) .* ninputs .+ 2]
 
-    # Properties
+    # Initial states
     initial_states = Int32[]
-    reach_states = Int32[]
-    avoid_states = Int32[1] # Absorbing state
-
     for (i, source_region) in enumerate(regions(state_abstraction))
         if !isdisjoint(initial(sys), source_region)
             push!(initial_states, i + 1)
         end
-
-        if !iszeromeasure(avoid(sys), source_region)
-            push!(avoid_states, i + 1)
-        elseif source_region ⊆ reach(sys)
-            push!(reach_states, i + 1)
-        end
     end
+    
+    mdp = IntervalMarkovDecisionProcess(prob, stateptr, initial_states)
 
-    # Final construction
-    return IntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
+    # Property
+    spec = convert_specification(spec, state_abstraction, target_model)
+
+    return mdp, spec
 end
 
 function initprob(::IMDPTarget, nregions, ninputs) 
@@ -88,12 +86,111 @@ function initprob(::SparseIMDPTarget, nregions, ninputs)
     return prob_lower, prob_upper
 end
 
+function convert_specification(spec::Specification{<:FiniteTimeRegionReachability}, state_abstraction::StateUniformGridSplit, target_model)
+    reach, avoid = convert_property(spec, state_abstraction, target_model)
+    prop = FiniteTimeReachAvoid(reach, avoid, time_horizon(system_property(spec)))
+
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+end
+
+function convert_specification(spec::Specification{<:InfiniteTimeRegionReachability}, state_abstraction::StateUniformGridSplit, target_model)
+    reach, avoid = convert_property(spec, state_abstraction, target_model)
+    prop = InfiniteTimeReachAvoid(reach, avoid, convergence_eps(system_property(spec)))
+
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+end
+
+function convert_property(spec::Specification{<:AbstractRegionReachability}, state_abstraction::StateUniformGridSplit, ::AbstractIMDPTarget)
+    prop = system_property(spec)
+    
+    reach_states = Int32[]
+    avoid_states = Int32[1]  # Absorbing state
+
+    for (i, source_region) in enumerate(regions(state_abstraction))
+        if ispessimistic(spec) && source_region ⊆ reach(prop)
+            push!(reach_states, i + 1)
+        elseif isoptimistic(spec) && !iszeromeasure(reach(prop), source_region)
+            push!(reach_states, i + 1)
+        end
+    end
+
+    return reach_states, avoid_states
+end
+
+function convert_specification(spec::Specification{<:FiniteTimeRegionReachAvoid}, state_abstraction::StateUniformGridSplit, target_model)
+    reach, avoid = convert_property(spec, state_abstraction, target_model)
+    prop = FiniteTimeReachAvoid(reach, avoid, time_horizon(system_property(spec)))
+
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+end
+
+function convert_specification(spec::Specification{<:InfiniteTimeRegionReachAvoid}, state_abstraction::StateUniformGridSplit, target_model)
+    reach, avoid = convert_property(spec, state_abstraction, target_model)
+    prop = InfiniteTimeReachAvoid(reach, avoid, convergence_eps(system_property(spec)))
+
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+end
+
+function convert_property(spec::Specification{<:AbstractRegionReachAvoid}, state_abstraction::StateUniformGridSplit, ::AbstractIMDPTarget)
+    prop = system_property(spec)
+    
+    reach_states = Int32[]
+    avoid_states = Int32[1]  # Absorbing state
+
+    for (i, source_region) in enumerate(regions(state_abstraction))
+        if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
+            push!(avoid_states, i + 1)
+        elseif isoptimistic(spec) && source_region ⊆ avoid(prop)
+            push!(avoid_states, i + 1)
+        elseif ispessimistic(spec) && source_region ⊆ reach(prop)
+            push!(reach_states, i + 1)
+        elseif isoptimistic(spec) && !iszeromeasure(reach(prop), source_region)
+            push!(reach_states, i + 1)
+        end
+    end
+
+    return reach_states, avoid_states
+end
+
+function convert_specification(spec::Specification{<:FiniteTimeRegionSafety}, state_abstraction::StateUniformGridSplit, target_model)
+    avoid = convert_property(spec, state_abstraction, target_model)
+    prop = FiniteTimeSafety(avoid, time_horizon(system_property(spec)))
+
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+end
+
+function convert_specification(spec::Specification{<:InfiniteTimeRegionSafety}, state_abstraction::StateUniformGridSplit, target_model)
+    avoid = convert_property(spec, state_abstraction, target_model)
+    prop = InfiniteTimeSafety(avoid, convergence_eps(system_property(spec)))
+
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+end
+
+function convert_property(spec::Specification{<:AbstractRegionSafety}, state_abstraction::StateUniformGridSplit, ::AbstractIMDPTarget)
+    prop = system_property(spec)
+    
+    avoid_states = Int32[1]  # Absorbing state
+
+    for (i, source_region) in enumerate(regions(state_abstraction))
+        if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
+            push!(avoid_states, i + 1)
+        elseif isoptimistic(spec) && source_region ⊆ avoid(prop)
+            push!(avoid_states, i + 1)
+        end
+    end
+
+    return avoid_states
+end
+
 """
-    abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractOrthogonalIMDPTarget)
+    abstraction(prob::AbstractionProblem{<:System{<:AdditiveNoiseDynamics}}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractOrthogonalIMDPTarget)
 
 Abstract function for creating an abstraction of a system with additive noise with a decoupled IMDP as the target model.
 """
-function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractOrthogonalIMDPTarget)
+function abstraction(prob::AbstractionProblem{<:System{<:AdditiveNoiseDynamics}}, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractOrthogonalIMDPTarget)
+    sys = system(prob)
+    spec = specification(prob)
+    
     dyn = dynamics(sys)
     if !candecouple(noise(dyn))
         throw(ArgumentError("Cannot decouple system with non-diagonal noise covariance matrix"))
@@ -178,31 +275,20 @@ function abstraction(sys::System{<:AdditiveNoiseDynamics}, state_abstraction::St
         Int32.(Tuple(splits(state_abstraction) .+ 1))
     )
 
-    # Properties
+    # Initial states
     initial_states = NTuple{dimstate(dyn), Int32}[]
-    reach_states = NTuple{dimstate(dyn), Int32}[]
-    avoid_states = NTuple{dimstate(dyn), Int32}[] # Absorbing state
-
-    for I in CartesianIndices(splits(state_abstraction) .+ 1)
-        if any(Tuple(I) .== 1)
-            push!(avoid_states, Tuple(I))
-        end
-    end
-
     for (I, source_region) in zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
         if !isdisjoint(initial(sys), source_region)
             push!(initial_states, Tuple(I) .+ 1)
         end
-
-        if !iszeromeasure(avoid(sys), source_region)
-            push!(avoid_states, Tuple(I) .+ 1)
-        elseif source_region ⊆ reach(sys)
-            push!(reach_states, Tuple(I) .+ 1)
-        end
     end
 
-    # Final construction
-    return OrthogonalIntervalMarkovDecisionProcess(prob, stateptr, initial_states), reach_states, avoid_states
+    mdp = OrthogonalIntervalMarkovDecisionProcess(prob, stateptr, initial_states)
+
+    # Property
+    spec = convert_specification(spec, state_abstraction, target_model)
+
+    return mdp, spec
 end
 
 function initprob(::OrthogonalIMDPTarget, state_abstraction::StateUniformGridSplit, ninputs) 
@@ -239,4 +325,79 @@ function initprob(::SparseOrthogonalIMDPTarget, state_abstraction::StateUniformG
     end
 
     return prob_lower, prob_upper
+end
+
+function convert_property(spec::Specification{<:AbstractRegionReachability}, state_abstraction::StateUniformGridSplit, ::AbstractOrthogonalIMDPTarget)
+    prop = system_property(spec)
+    
+    reach_states = NTuple{dim(prop), Int32}[]
+    avoid_states = NTuple{dim(prop), Int32}[]
+
+    # Absorbing states
+    for I in CartesianIndices(splits(state_abstraction) .+ 1)
+        if any(Tuple(I) .== 1)
+            push!(avoid_states, Tuple(I))
+        end
+    end    
+
+    for (I, source_region) in zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
+        if ispessimistic(spec) && source_region ⊆ reach(prop)
+            push!(reach_states, Tuple(I) .+ 1)
+        elseif isoptimistic(spec) && !iszeromeasure(reach(prop), source_region)
+            push!(reach_states, Tuple(I) .+ 1)
+        end
+    end
+
+    return reach_states, avoid_states
+end
+
+function convert_property(spec::Specification{<:AbstractRegionReachAvoid}, state_abstraction::StateUniformGridSplit, ::AbstractOrthogonalIMDPTarget)
+    prop = system_property(spec)
+    
+    reach_states = NTuple{dim(prop), Int32}[]
+    avoid_states = NTuple{dim(prop), Int32}[]
+
+    # Absorbing states
+    for I in CartesianIndices(splits(state_abstraction) .+ 1)
+        if any(Tuple(I) .== 1)
+            push!(avoid_states, Tuple(I))
+        end
+    end
+
+    for (I, source_region) in zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
+        if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
+            push!(avoid_states, Tuple(I) .+ 1)
+        elseif isoptimistic(spec) && source_region ⊆ avoid(prop)
+            push!(avoid_states, Tuple(I) .+ 1)
+        elseif ispessimistic(spec) && source_region ⊆ reach(prop)
+            push!(reach_states, Tuple(I) .+ 1)
+        elseif isoptimistic(spec) && !iszeromeasure(reach(prop), source_region)
+            push!(reach_states, Tuple(I) .+ 1)
+        end
+    end
+
+    return reach_states, avoid_states
+end
+
+function convert_property(spec::Specification{<:AbstractRegionSafety}, state_abstraction::StateUniformGridSplit, ::AbstractOrthogonalIMDPTarget)
+    prop = system_property(spec)
+    
+    avoid_states = NTuple{dim(prop), Int32}[]
+
+    # Absorbing states
+    for I in CartesianIndices(splits(state_abstraction) .+ 1)
+        if any(Tuple(I) .== 1)
+            push!(avoid_states, Tuple(I))
+        end
+    end
+
+    for (I, source_region) in zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
+        if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
+            push!(avoid_states, Tuple(I) .+ 1)
+        elseif isoptimistic(spec) && source_region ⊆ avoid(prop)
+            push!(avoid_states, Tuple(I) .+ 1)
+        end
+    end
+
+    return avoid_states
 end

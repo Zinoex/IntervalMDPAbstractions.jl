@@ -11,8 +11,6 @@ struct IntervalSySCoReComparisonProblem{N, M}
 
     direct_constructor::Function
     decoupled_constructor::Function
-    problem_constructor::Function
-    post_process_value_function::Function
 
     state_split::NTuple{N, Int}
     input_split::NTuple{M, Int}
@@ -21,10 +19,8 @@ end
 
 robot_2d_reachability = IntervalSySCoReComparisonProblem(
     "robot_2d_reachability",
-    (state_split, input_split) -> robot_2d_direct(;spec=:reachability, sparse=true, state_split=state_split, input_split=input_split),
-    (state_split, input_split) -> robot_2d_decoupled(;spec=:reachability, state_split=state_split, input_split=input_split),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachAvoid(reach, avoid, time_horizon), Pessimistic, Maximize)),
-    identity,
+    (state_split, input_split, time_horizon) -> robot_2d_direct(time_horizon; spec=:reachability, sparse=true, state_split=state_split, input_split=input_split),
+    (state_split, input_split, time_horizon) -> robot_2d_decoupled(time_horizon; spec=:reachability, state_split=state_split, input_split=input_split),
     (20, 20),
     (11, 11),
     10
@@ -32,10 +28,8 @@ robot_2d_reachability = IntervalSySCoReComparisonProblem(
 
 robot_2d_reachavoid = IntervalSySCoReComparisonProblem(
     "robot_2d_reachavoid",
-    (state_split, input_split) -> robot_2d_direct(;spec=:reachavoid, sparse=true, state_split=state_split, input_split=input_split),
-    (state_split, input_split) -> robot_2d_decoupled(;spec=:reachavoid, sparse=true, state_split=state_split, input_split=input_split),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachAvoid(reach, avoid, time_horizon), Pessimistic, Maximize)),
-    identity,
+    (state_split, input_split, time_horizon) -> robot_2d_direct(time_horizon; spec=:reachavoid, sparse=true, state_split=state_split, input_split=input_split),
+    (state_split, input_split, time_horizon) -> robot_2d_decoupled(time_horizon; spec=:reachavoid, sparse=true, state_split=state_split, input_split=input_split),
     (40, 40),
     (21, 21),
     10
@@ -43,10 +37,8 @@ robot_2d_reachavoid = IntervalSySCoReComparisonProblem(
 
 syscore_running_example = IntervalSySCoReComparisonProblem(
     "syscore_running_example",
-    (state_split, input_split) -> running_example_direct(;range_vs_grid=:range, sparse=true, state_split=state_split, input_split=input_split),
-    (state_split, input_split) -> running_example_decoupled(;range_vs_grid=:range, state_split=state_split, input_split=input_split),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachAvoid(reach, avoid, time_horizon), Pessimistic, Maximize)),
-    identity,
+    (state_split, input_split, time_horizon) -> running_example_direct(time_horizon; range_vs_grid=:range, sparse=true, state_split=state_split, input_split=input_split),
+    (state_split, input_split, time_horizon) -> running_example_decoupled(time_horizon; range_vs_grid=:range, state_split=state_split, input_split=input_split),
     (40, 40),
     (3, 3),
     10
@@ -54,10 +46,8 @@ syscore_running_example = IntervalSySCoReComparisonProblem(
 
 van_der_pol = IntervalSySCoReComparisonProblem(
     "van_der_pol",
-    (state_split, input_split) -> van_der_pol_direct(;state_split=state_split, input_split=input_split),
-    (state_split, input_split) -> van_der_pol_decoupled(;state_split=state_split, input_split=input_split),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachAvoid(reach, avoid, time_horizon), Pessimistic, Maximize)),
-    identity,
+    (state_split, input_split, time_horizon) -> van_der_pol_direct(time_horizon; state_split=state_split, input_split=input_split),
+    (state_split, input_split, time_horizon) -> van_der_pol_decoupled(time_horizon; state_split=state_split, input_split=input_split),
     (50, 50),
     (11,),
     10
@@ -65,10 +55,8 @@ van_der_pol = IntervalSySCoReComparisonProblem(
 
 bas4d = IntervalSySCoReComparisonProblem(
     "bas4d",
-    (state_split, input_split) -> building_automation_system_4d_direct(;sparse=true, state_split=state_split, input_split=input_split),
-    (state_split, input_split) -> building_automation_system_4d_decoupled(;state_split=state_split, input_split=input_split),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
-    (V) -> 1.0 .- V,
+    (state_split, input_split, time_horizon) -> building_automation_system_4d_direct(time_horizon; sparse=true, state_split=state_split, input_split=input_split),
+    (state_split, input_split, time_horizon) -> building_automation_system_4d_decoupled(time_horizon; state_split=state_split, input_split=input_split),
     (5, 5, 7, 7),
     (4,),
     10
@@ -76,10 +64,8 @@ bas4d = IntervalSySCoReComparisonProblem(
 
 bas7d = IntervalSySCoReComparisonProblem(
     "bas7d",
-    (state_split, input_split) -> building_automation_system_7d_direct(;sparse=true, state_split=state_split),
-    (state_split, input_split) -> building_automation_system_7d_decoupled(;state_split=state_split),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
-    (V) -> 1.0 .- V,
+    (state_split, input_split, time_horizon) -> building_automation_system_7d_direct(time_horizon; sparse=true, state_split=state_split),
+    (state_split, input_split, time_horizon) -> building_automation_system_7d_decoupled(time_horizon; state_split=state_split),
     (21, 21, 3, 3, 3, 3, 3),
     (1,),
     10
@@ -87,10 +73,8 @@ bas7d = IntervalSySCoReComparisonProblem(
 
 action_cartpole = IntervalSySCoReComparisonProblem(
     "action_cartpole",
-    (state_split, input_split) -> action_cartpole_direct(; sparse=true),
-    (state_split, input_split) -> action_cartpole_decoupled(; sparse=false),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
-    (V) -> 1.0 .- V,
+    (state_split, input_split, time_horizon) -> action_cartpole_direct(time_horizon; sparse=true),
+    (state_split, input_split, time_horizon) -> action_cartpole_decoupled(time_horizon; sparse=false),
     (20, 20, 24, 20),
     (1,),
     10
@@ -98,10 +82,8 @@ action_cartpole = IntervalSySCoReComparisonProblem(
 
 linear6d = IntervalSySCoReComparisonProblem(
     "linear6d",
-    (state_split, input_split) -> almost_identity_direct(6; sparse=true, state_split_per_dim=8),
-    (state_split, input_split) -> almost_identity_decoupled(6; sparse=true, state_split_per_dim=8),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
-    (V) -> 1.0 .- V,
+    (state_split, input_split, time_horizon) -> almost_identity_direct(6, time_horizon; sparse=true, state_split_per_dim=8),
+    (state_split, input_split, time_horizon) -> almost_identity_decoupled(6, time_horizon; sparse=true, state_split_per_dim=8),
     (8, 8, 8, 8, 8, 8),
     (1,),
     10
@@ -109,10 +91,8 @@ linear6d = IntervalSySCoReComparisonProblem(
 
 linear7d = IntervalSySCoReComparisonProblem(
     "linear7d",
-    (state_split, input_split) -> almost_identity_direct(7; sparse=true, state_split_per_dim=8),
-    (state_split, input_split) -> almost_identity_decoupled(7; sparse=true, state_split_per_dim=8),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
-    (V) -> 1.0 .- V,
+    (state_split, input_split, time_horizon) -> almost_identity_direct(7, time_horizon; sparse=true, state_split_per_dim=8),
+    (state_split, input_split, time_horizon) -> almost_identity_decoupled(7, time_horizon; sparse=true, state_split_per_dim=8),
     (8, 8, 8, 8, 8, 8, 8),
     (1,),
     10
@@ -131,7 +111,7 @@ problems = [
 ]
 
 function warmup_abstraction(problem::IntervalSySCoReComparisonProblem, constructor)
-    constructor(problem.state_split, problem.input_split)
+    constructor(problem.state_split, problem.input_split, problem.time_horizon)
 
     return nothing
 end
@@ -139,11 +119,11 @@ end
 function measure_abstraction_time(problem::IntervalSySCoReComparisonProblem, constructor)
     BenchmarkTools.gcscrub()
     start_time = time_ns()
-    mdp, reach, avoid = constructor(problem.state_split, problem.input_split)
+    mdp, spec = constructor(problem.state_split, problem.input_split)
     end_time = time_ns()
     abstraction_time = (end_time - start_time) / 1e9
 
-    return abstraction_time, mdp, reach, avoid
+    return abstraction_time, mdp, spec
 end
 
 function warmup_certification(prob)
@@ -174,13 +154,13 @@ function benchmark_intervalsyscore(name::String, direct=true)
     # Warmup
     warmup_abstraction(problem, constructor)
 
-    abstraction_time, mdp, reach, avoid = measure_abstraction_time(problem, constructor)
+    abstraction_time, mdp, spec = measure_abstraction_time(problem, constructor)
     println(("Abstraction time", abstraction_time))
 
     prob_mem = Base.summarysize(mdp) / 1000^2
     println(("Transition probability memory", prob_mem))
 
-    prob = problem.problem_constructor(mdp, reach, avoid, problem.time_horizon)
+    prob = Problem(mdp, spec)
 
     # Warmup
     warmup_certification(prob)
@@ -199,7 +179,6 @@ function benchmark_intervalsyscore(name::String, direct=true)
     end
 
     println("V")
-    V = problem.post_process_value_function(V)
     for v in V
         println(v)
     end

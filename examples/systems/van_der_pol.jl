@@ -2,7 +2,7 @@ using LinearAlgebra, LazySets, Plots
 using IntervalMDP, IntervalSySCoRe
 
 
-function van_der_pol_sys(; sampling_time=0.1)
+function van_der_pol_sys(time_horizon; sampling_time=0.1)
     f(x, u) = [x[1] + x[2] * sampling_time, x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * sampling_time + u[1]]
 
     w_variance = [0.2, 0.2]
@@ -11,16 +11,17 @@ function van_der_pol_sys(; sampling_time=0.1)
     dyn = NonlinearAdditiveNoiseDynamics(f, 2, 1, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(2)
+    sys = System(dyn, initial_region)
+
     reach_region = Hyperrectangle(; low=[-1.4, -2.9], high=[-0.7, -2.0])
-    avoid_region = EmptySet(2)
+    prop = FiniteTimeRegionReachability(reach_region, time_horizon)
+    spec = Specification(prop, Pessimistic, Maximize)
 
-    sys = System(dyn, initial_region, reach_region, avoid_region)
-
-    return sys
+    return sys, spec
 end
 
-function van_der_pol_decoupled(; sparse=false, state_split=(50, 50), input_split=10)
-    sys = van_der_pol_sys()
+function van_der_pol_decoupled(time_horizon=10; sparse=false, state_split=(50, 50), input_split=10)
+    sys, spec = van_der_pol_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-4.0, -4.0], high=[4.0, 4.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -34,13 +35,14 @@ function van_der_pol_decoupled(; sparse=false, state_split=(50, 50), input_split
         target_model = OrthogonalIMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
-function van_der_pol_direct(; state_split=(50, 50), input_split=10)
-    sys = van_der_pol_sys()
+function van_der_pol_direct(time_horizon=10; state_split=(50, 50), input_split=10)
+    sys, spec = van_der_pol_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-4.0, -4.0], high=[4.0, 4.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -50,13 +52,14 @@ function van_der_pol_direct(; state_split=(50, 50), input_split=10)
 
     target_model = SparseIMDPTarget()
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
 function van_der_pol_plot_nominal()
-    sys = van_der_pol_sys()
+    sys, spec = van_der_pol_sys(1)
 
     X = Hyperrectangle(low=[-4.0, -4.0], high=[4.0, 4.0])
     state_abs = StateUniformGridSplit(X, (50, 50))
@@ -81,10 +84,7 @@ function van_der_pol_plot_nominal()
 end
 
 function main()
-    @time "abstraction" mdp, reach, avoid = van_der_pol_decoupled(; state_split=(100, 100), input_split=3)
-
-    prop = FiniteTimeReachAvoid(reach, avoid, 10)
-    spec = Specification(prop, Pessimistic, Maximize)
+    @time "abstraction" mdp, spec = van_der_pol_decoupled(; state_split=(100, 100), input_split=3)
     prob = Problem(mdp, spec)
 
     @time "value iteration" V, k, res = value_iteration(prob)

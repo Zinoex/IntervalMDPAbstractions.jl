@@ -246,22 +246,23 @@ function load_hdf5_system(system_name::String)
     return dynamics
 end
 
-function action_cartpole_sys()
+function action_cartpole_sys(time_horizon)
     pwa_dyn = load_hdf5_system("cartpole")
     w = AdditiveDiagonalGaussianNoise([0.01, 0.01, 0.01, 0.01])
     dyn = UncertainPWAAdditiveNoiseDynamics(4, pwa_dyn, w)
 
     initial = EmptySet(4)
-    reach = EmptySet(4)
+    sys = System(dyn, initial)
+
     avoid = EmptySet(4)
+    prop = FiniteTimeRegionSafety(avoid, time_horizon)
+    spec = Specification(prop, Pessimistic, Maximize)
 
-    sys = System(dyn, initial, reach, avoid)
-
-    return sys
+    return sys, spec
 end
 
-function action_cartpole_decoupled(; sparse=false)
-    sys = action_cartpole_sys()
+function action_cartpole_decoupled(time_horizon=10; sparse=false)
+    sys, spec = action_cartpole_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-1.0, -1.0, deg2rad(-12.0), -1.0], high=[1.0, 1.0, deg2rad(12.0), 1.0])
     state_split = (20, 20, 24, 20)
@@ -275,13 +276,14 @@ function action_cartpole_decoupled(; sparse=false)
         target_model = OrthogonalIMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
-function action_cartpole_direct(; sparse=false)
-    sys = action_cartpole_sys()
+function action_cartpole_direct(time_horizon=10; sparse=false)
+    sys, spec = action_cartpole_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-1.0, -1.0, deg2rad(-12.0), -1.0], high=[1.0, 1.0, deg2rad(12.0), 1.0])
     state_split = (20, 20, 24, 20)
@@ -295,7 +297,8 @@ function action_cartpole_direct(; sparse=false)
         target_model = IMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end

@@ -2,7 +2,7 @@ using LinearAlgebra, LazySets
 using IntervalMDP, IntervalSySCoRe
 
 
-function running_example_sys()
+function running_example_sys(time_horizon)
     A = 0.9I(2)
     B = 0.7I(2)
     w_stddev = [1.0, 1.0]
@@ -10,17 +10,19 @@ function running_example_sys()
     dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(2)
+    sys = System(dyn, initial_region)
+
     reach_region = Hyperrectangle(; low=[4.0, -4.0], high=[10.0, 0.0])
     avoid_region = Hyperrectangle(; low=[4.0, 0.0], high=[10.0, 4.0])
+    prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, time_horizon)
+    spec = Specification(prop, Pessimistic, Maximize)
 
-    sys = System(dyn, initial_region, reach_region, avoid_region)
-
-    return sys
+    return sys, spec
 end
 
 
-function running_example_decoupled(; sparse=false, range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
-    sys = running_example_sys()
+function running_example_decoupled(time_horizon=10; sparse=false, range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
+    sys, spec = running_example_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -40,13 +42,14 @@ function running_example_decoupled(; sparse=false, range_vs_grid=:grid, state_sp
         target_model = OrthogonalIMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
-function running_example_direct(; sparse=false, range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
-    sys = running_example_sys()
+function running_example_direct(time_horizon=10; sparse=false, range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
+    sys, spec = running_example_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -66,24 +69,21 @@ function running_example_direct(; sparse=false, range_vs_grid=:grid, state_split
         target_model = IMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
 function main()
     # Direct
-    @time "abstraction direct" mdp_direct, reach_direct, avoid_direct = running_example_direct()
-    prop_direct = FiniteTimeReachAvoid(reach_direct, avoid_direct, 10)
-    spec_direct = Specification(prop_direct, Pessimistic, Maximize)
+    @time "abstraction direct" mdp_direct, spec_direct = running_example_direct()
     prob_direct = Problem(mdp_direct, spec_direct)
 
     @time "value iteration direct" V_direct, k_direct, res_direct = value_iteration(prob_direct)
 
     # Decoupled
-    @time "abstraction decoupled" mdp_decoupled, reach_decoupled, avoid_decoupled = running_example_decoupled()
-    prop_decoupled = FiniteTimeReachAvoid(reach_decoupled, avoid_decoupled, 10)
-    spec_decoupled = Specification(prop_decoupled, Pessimistic, Maximize)
+    @time "abstraction decoupled" mdp_decoupled, spec_decoupled = running_example_decoupled()
     prob_decoupled = Problem(mdp_decoupled, spec_decoupled)
 
     @time "value iteration decoupled" V_decoupled, k_decoupled, res_decoupled = value_iteration(prob_decoupled)

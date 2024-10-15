@@ -2,7 +2,7 @@ using LinearAlgebra, LazySets
 using IntervalMDP, IntervalSySCoRe
 
 
-function building_automation_system_7d()
+function building_automation_system_7d(time_horizon)
     A = [
         0.9678 0.0    0.0036 0.0    0.0036 0.0    0.0036;
         0.0    0.9682 0.0    0.0034 0.0    0.0034 0.0034;
@@ -21,16 +21,17 @@ function building_automation_system_7d()
     dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(7)
-    reach_region = EmptySet(7)
+    sys = System(dyn, initial_region)
+
     avoid_region = EmptySet(7)
+    prop = FiniteTimeRegionSafety(avoid_region, time_horizon)
+    spec = Specification(prop, Pessimistic, Maximize)
 
-    sys = System(dyn, initial_region, reach_region, avoid_region)
-
-    return sys
+    return sys, spec
 end
 
-function building_automation_system_7d_decoupled(; sparse=false, state_split=(21, 21, 3, 3, 3, 3, 3))
-    sys = building_automation_system_7d()
+function building_automation_system_7d_decoupled(time_horizon=10; sparse=false, state_split=(21, 21, 3, 3, 3, 3, 3))
+    sys, spec = building_automation_system_7d(time_horizon)
 
     X = Hyperrectangle(; low=[-0.525, -0.525, -0.75, -0.75, -0.75, -0.75, -0.75], high=[0.525, 0.525, 0.75, 0.75, 0.75, 0.75, 0.75])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -43,13 +44,14 @@ function building_automation_system_7d_decoupled(; sparse=false, state_split=(21
         target_model = OrthogonalIMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
-function building_automation_system_7d_direct(; sparse=false, state_split=(21, 21, 3, 3, 3, 3, 3))
-    sys = building_automation_system_7d()
+function building_automation_system_7d_direct(time_horizon=10; sparse=false, state_split=(21, 21, 3, 3, 3, 3, 3))
+    sys, spec = building_automation_system_7d(time_horizon)
 
     X = Hyperrectangle(; low=[-0.525, -0.525, -0.75, -0.75, -0.75, -0.75, -0.75], high=[0.525, 0.525, 0.75, 0.75, 0.75, 0.75, 0.75])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -62,18 +64,20 @@ function building_automation_system_7d_direct(; sparse=false, state_split=(21, 2
         target_model = IMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
 function main()
-    @time "abstraction" mdp, _, avoid = building_automation_system_7d_decoupled(; state_split=(21, 21, 3, 3, 3, 3, 3))
-
-    prop = FiniteTimeReachability(avoid, 10)
-    spec = Specification(prop, Optimistic, Minimize)
+    @time "abstraction" mdp, spec = building_automation_system_7d_decoupled(; state_split=(21, 21, 3, 3, 3, 3, 3))
     prob = Problem(mdp, spec)
 
-    @time "value iteration" V_unsafety, k, res = value_iteration(prob)
-    V_safety = 1.0 .- V_unsafety
+    @time "value iteration" V_safety, k, res = value_iteration(prob)
+
+    # Remove the first state from each axis (the avoid state, whose value is always 0).
+    V_safety = V_safety[(2:d for d in size(V_safety))...]
+
+    return V_safety
 end

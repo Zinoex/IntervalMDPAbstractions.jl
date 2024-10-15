@@ -12,8 +12,6 @@ struct SySCoReComparisonProblem
     name::String
 
     constructor::Function
-    problem_constructor::Function
-    post_process_value_function::Function
 
     state_split
     input_split
@@ -23,9 +21,7 @@ end
 
 syscore_running_example = SySCoReComparisonProblem(
     "running_example",
-    (state_split, input_split) -> running_example_decoupled(;range_vs_grid=:range, state_split=state_split, input_split=input_split),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachAvoid(reach, avoid, time_horizon), Pessimistic, Maximize)),
-    identity,
+    (state_split, input_split, time_horizon) -> running_example_decoupled(time_horizon; range_vs_grid=:range, state_split=state_split, input_split=input_split),
     n -> (n, n),
     (3, 3),
     10
@@ -34,9 +30,7 @@ syscore_running_example = SySCoReComparisonProblem(
 
 bas_4d = SySCoReComparisonProblem(
     "4d_bas",
-    (state_split, input_split) -> building_automation_system_4d_decoupled(;state_split=state_split, input_split=input_split),
-    (mdp, reach, avoid, time_horizon) -> Problem(mdp, Specification(FiniteTimeReachability(avoid, time_horizon), Optimistic, Minimize)),
-    (V) -> 1.0 .- V,
+    (state_split, input_split, time_horizon) -> building_automation_system_4d_decoupled(time_horizon; state_split=state_split, input_split=input_split),
     n -> (n, n, n, n),
     4,
     10
@@ -57,11 +51,11 @@ end
 function measure_abstraction_time(problem::SySCoReComparisonProblem, num_regions_per_axis)
     BenchmarkTools.gcscrub()
     start_time = time_ns()
-    mdp, reach, avoid = problem.constructor(problem.state_split(num_regions_per_axis), problem.input_split)
+    mdp, spec = problem.constructor(problem.state_split(num_regions_per_axis), problem.input_split, problem.time_horizon)
     end_time = time_ns()
     abstraction_time = (end_time - start_time) / 1e9
 
-    return abstraction_time, mdp, reach, avoid
+    return abstraction_time, mdp, spec
 end
 
 function warmup_certification(prob)
@@ -84,13 +78,13 @@ function benchmark_intervalsyscore(problem::SySCoReComparisonProblem, num_region
     # Warmup
     warmup_abstraction(problem, num_regions_per_axis)
 
-    abstraction_time, mdp, reach, avoid = measure_abstraction_time(problem, num_regions_per_axis)
+    abstraction_time, mdp, spec = measure_abstraction_time(problem, num_regions_per_axis)
     println(("Abstraction time", abstraction_time))
 
     prob_mem = Base.summarysize(mdp) / 1000^2
     println(("Transition probability memory", prob_mem))
 
-    prob = problem.problem_constructor(mdp, reach, avoid, problem.time_horizon)
+    prob = Problem(mdp, spec)
 
     # Warmup
     warmup_certification(prob)
@@ -111,9 +105,12 @@ function benchmark_intervalsyscore(problem::SySCoReComparisonProblem, num_region
     # end
 
     V = problem.post_process_value_function(V)
-    V = V[(2:size(V, i) for i in 1:ndims(V))...]
 
-    reach = map(x -> CartesianIndex(x .- 1), reach) # Subtract 1 to match 1-based indexing without the avoid states
+    if spec isa AbstractReachability
+        reach = map(x -> CartesianIndex(x .- 1), reach) # Subtract 1 to match 1-based indexing without the avoid states
+    else
+        reach = []
+    end
 
     avoid = filter(x -> !any(isone, x), avoid) # Remove the absorbing avoid states (we remove these manually later)
     avoid = map(x -> CartesianIndex(x .- 1), avoid) # Subtract 1 to match 1-based indexing without the avoid states

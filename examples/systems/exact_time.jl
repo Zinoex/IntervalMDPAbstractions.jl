@@ -16,8 +16,8 @@ function ExactTimeReachAvoid(
     return ExactTimeReachAvoid(reach, avoid, time_horizon)
 end
 
-function IntervalMDP.checkproperty!(prop::ExactTimeReachAvoid, system)
-    IntervalMDP.checktimehorizon!(prop, system)
+function IntervalMDP.checkproperty!(prop::ExactTimeReachAvoid, system, strategy)
+    IntervalMDP.checktimehorizon!(prop, strategy)
     IntervalMDP.checkterminal!(IntervalMDP.terminal_states(prop), system)
     IntervalMDP.checkdisjoint!(IntervalMDP.reach(prop), IntervalMDP.avoid(prop))
 end
@@ -58,6 +58,26 @@ Return the set of states to avoid.
 """
 IntervalMDP.avoid(prop::ExactTimeReachAvoid) = prop.avoid
 
-function IntervalMDP.postprocess_value_function!(value_function, prop::ExactTimeReachAvoid)
+function IntervalMDP.step_postprocess_value_function!(value_function, prop::ExactTimeReachAvoid)
     @inbounds value_function.current[IntervalMDP.avoid(prop)] .= 0.0
+end
+
+IntervalMDP.postprocess_value_function!(value_function, prop::ExactTimeReachAvoid) = nothing
+
+## Region prop
+struct ExactTimeRegionReachability{S <: LazySet, T <: Integer} <: AbstractRegionReachability
+    reach_set::S
+    time_horizon::T
+end
+
+IntervalMDP.isfinitetime(::ExactTimeRegionReachability) = true
+IntervalMDP.time_horizon(prop::ExactTimeRegionReachability) = prop.time_horizon
+reach(prop::ExactTimeRegionReachability) = prop.reach_set
+dim(prop::ExactTimeRegionReachability) = LazySets.dim(reach(prop))
+
+function IntervalSySCoRe.convert_specification(spec::Specification{<:ExactTimeRegionReachability}, state_abstraction::StateUniformGridSplit, target_model)
+    reach, avoid = IntervalSySCoRe.convert_property(spec, state_abstraction, target_model)
+    prop = ExactTimeReachAvoid(reach, avoid, time_horizon(system_property(spec)))
+
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
 end

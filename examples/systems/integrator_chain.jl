@@ -3,7 +3,7 @@ using IntervalMDP, IntervalSySCoRe
 
 include("exact_time.jl")
 
-function integrator_chain_sys(num_dims::Int; sampling_time=0.1)
+function integrator_chain_sys(num_dims::Int, time_horizon; sampling_time=0.1)
     A = zeros(Float64, num_dims, num_dims)
     B = zeros(Float64, num_dims, 1)
 
@@ -23,16 +23,18 @@ function integrator_chain_sys(num_dims::Int; sampling_time=0.1)
     dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(num_dims)
+
+    sys = System(dyn, initial_region)
+
     reach_region = Hyperrectangle(; low=[-8.0 for _ in 1:num_dims], high=[8.0 for _ in 1:num_dims])
-    avoid_region = EmptySet(num_dims)
+    prop = ExactTimeRegionReachability(reach_region, time_horizon)
+    spec = Specification(prop, Pessimistic, Maximize)
 
-    sys = System(dyn, initial_region, reach_region, avoid_region)
-
-    return sys
+    return sys, spec
 end
 
-function integrator_chain_decoupled(num_dims::Int; sparse=false, state_split_per_dim=50, input_split=11)
-    sys = integrator_chain_sys(num_dims)
+function integrator_chain_decoupled(num_dims::Int, time_horizon=5; sparse=false, state_split_per_dim=50, input_split=11)
+    sys, spec = integrator_chain_sys(num_dims, time_horizon)
 
     X = Hyperrectangle(; low=[-10.0 for _ in 1:num_dims], high=[10.0 for _ in 1:num_dims])
     state_abs = StateUniformGridSplit(X, Tuple(state_split_per_dim for _ in 1:num_dims))
@@ -46,16 +48,14 @@ function integrator_chain_decoupled(num_dims::Int; sparse=false, state_split_per
         target_model = OrthogonalIMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
 function main(n)
-    @time "abstraction" mdp, reach, avoid = integrator_chain_decoupled(n)
-
-    prop = ExactTimeReachAvoid(reach, avoid, 5)
-    spec = Specification(prop, Pessimistic, Maximize)
+    @time "abstraction" mdp, spec = integrator_chain_decoupled(n, 5)
     prob = Problem(mdp, spec)
 
     @time "value iteration" V, k, res = value_iteration(prob)

@@ -25,7 +25,7 @@ function IntervalSySCoRe.inputs(input::InputRobot)
     return regions
 end
 
-function robot_2d_sys(;spec=:reachavoid)
+function robot_2d_sys(time_horizon; spec=:reachavoid)
     # Dynamics
     # x₁[k + 1] = x₁[k] + u₁[k] * cos(u₂[k]) + w₁[k]
     # x₂[k + 1] = x₂[k] + u₁[k] * sin(u₂[k]) + w₂[k]
@@ -45,22 +45,24 @@ function robot_2d_sys(;spec=:reachavoid)
     dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
     initial_region = EmptySet(2)
+    sys = System(dyn, initial_region)
+
     reach_region = Hyperrectangle(; low=[5.0, 5.0], high=[7.0, 7.0])
     if spec == :reachavoid
         avoid_region = Hyperrectangle(; low=[-2.0, -2.0], high=[2.0, 2.0])
+        prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, time_horizon)
     elseif spec == :reachability
-        avoid_region = EmptySet(2)
+        prop = FiniteTimeRegionReachability(reach_region, time_horizon)
     else
         throw(ArgumentError("Invalid spec argument"))
     end
+    spec = Specification(prop, Pessimistic, Maximize)
 
-    sys = System(dyn, initial_region, reach_region, avoid_region)
-
-    return sys
+    return sys, spec
 end
 
-function robot_2d_decoupled(; sparse=true, spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
-    sys = robot_2d_sys(;spec=spec)
+function robot_2d_decoupled(time_horizon=10; sparse=true, spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
+    sys, spec = robot_2d_sys(time_horizon; spec=spec)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -74,13 +76,14 @@ function robot_2d_decoupled(; sparse=true, spec=:reachavoid, state_split=(40, 40
         target_model = OrthogonalIMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
-function robot_2d_direct(; sparse=true, spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
-    sys = robot_2d_sys(;spec=spec)
+function robot_2d_direct(time_horizon=10; sparse=true, spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
+    sys, spec = robot_2d_sys(time_horizon; spec=spec)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -94,25 +97,20 @@ function robot_2d_direct(; sparse=true, spec=:reachavoid, state_split=(40, 40), 
         target_model = IMDPTarget()
     end
 
-    mdp, reach, avoid = abstraction(sys, state_abs, input_abs, target_model)
+    prob = AbstractionProblem(sys, spec)
+    mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, reach, avoid
+    return mdp, abstract_spec
 end
 
 function main()
-    @time "abstraction reach-avoid" mdp_reachavoid, reach_reachavoid, avoid_reachavoid = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
-
-    prop_reachavoid = FiniteTimeReachAvoid(reach_reachavoid, avoid_reachavoid, 10)
-    spec_reachavoid = Specification(prop_reachavoid, Pessimistic, Maximize)
+    @time "abstraction reach-avoid" mdp_reachavoid, spec_reachavoid = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
     prob_reachavoid = Problem(mdp_reachavoid, spec_reachavoid)
 
     @time "value-iteration reach-avoid" V_reachavoid, k_reachavoid, res_reachavoid = value_iteration(prob_reachavoid)
     V_reachavoid = V_reachavoid[2:end, 2:end]
 
-    @time "abstraction reachability" mdp_reachability, reach_reachability, avoid_reachability = robot_2d_decoupled(;spec=:reachability, state_split=(20, 20), input_split=(11, 11))
-
-    prop_reachability = FiniteTimeReachAvoid(reach_reachability, avoid_reachability, 10)
-    spec_reachability = Specification(prop_reachability, Pessimistic, Maximize)
+    @time "abstraction reachability" mdp_reachability, spec_reachability = robot_2d_decoupled(;spec=:reachability, state_split=(20, 20), input_split=(11, 11))
     prob_reachability = Problem(mdp_reachability, spec_reachability)
 
     @time "value-iteration reachability" V_reachability, k_reachability, res_reachability = value_iteration(prob_reachability)

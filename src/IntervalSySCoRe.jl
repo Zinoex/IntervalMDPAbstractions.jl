@@ -26,6 +26,7 @@ include("dynamics/NonlinearAdditiveNoiseDynamics.jl")
 include("dynamics/UncertainPWAAdditiveNoiseDynamics.jl")
 
 include("systems.jl")
+include("specification.jl")
 
 # Abstractions
 include("abstractions/input_abstraction.jl")
