@@ -12,40 +12,34 @@ struct EpsSySCoReComparisonProblem
     name::String
 
     constructor::Function
-    problem_constructor::Function
-    other_bound_problem_constructor::Function
 
     state_splits
     input_split
-    time_horizon
+    time_horizons
 end
 
 
 syscore_running_example = EpsSySCoReComparisonProblem(
     "running_example",
-    (state_split, input_split) -> running_example_decoupled(;range_vs_grid=:range, state_split=state_split, input_split=input_split),
-    (mdp, spec) -> Problem(mdp, spec),
-    (mdp, spec, strategy) -> Problem(mdp, Specification(system_property(spec), !satisfaction_mode(spec)), strategy),
+    (state_split, input_split, time_horizon) -> running_example_decoupled(time_horizon; range_vs_grid=:range, state_split=state_split, input_split=input_split),
     [(50, 50), (100, 100), (150, 150)],
     (3, 3),
-    10
+    [1, 2, 5, 10, 20, 50, 100, 200]
 )
 
 
 bas_4d = EpsSySCoReComparisonProblem(
     "4d_bas",
-    (state_split, input_split) -> building_automation_system_4d_decoupled(;state_split=state_split, input_split=input_split),
-    (mdp, spec, time_horizon) -> Problem(mdp, spec),
-    (mdp, spec, strategy) -> Problem(mdp, Specification(system_property(spec), !satisfaction_mode(spec)), strategy),
+    (state_split, input_split, time_horizon) -> building_automation_system_4d_decoupled(time_horizon; state_split=state_split, input_split=input_split),
     [(4, 4, 4, 4), (8, 8, 8, 8), (12, 12, 12, 12), (16, 16, 16, 16)],
     4,
-    10
+    [1, 2, 5, 10, 20, 50, 100, 200]
 )
 
 function benchmark_intervalsyscore(problem::EpsSySCoReComparisonProblem, state_split, time_horizon)
     BenchmarkTools.gcscrub()
 
-    mdp, lower_spec = problem.constructor(state_split, problem.input_split)
+    mdp, lower_spec = problem.constructor(state_split, problem.input_split, time_horizon)
     lower_bound_prob = Problem(mdp, lower_spec)
 
     strategy, V_lower, k, res = control_synthesis(lower_bound_prob)
@@ -76,7 +70,7 @@ function benchmark_system(problem::EpsSySCoReComparisonProblem, time_horizon)
 end
 
 function benchmark_system(problem::EpsSySCoReComparisonProblem)
-    for time_horizon in [1, 2, 5, 10, 20, 50, 100, 200]
+    for time_horizon in problem.time_horizons
         benchmark_system(problem, time_horizon)
     end
 end
