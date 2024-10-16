@@ -173,14 +173,20 @@ function benchmark_direct(problem::ComparisonProblem)
             reach = []
         else
             reach_lines = split(chomp(reach), '\n')
-            reach = map(line -> parse(Int32, line), reach_lines) # Parse each line as an integer
+            reach = map(reach_lines) do line
+                line_match = match(r"CartesianIndex\(([0-9]+),\)", line)
+                return parse(Int32, line_match.captures[1])
+            end
             reach = reach .- 1 # Subtract 1 to match 1-based indexing without the avoid state
             reach = map(x -> cartesian_indices[x], reach) # Convert from a linear index to a CartesianIndex
         end
 
         # Read avoid states
         avoid_lines = split(chomp(avoid), '\n') 
-        avoid = map(line -> parse(Int32, line), avoid_lines) # Parse each line as an integer
+        avoid = map(avoid_lines) do line
+            line_match = match(r"CartesianIndex\(([0-9]+),\)", line)
+            return parse(Int32, line_match.captures[1])
+        end
         avoid = filter(x -> x != 1, avoid) # Remove the absorbing avoid state (we remove this manually later)
         avoid = avoid .- 1 # Subtract 1 to match 1-based indexing without the avoid state
         avoid = map(x -> cartesian_indices[x], avoid) # Convert from a linear index to a CartesianIndex
@@ -280,6 +286,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
         else
             reach_lines = split(chomp(reach), '\n')
             reach = map(reach_lines) do line # Parse each line as a tuple of indices
+                line = replace(line, "CartesianIndex" => "")
                 indices = split(line[2:end - 1], ",")
                 indices = map(index -> parse(Int32, index), indices)
                 return Tuple(indices)
@@ -290,6 +297,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
         # Read avoid states
         avoid_lines = split(chomp(avoid), '\n')
         avoid = map(avoid_lines) do line # Parse each line as a tuple of indices
+            line = replace(line, "CartesianIndex" => "")
             indices = split(line[2:end - 1], ",")
             indices = map(index -> parse(Int32, index), indices)
             return Tuple(indices)

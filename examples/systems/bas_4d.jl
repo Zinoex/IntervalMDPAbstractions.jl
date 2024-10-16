@@ -54,7 +54,7 @@ function building_automation_system_4d_decoupled(time_horizon=10; sparse=false, 
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
@@ -78,7 +78,7 @@ function building_automation_system_4d_direct(time_horizon=10; sparse=false, sta
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end

@@ -119,27 +119,33 @@ end
 function measure_abstraction_time(problem::IntervalSySCoReComparisonProblem, constructor)
     BenchmarkTools.gcscrub()
     start_time = time_ns()
-    mdp, spec, upper_bound_spec = constructor(problem.state_split, problem.input_split)
+    mdp, spec, upper_bound_spec = constructor(problem.state_split, problem.input_split, problem.time_horizon)
     end_time = time_ns()
     abstraction_time = (end_time - start_time) / 1e9
 
     return abstraction_time, mdp, spec, upper_bound_spec
 end
 
-function warmup_certification(prob)
-    value_iteration(prob)
+function warmup_certification(prob, upper_bound_spec)
+    strategy, _ = control_synthesis(prob)
 
-    return nothing
+    upper_bound_prob = Problem(IntervalMDP.system(prob), upper_bound_spec, strategy)
+    value_iteration(upper_bound_prob)
+
+    return upper_bound_prob
 end
 
-function measure_certification_time(prob)
+function measure_certification_time(prob, upper_bound_prob)
     BenchmarkTools.gcscrub()
     start_time = time_ns()
-    strategy, V, k, res = control_synthesis(prob)
+    
+    _, V_lower, _ = control_synthesis(prob)
+    V_upper, _ = value_iteration(upper_bound_prob)
+
     end_time = time_ns()
     certification_time = (end_time - start_time) / 1e9
 
-    return certification_time, V, strategy
+    return certification_time, V_lower, V_upper
 end
 
 function benchmark_intervalsyscore(name::String, direct=true)
@@ -165,19 +171,15 @@ function benchmark_intervalsyscore(name::String, direct=true)
     prob = Problem(mdp, spec)
 
     # Warmup
-    warmup_certification(prob)
+    upper_bound_prob = warmup_certification(prob, upper_bound_spec)
 
     # Measure certification time
-    certification_time, V_lower, strategy = measure_certification_time(prob)
+    certification_time, V_lower, V_upper = measure_certification_time(prob, upper_bound_prob)
     println(("Certification time", certification_time))
-
-    # Compute upper bound probabilities
-    prob = Problem(mdp, upper_bound_spec, strategy)
-    V_upper, _, _ = value_iteration(prob)
 
     println("reach")
     reach_set = if system_property(spec) isa AbstractReachability
-        reach(system_property(spec))
+        IntervalMDP.reach(system_property(spec))
     else
         []
     end
@@ -186,7 +188,7 @@ function benchmark_intervalsyscore(name::String, direct=true)
     end
 
     println("avoid")
-    for a in avoid(system_property(spec))
+    for a in IntervalMDP.avoid(system_property(spec))
         println(a)
     end
 
