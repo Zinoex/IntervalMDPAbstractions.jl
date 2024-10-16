@@ -45,7 +45,10 @@ function almost_identity_decoupled(num_dims::Int, time_horizon=10; sparse=false,
     prob = AbstractionProblem(sys, spec)
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, abstract_spec
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+
+    return mdp, abstract_spec, upper_bound_spec
 end
 
 function almost_identity_direct(num_dims::Int, time_horizon=10; sparse=false, state_split_per_dim=8)
@@ -65,11 +68,14 @@ function almost_identity_direct(num_dims::Int, time_horizon=10; sparse=false, st
     prob = AbstractionProblem(sys, spec)
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, abstract_spec
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+
+    return mdp, abstract_spec, upper_bound_spec
 end
 
 function main(n)
-    @time "abstraction" mdp, spec = almost_identity_decoupled(n; sparse=true)
+    @time "abstraction" mdp, spec, _ = almost_identity_decoupled(n; sparse=true)
 
     println("Memory usage: $(Base.summarysize(mdp) / 1000^2) MB")
 

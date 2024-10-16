@@ -79,7 +79,10 @@ function robot_2d_decoupled(time_horizon=10; sparse=true, spec=:reachavoid, stat
     prob = AbstractionProblem(sys, spec)
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, abstract_spec
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+
+    return mdp, abstract_spec, upper_bound_spec
 end
 
 function robot_2d_direct(time_horizon=10; sparse=true, spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
@@ -100,17 +103,20 @@ function robot_2d_direct(time_horizon=10; sparse=true, spec=:reachavoid, state_s
     prob = AbstractionProblem(sys, spec)
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, abstract_spec
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+
+    return mdp, abstract_spec, upper_bound_spec
 end
 
 function main()
-    @time "abstraction reach-avoid" mdp_reachavoid, spec_reachavoid = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
+    @time "abstraction reach-avoid" mdp_reachavoid, spec_reachavoid, _ = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
     prob_reachavoid = Problem(mdp_reachavoid, spec_reachavoid)
 
     @time "value-iteration reach-avoid" V_reachavoid, k_reachavoid, res_reachavoid = value_iteration(prob_reachavoid)
     V_reachavoid = V_reachavoid[2:end, 2:end]
 
-    @time "abstraction reachability" mdp_reachability, spec_reachability = robot_2d_decoupled(;spec=:reachability, state_split=(20, 20), input_split=(11, 11))
+    @time "abstraction reachability" mdp_reachability, spec_reachability, _ = robot_2d_decoupled(;spec=:reachability, state_split=(20, 20), input_split=(11, 11))
     prob_reachability = Problem(mdp_reachability, spec_reachability)
 
     @time "value-iteration reachability" V_reachability, k_reachability, res_reachability = value_iteration(prob_reachability)

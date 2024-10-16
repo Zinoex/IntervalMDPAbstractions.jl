@@ -38,7 +38,10 @@ function van_der_pol_decoupled(time_horizon=10; sparse=false, state_split=(50, 5
     prob = AbstractionProblem(sys, spec)
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, abstract_spec
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+
+    return mdp, abstract_spec, upper_bound_spec
 end
 
 function van_der_pol_direct(time_horizon=10; state_split=(50, 50), input_split=10)
@@ -55,7 +58,10 @@ function van_der_pol_direct(time_horizon=10; state_split=(50, 50), input_split=1
     prob = AbstractionProblem(sys, spec)
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, abstract_spec
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+
+    return mdp, abstract_spec, upper_bound_spec
 end
 
 function van_der_pol_plot_nominal()
@@ -84,7 +90,7 @@ function van_der_pol_plot_nominal()
 end
 
 function main()
-    @time "abstraction" mdp, spec = van_der_pol_decoupled(; state_split=(100, 100), input_split=3)
+    @time "abstraction" mdp, spec, upper_bound_spec = van_der_pol_decoupled(; state_split=(100, 100), input_split=3)
     prob = Problem(mdp, spec)
 
     @time "value iteration" V, k, res = value_iteration(prob)

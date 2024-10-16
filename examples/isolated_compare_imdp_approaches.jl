@@ -119,11 +119,11 @@ end
 function measure_abstraction_time(problem::IntervalSySCoReComparisonProblem, constructor)
     BenchmarkTools.gcscrub()
     start_time = time_ns()
-    mdp, spec = constructor(problem.state_split, problem.input_split)
+    mdp, spec, upper_bound_spec = constructor(problem.state_split, problem.input_split)
     end_time = time_ns()
     abstraction_time = (end_time - start_time) / 1e9
 
-    return abstraction_time, mdp, spec
+    return abstraction_time, mdp, spec, upper_bound_spec
 end
 
 function warmup_certification(prob)
@@ -135,11 +135,11 @@ end
 function measure_certification_time(prob)
     BenchmarkTools.gcscrub()
     start_time = time_ns()
-    V, k, res = value_iteration(prob)
+    strategy, V, k, res = control_synthesis(prob)
     end_time = time_ns()
     certification_time = (end_time - start_time) / 1e9
 
-    return certification_time, V
+    return certification_time, V, strategy
 end
 
 function benchmark_intervalsyscore(name::String, direct=true)
@@ -154,9 +154,11 @@ function benchmark_intervalsyscore(name::String, direct=true)
     # Warmup
     warmup_abstraction(problem, constructor)
 
-    abstraction_time, mdp, spec = measure_abstraction_time(problem, constructor)
+    # Measure abstraction time
+    abstraction_time, mdp, spec, upper_bound_spec = measure_abstraction_time(problem, constructor)
     println(("Abstraction time", abstraction_time))
 
+    # Measure memory usage
     prob_mem = Base.summarysize(mdp) / 1000^2
     println(("Transition probability memory", prob_mem))
 
@@ -165,21 +167,36 @@ function benchmark_intervalsyscore(name::String, direct=true)
     # Warmup
     warmup_certification(prob)
 
-    certification_time, V = measure_certification_time(prob)
+    # Measure certification time
+    certification_time, V_lower, strategy = measure_certification_time(prob)
     println(("Certification time", certification_time))
 
+    # Compute upper bound probabilities
+    prob = Problem(mdp, upper_bound_spec, strategy)
+    V_upper, _, _ = value_iteration(prob)
+
     println("reach")
-    for r in reach
+    reach_set = if system_property(spec) isa AbstractReachability
+        reach(system_property(spec))
+    else
+        []
+    end
+    for r in reach_set
         println(r)
     end
 
     println("avoid")
-    for a in avoid
+    for a in avoid(system_property(spec))
         println(a)
     end
 
-    println("V")
-    for v in V
+    println("V_lower")
+    for v in V_lower
+        println(v)
+    end
+
+    println("V_upper")
+    for v in V_upper
         println(v)
     end
 end

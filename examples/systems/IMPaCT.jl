@@ -1,6 +1,6 @@
 using HDF5
 
-function run_impact(name; lower_bound=true, container=:apptainer)
+function run_impact(name; container=:apptainer)
     try 
         if container == :docker
             script = "docker_run.sh"
@@ -23,7 +23,8 @@ function run_impact(name; lower_bound=true, container=:apptainer)
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
-                "value_function" => NaN
+                "value_function_lower" => NaN.
+                "value_function_upper" => NaN
             )
         end
 
@@ -35,7 +36,8 @@ function run_impact(name; lower_bound=true, container=:apptainer)
                 "certification_time" => NaN,
                 "peak_mem" => NaN,
                 "prob_mem" => NaN,
-                "value_function" => NaN
+                "value_function_lower" => NaN,
+                "value_function_upper" => NaN
             )
         end
 
@@ -72,11 +74,8 @@ function run_impact(name; lower_bound=true, container=:apptainer)
         file = "$(@__DIR__)/IMPaCT/$name/controller.h5"
         table = "dataset"
         data = h5read(file, table)
-        V = if lower_bound
-            data[:, end - 1]
-        else
-            data[:, end]
-        end
+        V_lower = data[:, end - 1]
+        V_upper = data[:, end]
 
         # Cleanup
         rm(file, force=true)
@@ -87,7 +86,8 @@ function run_impact(name; lower_bound=true, container=:apptainer)
             "abstraction_time" => abstraction_time,
             "certification_time" => certification_time,
             "prob_mem" => mem,
-            "value_function" => V
+            "value_function_lower" => V_lower,
+            "value_function_upper" => V_upper
         )
     catch e
         if isa(e, ProcessFailedException)
@@ -100,7 +100,8 @@ function run_impact(name; lower_bound=true, container=:apptainer)
                 "certification_time" => NaN,
                 "peak_mem" => NaN,
                 "prob_mem" => NaN,
-                "value_function" => NaN
+                "value_function_lower" => NaN,
+                "value_function_upper" => NaN
             )
         else
             rethrow(e)

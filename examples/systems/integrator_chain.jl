@@ -51,11 +51,14 @@ function integrator_chain_decoupled(num_dims::Int, time_horizon=5; sparse=false,
     prob = AbstractionProblem(sys, spec)
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, abstract_spec
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+
+    return mdp, abstract_spec, upper_bound_spec
 end
 
 function main(n)
-    @time "abstraction" mdp, spec = integrator_chain_decoupled(n, 5)
+    @time "abstraction" mdp, spec, _ = integrator_chain_decoupled(n, 5)
     prob = Problem(mdp, spec)
 
     @time "value iteration" V, k, res = value_iteration(prob)

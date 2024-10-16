@@ -135,7 +135,8 @@ function benchmark_direct(problem::ComparisonProblem)
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
-                "value_function" => NaN
+                "value_function_lower" => NaN,
+                "value_function_upper" => NaN
             )
         end
 
@@ -151,7 +152,8 @@ function benchmark_direct(problem::ComparisonProblem)
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
-                "value_function" => NaN
+                "value_function_lower" => NaN,
+                "value_function_upper" => NaN
             )
         end
         abstraction_time = parse(Float64, m1.captures[1])
@@ -161,7 +163,8 @@ function benchmark_direct(problem::ComparisonProblem)
         # Split output
         prefix, rest = split(output, "reach\n")
         reach, rest = split(rest, "avoid\n")
-        avoid, rest = split(rest, "V\n")
+        avoid, rest = split(rest, "V_lower\n")
+        V_lower, rest = split(rest, "V_upper\n")
 
         cartesian_indices = CartesianIndices(problem.state_split)
 
@@ -182,21 +185,30 @@ function benchmark_direct(problem::ComparisonProblem)
         avoid = avoid .- 1 # Subtract 1 to match 1-based indexing without the avoid state
         avoid = map(x -> cartesian_indices[x], avoid) # Convert from a linear index to a CartesianIndex
 
-        # Read value function
-        V_lines = split(chomp(rest), '\n')
-        V = map(line -> parse(Float64, line), V_lines)
+        ## V_lower
+        V_lower_lines = split(chomp(V_lower), '\n')
+        V_lower = map(line -> parse(Float64, line), V_lower_lines)
 
         # Remove the first element of the value function, which is the absorbing avoid state
-        V = reshape(V[2:end], problem.state_split...)
-        V = to_impact_format(V, reach, avoid)
-    
+        V_lower = reshape(V_lower[2:end], problem.state_split...)
+        V_lower = to_impact_format(V_lower, reach, avoid)
+
+        ## V_upper
+        V_upper_lines = split(chomp(rest), '\n')
+        V_upper = map(line -> parse(Float64, line), V_upper_lines)
+
+        # Remove the first element of the value function, which is the absorbing avoid state
+        V_upper = reshape(V_upper[2:end], problem.state_split...)
+        V_upper = to_impact_format(V_upper, reach, avoid)
+
         return Dict(
             "oom" => false,
             "timeout" => false,
             "abstraction_time" => abstraction_time,
             "certification_time" => certification_time,
             "prob_mem" => prob_mem,
-            "value_function" => V
+            "value_function_lower" => V_lower,
+            "value_function_upper" => V_upper
         )
     catch e
         if isa(e, ProcessFailedException)
@@ -208,7 +220,8 @@ function benchmark_direct(problem::ComparisonProblem)
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
-                "value_function" => NaN
+                "value_function_lower" => NaN,
+                "value_function_upper" => NaN
             )
         else
             rethrow(e)
@@ -231,7 +244,8 @@ function benchmark_decoupled(problem::ComparisonProblem)
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
-                "value_function" => NaN
+                "value_function_lower" => NaN,
+                "value_function_upper" => NaN
             )
         end
 
@@ -246,7 +260,8 @@ function benchmark_decoupled(problem::ComparisonProblem)
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
-                "value_function" => NaN
+                "value_function_lower" => NaN,
+                "value_function_upper" => NaN
             )
         end
         abstraction_time = parse(Float64, m1.captures[1])
@@ -256,7 +271,8 @@ function benchmark_decoupled(problem::ComparisonProblem)
         # Split output
         prefix, rest = split(output, "reach\n")
         reach, rest = split(rest, "avoid\n")
-        avoid, rest = split(rest, "V\n")
+        avoid, rest = split(rest, "V_lower\n")
+        V_lower, rest = split(rest, "V_upper\n")
         
         # Read reach states
         if reach == ""
@@ -265,7 +281,6 @@ function benchmark_decoupled(problem::ComparisonProblem)
             reach_lines = split(chomp(reach), '\n')
             reach = map(reach_lines) do line # Parse each line as a tuple of indices
                 indices = split(line[2:end - 1], ",")
-                println(indices)
                 indices = map(index -> parse(Int32, index), indices)
                 return Tuple(indices)
             end
@@ -282,13 +297,23 @@ function benchmark_decoupled(problem::ComparisonProblem)
         avoid = filter(x -> !any(isone, x), avoid) # Remove the absorbing avoid states (we remove these manually later)
         avoid = map(x -> CartesianIndex(x .- 1), avoid) # Subtract 1 to match 1-based indexing without the avoid states
 
-        V_lines = split(chomp(rest), '\n')
-        V = map(line -> parse(Float64, line), V_lines)
+        ## V_lower
+        V_lower_lines = split(chomp(V_lower), '\n')
+        V_lower = map(line -> parse(Float64, line), V_lower_lines)
 
         # Remove the first element of the value function, which is the absorbing avoid state
-        V = reshape(V, (problem.state_split .+ 1)...)
-        V = V[(2:size(V, i) for i in 1:ndims(V))...]
-        V = to_impact_format(V, reach, avoid)
+        V_lower = reshape(V_lower, (problem.state_split .+ 1)...)
+        V_lower = V_lower[(2:size(V_lower, i) for i in 1:ndims(V_lower))...]
+        V_lower = to_impact_format(V_lower, reach, avoid)
+
+        ## V_upper
+        V_upper_lines = split(chomp(rest), '\n')
+        V_upper = map(line -> parse(Float64, line), V_upper_lines)
+
+        # Remove the first element of the value function, which is the absorbing avoid state
+        V_upper = reshape(V_upper, (problem.state_split .+ 1)...)
+        V_upper = V_upper[(2:size(V_upper, i) for i in 1:ndims(V_upper))...]
+        V_upper = to_impact_format(V_upper, reach, avoid)
 
         return Dict(
             "oom" => false,
@@ -296,7 +321,8 @@ function benchmark_decoupled(problem::ComparisonProblem)
             "abstraction_time" => abstraction_time,
             "certification_time" => certification_time,
             "prob_mem" => prob_mem,
-            "value_function" => V
+            "value_function_lower" => V_lower,
+            "value_function_upper" => V_upper
         )
     catch e
         if isa(e, ProcessFailedException)
@@ -308,7 +334,8 @@ function benchmark_decoupled(problem::ComparisonProblem)
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
-                "value_function" => NaN
+                "value_function_lower" => NaN,
+                "value_function_upper" => NaN
             )
         else
             rethrow(e)

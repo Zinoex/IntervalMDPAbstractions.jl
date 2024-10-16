@@ -47,7 +47,10 @@ function building_automation_system_7d_decoupled(time_horizon=10; sparse=false, 
     prob = AbstractionProblem(sys, spec)
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, abstract_spec
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+
+    return mdp, abstract_spec, upper_bound_spec
 end
 
 function building_automation_system_7d_direct(time_horizon=10; sparse=false, state_split=(21, 21, 3, 3, 3, 3, 3))
@@ -67,11 +70,14 @@ function building_automation_system_7d_direct(time_horizon=10; sparse=false, sta
     prob = AbstractionProblem(sys, spec)
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
-    return mdp, abstract_spec
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = convert_specification(upper_bound_spec, state_abs, target_model)
+
+    return mdp, abstract_spec, upper_bound_spec
 end
 
 function main()
-    @time "abstraction" mdp, spec = building_automation_system_7d_decoupled(; state_split=(21, 21, 3, 3, 3, 3, 3))
+    @time "abstraction" mdp, spec, _ = building_automation_system_7d_decoupled(; state_split=(21, 21, 3, 3, 3, 3, 3))
     prob = Problem(mdp, spec)
 
     @time "value iteration" V_safety, k, res = value_iteration(prob)
