@@ -48,9 +48,9 @@ function linear_stochastic_switched_direct(time_horizon=10; sparse=false, state_
     input_abs = InputDiscrete([Singleton([0.0])])
 
     if sparse
-        target_model = SparseOrthogonalIMDPTarget()
+        target_model = SparseIMDPTarget()
     else
-        target_model = OrthogonalIMDPTarget()
+        target_model = IMDPTarget()
     end
 
     prob = AbstractionProblem(sys, spec)

@@ -1,6 +1,6 @@
 function transition_prob(dyn::StochasticSwitchedDynamics, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, stateptr, target_model::AbstractIMDPTarget)
     transition_probs = map(dyn.dynamics) do mixture_dyn
-        return transition_prob(mixture_dyn, state_abstraction, input_abstraction, stateptr, mixture_target(target_model))
+        return transition_prob(mixture_dyn, state_abstraction, input_abstraction, stateptr, target_model)
     end
 
     l = sum(zip(transition_probs, dyn.weights)) do (prob, w)
