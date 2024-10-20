@@ -11,3 +11,5 @@ struct System{D <: DiscreteTimeStochasticDynamics, I<:LazySet}
 end
 dynamics(sys) = sys.dynamics
 initial(sys) = sys.initial
+dimstate(sys::System) = dimstate(dynamics(sys))
+diminput(sys::System) = diminput(dynamics(sys))

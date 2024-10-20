@@ -1,4 +1,7 @@
-export TargetAbstractionModel, IMDPTarget, SparseIMDPTarget, OrthogonalIMDPTarget, SparseOrthogonalIMDPTarget
+export TargetAbstractionModel
+export IMDPTarget, SparseIMDPTarget
+export OrthogonalIMDPTarget, SparseOrthogonalIMDPTarget
+export MixtureIMDPTarget, SparseMixtureIMDPTarget
 
 """
     TargetAbstractionModel
@@ -6,6 +9,7 @@ export TargetAbstractionModel, IMDPTarget, SparseIMDPTarget, OrthogonalIMDPTarge
 Type hierarchy to represent the target abstraction model.
 """
 abstract type TargetAbstractionModel end
+
 
 ########
 # IMDP #
@@ -66,3 +70,36 @@ Base.@kwdef struct SparseOrthogonalIMDPTarget <: AbstractOrthogonalIMDPTarget
 end
 
 includetransition(target::SparseOrthogonalIMDPTarget, prob) = target.sparsity_threshold < prob
+
+
+###############################
+# Mixture of Orthogonal IMDPs #
+###############################
+abstract type AbstractMixtureIMDPTarget <: AbstractOrthogonalIMDPTarget end
+
+"""
+    MixtureIMDPTarget
+
+A target for IMDP abstractions where, for each source state, the transition probabilities
+are Mixturely decomposed. One state is appended along each axis to capture the transitions
+to outside the partitioned region. 
+
+Benefits compared to `IMDPTarget` include less memory usage, faster computation of the
+transition probabilities and value iteration, and tighter uncertainty set (see [1] for a proof).
+
+[1] TODO: Add reference to paper.
+"""
+struct MixtureIMDPTarget <: AbstractMixtureIMDPTarget end
+
+mixture_target(::MixtureIMDPTarget) = OrthogonalIMDPTarget()
+
+"""
+    SparseMixtureIMDPTarget
+
+Similar to [`MixtureIMDPTarget`](@ref), but uses a sparse matrix to represent the transition probabilities.
+"""
+Base.@kwdef struct SparseMixtureIMDPTarget <: AbstractMixtureIMDPTarget 
+    sparsity_threshold = 1e-9
+end
+
+mixture_target(target::SparseMixtureIMDPTarget) = SparseOrthogonalIMDPTarget(target.sparsity_threshold)
