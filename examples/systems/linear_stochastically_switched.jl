@@ -2,7 +2,7 @@ using LinearAlgebra, LazySets
 using IntervalMDP, IntervalSySCoRe
 
 
-function linear_stochastic_switched_sys(time_horizon)
+function linear_stochastically_switched_sys(time_horizon)
     A1 = [
         0.1 0.9;
         0.8 0.2
@@ -39,8 +39,8 @@ function linear_stochastic_switched_sys(time_horizon)
     return sys, spec
 end
 
-function linear_stochastic_switched_direct(time_horizon=10; sparse=false, state_split=(40, 40))
-    sys, spec = linear_stochastic_switched_sys(time_horizon)
+function linear_stochastically_switched_direct(time_horizon=10; sparse=false, state_split=(40, 40))
+    sys, spec = linear_stochastically_switched_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-2.0, -2.0], high=[2.0, 2.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -62,8 +62,8 @@ function linear_stochastic_switched_direct(time_horizon=10; sparse=false, state_
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function linear_stochastic_switched_mixture(time_horizon=10; sparse=false, state_split=(40, 40))
-    sys, spec = linear_stochastic_switched_sys(time_horizon)
+function linear_stochastically_switched_mixture(time_horizon=10; sparse=false, state_split=(40, 40))
+    sys, spec = linear_stochastically_switched_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-2.0, -2.0], high=[2.0, 2.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -86,7 +86,7 @@ function linear_stochastic_switched_mixture(time_horizon=10; sparse=false, state
 end
 
 function main()
-    @time "abstraction" mdp, spec, upper_bound_spec = linear_stochastic_switched_mixture(; state_split=(40, 40))
+    @time "abstraction" mdp, spec, upper_bound_spec = linear_stochastically_switched_mixture(; state_split=(40, 40))
     prob = Problem(mdp, spec)
 
     @time "control synthesis" strategy, V_lower, k, res = control_synthesis(prob)
