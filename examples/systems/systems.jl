@@ -7,5 +7,6 @@ include("almost_identity.jl")
 include("integrator_chain.jl")
 include("van_der_pol.jl")
 include("nndm.jl")
+include("linear_stochastically_switched.jl")
 
 include("IMPaCT.jl")

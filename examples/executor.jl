@@ -98,6 +98,15 @@ linear7d = IntervalSySCoReComparisonProblem(
     10
 )
 
+linear_stochastically_switched = IntervalSySCoReComparisonProblem(
+    "linear_stochastically_switched",
+    (state_split, input_split, time_horizon) -> linear_stochastically_switched_direct(time_horizon; state_split=state_split),
+    (state_split, input_split, time_horizon) -> linear_stochastically_switched_mixture(time_horizon; state_split=state_split),
+    (40, 40),
+    (1,),
+    10
+)
+
 problems = [
     robot_2d_reachability,
     robot_2d_reachavoid,
@@ -107,7 +116,8 @@ problems = [
     bas7d,
     action_cartpole,
     linear6d,
-    linear7d
+    linear7d,
+    linear_stochastically_switched
 ]
 
 function warmup_abstraction(problem::IntervalSySCoReComparisonProblem, constructor)

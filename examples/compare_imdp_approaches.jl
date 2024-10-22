@@ -87,6 +87,14 @@ linear7d = ComparisonProblem(
     (1,),
 )
 
+linear_stochastically_switched = ComparisonProblem(
+    "linear_stochastically_switched",
+    () -> nothing,
+    false,
+    (40, 40),
+    (1,),
+)
+
 problems = [
     robot_2d_reachability,
     robot_2d_reachavoid,
@@ -96,7 +104,8 @@ problems = [
     bas7d,
     action_cartpole,
     linear6d,
-    linear7d
+    linear7d,
+    linear_stochastically_switched
 ]
 
 function benchmark_impact(problem::ComparisonProblem)
@@ -120,11 +129,15 @@ function to_impact_format(V, reach, avoid)
     return V
 end
 
+TIMEOUT_DURATION = "48h"
+TIMEOUT_CMD = `timeout --signal SIGKILL --verbose $TIMEOUT_DURATION`
+JULIA_CMD = `julia -tauto --project=$(@__DIR__) executor.jl`
+
 function benchmark_direct(problem::ComparisonProblem)
     @info "Benchmarking direct"
     try
         BenchmarkTools.gcscrub()
-        output = read(`timeout --signal SIGKILL --verbose 48h julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) true`, String)
+        output = read(`$TIMEOUT_CMD $JULIA_CMD $(problem.name) true`, String)
 
         if occursin("timeout", output)
             @warn "Decoupled timeout"
@@ -239,7 +252,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
     @info "Benchmarking decoupled"
     try
         BenchmarkTools.gcscrub()
-        output = read(`timeout --signal SIGKILL --verbose 48h julia -tauto --project=$(@__DIR__) isolated_compare_imdp_approaches.jl $(problem.name) false`, String)
+        output = read(`$TIMEOUT_CMD $JULIA_CMD $(problem.name) false`, String)
 
         if occursin("timeout", output)
             @warn "Decoupled timeout"
@@ -403,7 +416,7 @@ end
 function to_dataframe(res)
     rows = []
     for (name, data) in res
-        n_decoupled = length(data["decoupled"]["value_function"])
+        n_decoupled = length(data["decoupled"]["value_function_lower"])
 
         row = Dict(
             "name" => name,
@@ -412,19 +425,21 @@ function to_dataframe(res)
             "decoupled_abstraction_time" => data["decoupled"]["abstraction_time"],
             "decoupled_certification_time" => data["decoupled"]["certification_time"],
             "decoupled_prob_mem" => data["decoupled"]["prob_mem"],
-            "decoupled_min_prob" => minimum(data["decoupled"]["value_function"]),
-            "decoupled_max_prob" => maximum(data["decoupled"]["value_function"]),
+            "decoupled_min_prob" => minimum(data["decoupled"]["value_function_lower"]),
+            "decoupled_max_prob" => maximum(data["decoupled"]["value_function_lower"]),
+            "decoupled_mean_error" => mean(data["decoupled"]["value_function_upper"] - data["decoupled"]["value_function_lower"]),
         )
 
         if !data["direct"]["oom"] && !data["direct"]["timeout"]
-            if n_decoupled != length(data["direct"]["value_function"])
-                @warn "Direct value function length mismatch" name n_decoupled n_direct=length(data["direct"]["value_function"])
+            if n_decoupled != length(data["direct"]["value_function_lower"])
+                @warn "Direct value function length mismatch" name n_decoupled n_direct=length(data["direct"]["value_function_lower"])
 
                 row["direct_abstraction_time"] = NaN
                 row["direct_certification_time"] = NaN
                 row["direct_prob_mem"] = NaN
                 row["direct_min_prob"] = NaN
                 row["direct_max_prob"] = NaN
+                row["direct_mean_error"] = NaN
                 row["direct_min_prob_diff"] = NaN
                 row["direct_max_prob_diff"] = NaN
                 row["direct_avg_prob_diff"] = NaN
@@ -432,11 +447,12 @@ function to_dataframe(res)
                 row["direct_abstraction_time"] = data["direct"]["abstraction_time"]
                 row["direct_certification_time"] = data["direct"]["certification_time"]
                 row["direct_prob_mem"] = data["direct"]["prob_mem"]
-                row["direct_min_prob"] = minimum(data["direct"]["value_function"])
-                row["direct_max_prob"] = maximum(data["direct"]["value_function"])
-                row["direct_min_prob_diff"] = minimum(data["decoupled"]["value_function"] - data["direct"]["value_function"])
-                row["direct_max_prob_diff"] = maximum(data["decoupled"]["value_function"] - data["direct"]["value_function"])
-                row["direct_avg_prob_diff"] = mean(data["decoupled"]["value_function"] - data["direct"]["value_function"])
+                row["direct_min_prob"] = minimum(data["direct"]["value_function_lower"])
+                row["direct_max_prob"] = maximum(data["direct"]["value_function_lower"])
+                row["direct_mean_error"] = mean(data["direct"]["value_function_upper"] - data["direct"]["value_function_lower"])
+                row["direct_min_prob_diff"] = minimum(data["decoupled"]["value_function_lower"] - data["direct"]["value_function_lower"])
+                row["direct_max_prob_diff"] = maximum(data["decoupled"]["value_function_lower"] - data["direct"]["value_function_lower"])
+                row["direct_avg_prob_diff"] = mean(data["decoupled"]["value_function_lower"] - data["direct"]["value_function_lower"])
             end
         else
             row["direct_abstraction_time"] = NaN
@@ -444,20 +460,22 @@ function to_dataframe(res)
             row["direct_prob_mem"] = NaN
             row["direct_min_prob"] = NaN
             row["direct_max_prob"] = NaN
+            row["direct_mean_error"] = NaN
             row["direct_min_prob_diff"] = NaN
             row["direct_max_prob_diff"] = NaN
             row["direct_avg_prob_diff"] = NaN
         end
 
         if data["include_impact"] && !data["impact"]["oom"] && !data["impact"]["timeout"]
-            if n_decoupled != length(data["impact"]["value_function"])
-                @warn "Impact value function length mismatch" name n_decoupled n_impact=length(data["impact"]["value_function"])
+            if n_decoupled != length(data["impact"]["value_function_lower"]) 
+                @warn "Impact value function length mismatch" name n_decoupled n_impact=length(data["impact"]["value_function_lower"])
 
                 row["impact_abstraction_time"] = NaN
                 row["impact_certification_time"] = NaN
                 row["impact_prob_mem"] = NaN
                 row["impact_min_prob"] = NaN
                 row["impact_max_prob"] = NaN
+                row["impact_mean_error"] = NaN
                 row["impact_min_prob_diff"] = NaN
                 row["impact_max_prob_diff"] = NaN
                 row["impact_avg_prob_diff"] = NaN
@@ -465,11 +483,23 @@ function to_dataframe(res)
                 row["impact_abstraction_time"] = data["impact"]["abstraction_time"]
                 row["impact_certification_time"] = data["impact"]["certification_time"]
                 row["impact_prob_mem"] = data["impact"]["prob_mem"]
-                row["impact_min_prob"] = minimum(data["impact"]["value_function"])
-                row["impact_max_prob"] = maximum(data["impact"]["value_function"])
-                row["impact_min_prob_diff"] = minimum(data["decoupled"]["value_function"] - data["impact"]["value_function"])
-                row["impact_max_prob_diff"] = maximum(data["decoupled"]["value_function"] - data["impact"]["value_function"])
-                row["impact_avg_prob_diff"] = mean(data["decoupled"]["value_function"] - data["impact"]["value_function"])
+                if any(isnothing, data["impact"]["value_function_lower"])
+                    @warn "Impact value function contains NaN (null in JSON)" name
+
+                    row["impact_min_prob"] = NaN
+                    row["impact_max_prob"] = NaN
+                    row["impact_mean_error"] = NaN
+                    row["impact_min_prob_diff"] = NaN
+                    row["impact_max_prob_diff"] = NaN
+                    row["impact_avg_prob_diff"] = NaN
+                else
+                    row["impact_min_prob"] = minimum(data["impact"]["value_function_lower"])
+                    row["impact_max_prob"] = maximum(data["impact"]["value_function_lower"])
+                    row["impact_mean_error"] = mean(data["impact"]["value_function_upper"] - data["impact"]["value_function_lower"])
+                    row["impact_min_prob_diff"] = minimum(data["decoupled"]["value_function_lower"] - data["impact"]["value_function_lower"])
+                    row["impact_max_prob_diff"] = maximum(data["decoupled"]["value_function_lower"] - data["impact"]["value_function_lower"])
+                    row["impact_avg_prob_diff"] = mean(data["decoupled"]["value_function_lower"] - data["impact"]["value_function_lower"])
+                end
             end
         else
             row["impact_abstraction_time"] = NaN
@@ -477,6 +507,7 @@ function to_dataframe(res)
             row["impact_prob_mem"] = NaN
             row["impact_min_prob"] = NaN
             row["impact_max_prob"] = NaN
+            row["impact_mean_error"] = NaN
             row["impact_min_prob_diff"] = NaN
             row["impact_max_prob_diff"] = NaN
             row["impact_avg_prob_diff"] = NaN
@@ -486,17 +517,57 @@ function to_dataframe(res)
     end
 
     df = DataFrame(rows)
+    select!(df, 
+        :name,
+        :state_split,
+        :input_split,
+        :decoupled_abstraction_time,
+        :decoupled_certification_time,
+        :decoupled_prob_mem,
+        :decoupled_min_prob,
+        :decoupled_max_prob,
+        :decoupled_mean_error,
+        :direct_abstraction_time,
+        :direct_certification_time,
+        :direct_prob_mem,
+        :direct_min_prob,
+        :direct_max_prob,
+        :direct_mean_error,
+        :direct_min_prob_diff,
+        :direct_max_prob_diff,
+        :direct_avg_prob_diff,
+        :impact_abstraction_time,
+        :impact_certification_time,
+        :impact_prob_mem,
+        :impact_min_prob,
+        :impact_max_prob,
+        :impact_mean_error,
+        :impact_min_prob_diff,
+        :impact_max_prob_diff,
+        :impact_avg_prob_diff
+    )
     return df
+end
+
+function save_dataframe(df)
+    mkpath("results/compare_imdp_approaches", mode=0o754)
+    CSV.write("results/compare_imdp_approaches/summarized_results.csv", df)
 end
 
 # TODO: plot results
 
-# function compare()
-#     res = benchmark()
-#     df = to_dataframe(res)
-#     save_results(df)
-# end
+function compare()
+    res = read_results()
+    df = to_dataframe(res)
+    save_dataframe(df)
+end
 
 end
 
-CompareIMDPApproaches.benchmark()
+if ARGS[1] == "run_benchmark"
+    CompareIMDPApproaches.benchmark()
+elseif ARGS[1] == "compute_results"
+    CompareIMDPApproaches.compare()
+else
+    @error "Invalid argument $(ARGS[1])"
+end
