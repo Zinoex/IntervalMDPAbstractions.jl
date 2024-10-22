@@ -39,20 +39,20 @@ robot_2d_reachavoid = ComparisonProblem(
     (21, 21),
 )
 
-van_der_pol = ComparisonProblem(
-    "van_der_pol",
-    () -> run_impact("ex_van_der_pol-R"),
-    true,
-    (50, 50),
-    (11,),
-)
-
 bas4d = ComparisonProblem(
     "bas4d",
     () -> run_impact("ex_4DBAS-S"),
     true,
     (5, 5, 7, 7),
     (4,),
+)
+
+van_der_pol = ComparisonProblem(
+    "van_der_pol",
+    () -> run_impact("ex_van_der_pol-R"),
+    true,
+    (50, 50),
+    (11,),
 )
 
 nndm_cartpole = ComparisonProblem(
@@ -91,8 +91,8 @@ problems = [
     car_parking,
     robot_2d_reachability,
     robot_2d_reachavoid,
-    van_der_pol,
     bas4d,
+    van_der_pol,
     nndm_cartpole,
     linear6d,
     linear7d,
