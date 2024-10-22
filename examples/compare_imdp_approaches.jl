@@ -15,6 +15,14 @@ struct ComparisonProblem
     input_split
 end
 
+car_parking = ComparisonProblem(
+    "car_parking",
+    () -> run_impact("ex_car_parking-RA"),
+    true,
+    (40, 40),
+    (3, 3),
+)
+
 robot_2d_reachability = ComparisonProblem(
     "robot_2d_reachability",
     () -> run_impact("ex_2Drobot-R-U"),
@@ -29,14 +37,6 @@ robot_2d_reachavoid = ComparisonProblem(
     true,
     (40, 40),
     (21, 21),
-)
-
-syscore_running_example = ComparisonProblem(
-    "syscore_running_example",
-    () -> run_impact("ex_syscore_running_example-RA"),
-    true,
-    (40, 40),
-    (3, 3),
 )
 
 van_der_pol = ComparisonProblem(
@@ -55,16 +55,8 @@ bas4d = ComparisonProblem(
     (4,),
 )
 
-bas7d = ComparisonProblem(
-    "bas7d",
-    () -> run_impact("ex_7DBAS-S"),
-    true,
-    (21, 21, 3, 3, 3, 3, 3),
-    (1,),
-)
-
-action_cartpole = ComparisonProblem(
-    "action_cartpole",
+nndm_cartpole = ComparisonProblem(
+    "nndm_cartpole",
     () -> nothing,
     false,
     (20, 20, 24, 20),
@@ -96,13 +88,12 @@ linear_stochastically_switched = ComparisonProblem(
 )
 
 problems = [
+    car_parking,
     robot_2d_reachability,
     robot_2d_reachavoid,
-    syscore_running_example,
     van_der_pol,
     bas4d,
-    bas7d,
-    action_cartpole,
+    nndm_cartpole,
     linear6d,
     linear7d,
     linear_stochastically_switched

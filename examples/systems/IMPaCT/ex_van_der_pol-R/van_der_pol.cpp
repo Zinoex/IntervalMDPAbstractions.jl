@@ -1,7 +1,5 @@
 // Run:   make
-//        ./robot2D
-
-// Code: Ben Wooding 4 Jan 2024
+//        ./van_der_pol
 
 #include <iostream>
 #include <vector>

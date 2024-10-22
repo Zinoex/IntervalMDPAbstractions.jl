@@ -2,7 +2,7 @@ using LinearAlgebra, LazySets
 using IntervalMDP, IntervalSySCoRe
 
 
-function running_example_sys(time_horizon)
+function car_parking_sys(time_horizon)
     A = 0.9I(2)
     B = 0.7I(2)
     w_stddev = [1.0, 1.0]
@@ -21,8 +21,8 @@ function running_example_sys(time_horizon)
 end
 
 
-function running_example_decoupled(time_horizon=10; sparse=false, range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
-    sys, spec = running_example_sys(time_horizon)
+function car_parking_decoupled(time_horizon=10; sparse=false, range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
+    sys, spec = car_parking_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -51,8 +51,8 @@ function running_example_decoupled(time_horizon=10; sparse=false, range_vs_grid=
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function running_example_direct(time_horizon=10; sparse=false, range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
-    sys, spec = running_example_sys(time_horizon)
+function car_parking_direct(time_horizon=10; sparse=false, range_vs_grid=:grid, state_split=(20, 20), input_split=(3, 3))
+    sys, spec = car_parking_sys(time_horizon)
 
     X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, state_split)
@@ -83,13 +83,13 @@ end
 
 function main()
     # Direct
-    @time "abstraction direct" mdp_direct, spec_direct, _ = running_example_direct()
+    @time "abstraction direct" mdp_direct, spec_direct, _ = car_parking_direct()
     prob_direct = Problem(mdp_direct, spec_direct)
 
     @time "value iteration direct" V_direct, k_direct, res_direct = value_iteration(prob_direct)
 
     # Decoupled
-    @time "abstraction decoupled" mdp_decoupled, spec_decoupled, _ = running_example_decoupled()
+    @time "abstraction decoupled" mdp_decoupled, spec_decoupled, _ = car_parking_decoupled()
     prob_decoupled = Problem(mdp_decoupled, spec_decoupled)
 
     @time "value iteration decoupled" V_decoupled, k_decoupled, res_decoupled = value_iteration(prob_decoupled)

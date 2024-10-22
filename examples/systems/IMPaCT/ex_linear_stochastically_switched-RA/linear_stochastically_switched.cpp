@@ -1,7 +1,5 @@
 // Run:   make
-//        ./robot2D
-
-// Code: Ben Wooding 4 Jan 2024
+//        ./linear_stochastically_switched
 
 #include <iostream>
 #include <vector>

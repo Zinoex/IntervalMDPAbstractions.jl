@@ -17,6 +17,15 @@ struct IntervalSySCoReComparisonProblem{N, M}
     time_horizon::Int
 end
 
+car_parking = IntervalSySCoReComparisonProblem(
+    "car_parking",
+    (state_split, input_split, time_horizon) -> car_parking_direct(time_horizon; range_vs_grid=:range, sparse=true, state_split=state_split, input_split=input_split),
+    (state_split, input_split, time_horizon) -> car_parking_decoupled(time_horizon; range_vs_grid=:range, state_split=state_split, input_split=input_split),
+    (40, 40),
+    (3, 3),
+    10
+)
+
 robot_2d_reachability = IntervalSySCoReComparisonProblem(
     "robot_2d_reachability",
     (state_split, input_split, time_horizon) -> robot_2d_direct(time_horizon; spec=:reachability, sparse=true, state_split=state_split, input_split=input_split),
@@ -35,12 +44,12 @@ robot_2d_reachavoid = IntervalSySCoReComparisonProblem(
     10
 )
 
-syscore_running_example = IntervalSySCoReComparisonProblem(
-    "syscore_running_example",
-    (state_split, input_split, time_horizon) -> running_example_direct(time_horizon; range_vs_grid=:range, sparse=true, state_split=state_split, input_split=input_split),
-    (state_split, input_split, time_horizon) -> running_example_decoupled(time_horizon; range_vs_grid=:range, state_split=state_split, input_split=input_split),
-    (40, 40),
-    (3, 3),
+bas4d = IntervalSySCoReComparisonProblem(
+    "bas4d",
+    (state_split, input_split, time_horizon) -> building_automation_system_4d_direct(time_horizon; sparse=true, state_split=state_split, input_split=input_split),
+    (state_split, input_split, time_horizon) -> building_automation_system_4d_decoupled(time_horizon; state_split=state_split, input_split=input_split),
+    (5, 5, 7, 7),
+    (4,),
     10
 )
 
@@ -53,26 +62,8 @@ van_der_pol = IntervalSySCoReComparisonProblem(
     10
 )
 
-bas4d = IntervalSySCoReComparisonProblem(
-    "bas4d",
-    (state_split, input_split, time_horizon) -> building_automation_system_4d_direct(time_horizon; sparse=true, state_split=state_split, input_split=input_split),
-    (state_split, input_split, time_horizon) -> building_automation_system_4d_decoupled(time_horizon; state_split=state_split, input_split=input_split),
-    (5, 5, 7, 7),
-    (4,),
-    10
-)
-
-bas7d = IntervalSySCoReComparisonProblem(
-    "bas7d",
-    (state_split, input_split, time_horizon) -> building_automation_system_7d_direct(time_horizon; sparse=true, state_split=state_split),
-    (state_split, input_split, time_horizon) -> building_automation_system_7d_decoupled(time_horizon; state_split=state_split),
-    (21, 21, 3, 3, 3, 3, 3),
-    (1,),
-    10
-)
-
-action_cartpole = IntervalSySCoReComparisonProblem(
-    "action_cartpole",
+nndm_cartpole = IntervalSySCoReComparisonProblem(
+    "nndm_cartpole",
     (state_split, input_split, time_horizon) -> action_cartpole_direct(time_horizon; sparse=true),
     (state_split, input_split, time_horizon) -> action_cartpole_decoupled(time_horizon; sparse=false),
     (20, 20, 24, 20),
@@ -110,11 +101,9 @@ linear_stochastically_switched = IntervalSySCoReComparisonProblem(
 problems = [
     robot_2d_reachability,
     robot_2d_reachavoid,
-    syscore_running_example,
     van_der_pol,
     bas4d,
-    bas7d,
-    action_cartpole,
+    nndm_cartpole,
     linear6d,
     linear7d,
     linear_stochastically_switched
