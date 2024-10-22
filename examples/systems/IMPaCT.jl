@@ -10,7 +10,7 @@ function run_impact(name; container=:apptainer)
             error("Unknown container type: $container")
         end
 
-        cmd = `timeout --signal SIGKILL --verbose 48h $(@__DIR__)/IMPaCT/$name/$script`
+        cmd = `timeout --signal SIGKILL --verbose 24h $(@__DIR__)/IMPaCT/$name/$script`
 
         output = read(cmd, String)
 

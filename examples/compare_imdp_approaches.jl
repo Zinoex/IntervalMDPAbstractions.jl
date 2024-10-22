@@ -120,6 +120,7 @@ function to_impact_format(V, reach, avoid)
     return V
 end
 
+# Has to be double, since, for a realiable time measurement, julia has to run twice (it may compile the first time).
 TIMEOUT_DURATION = "48h"
 TIMEOUT_CMD = `timeout --signal SIGKILL --verbose $TIMEOUT_DURATION`
 JULIA_CMD = `julia -tauto --project=$(@__DIR__) executor.jl`
