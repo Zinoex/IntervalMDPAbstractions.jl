@@ -7,9 +7,9 @@ abstract type StateAbstraction end
 
 State abstraction for splitting the state space into a grid.
 """
-struct StateUniformGridSplit{N, H<:AbstractHyperrectangle} <: StateAbstraction
-    state_space::Hyperrectangle
-    splits::NTuple{N, Int}
+struct StateUniformGridSplit{N, I<:Int, H<:AbstractHyperrectangle} <: StateAbstraction
+    state_space::H
+    splits::NTuple{N, I}
     regions::Vector{H}
 end
 

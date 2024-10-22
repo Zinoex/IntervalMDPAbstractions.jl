@@ -19,31 +19,38 @@ function transition_prob(dyn::AdditiveNoiseDynamics, state_abstraction::StateUni
             srcact_idx = (i - 1) * ninputs + j + 1
             Y = nominal(dyn, source_region, input)
 
-            # Transition to outside the partitioned region
-            pl, pu = transition_prob_bounds(Y, statespace(state_abstraction), noise(dyn))
-            prob_lower[srcact_idx][1] = 1.0 - pu
-            prob_upper[srcact_idx][1] = 1.0 - pl
-
-            # Transition to other states
-            for (tar_idx, target_region) in enumerate(regions(state_abstraction))
-                pl, pu = transition_prob_bounds(Y, target_region, noise(dyn))
-
-                if includetransition(target_model, pu)
-                    prob_lower[srcact_idx][tar_idx + 1] = pl
-                    prob_upper[srcact_idx][tar_idx + 1] = pu
-                else  # Allow sparsifying via adding probability to the absorbing avoid state
-
-                    # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-                    prob_lower[srcact_idx][1] = clamp(prob_lower[srcact_idx][1] + pl, 0.0, 1.0)
-                    prob_upper[srcact_idx][1] = clamp(prob_upper[srcact_idx][1] + pu, 0.0, 1.0)
-                end
-            end
+            source_action_transition_prob(dyn, state_abstraction, target_model, Y, prob_lower, prob_upper, srcact_idx)
         end
     end
 
     prob = IntervalProbabilities(;lower=efficient_hcat(prob_lower), upper=efficient_hcat(prob_upper))
 
     return prob
+end
+
+function source_action_transition_prob(dyn::AdditiveNoiseDynamics, state_abstraction::StateUniformGridSplit, target_model::AbstractIMDPTarget, Y::LazySet, prob_lower, prob_upper, srcact_idx)
+    X = statespace(state_abstraction)
+    w = noise(dyn)
+    
+    # Transition to outside the partitioned region
+    pl, pu = transition_prob_bounds(Y, X, w)
+    prob_lower[srcact_idx][1] = 1.0 - pu
+    prob_upper[srcact_idx][1] = 1.0 - pl
+
+    # Transition to other states
+    for (tar_idx, target_region) in enumerate(regions(state_abstraction))
+        pl, pu = transition_prob_bounds(Y, target_region, noise(dyn))
+
+        if includetransition(target_model, pu)
+            prob_lower[srcact_idx][tar_idx + 1] = pl
+            prob_upper[srcact_idx][tar_idx + 1] = pu
+        else  # Allow sparsifying via adding probability to the absorbing avoid state
+
+            # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
+            prob_lower[srcact_idx][1] = clamp(prob_lower[srcact_idx][1] + pl, 0.0, 1.0)
+            prob_upper[srcact_idx][1] = clamp(prob_upper[srcact_idx][1] + pu, 0.0, 1.0)
+        end
+    end
 end
 
 function transition_prob(dyn::AdditiveNoiseDynamics, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, stateptr, target_model::AbstractOrthogonalIMDPTarget)
@@ -80,33 +87,10 @@ function transition_prob(dyn::AdditiveNoiseDynamics, state_abstraction::StateUni
         source_region = regions(state_abstraction)[region_indices[Iregion]]
         for input in inputs(input_abstraction)
             # To decouple, we need to construct a hyperrectangle around the nominal one-step reachable region
-            Y = box_approximation(nominal(dyn, source_region, input))
+            Yhat = nominal(dyn, source_region, input)
+            Y = box_approximation(Yhat)
 
-            # For each axis... 
-            for (axis, axisregions) in enumerate(splits(state_abstraction))
-                # Transition to outside the partitioned region
-                pl, pu = axis_transition_prob_bounds(Y, statespace(state_abstraction), noise(dyn), axis)
-                prob_lower[axis][srcact_idx][1] = 1.0 - pu
-                prob_upper[axis][srcact_idx][1] = 1.0 - pl
-
-                # Transition to other states
-                axis_statespace = Interval(extrema(statespace(state_abstraction), axis)...)
-                split_axis = LazySets.split(axis_statespace, [axisregions])
-                
-                for (tar_idx, target_region) in enumerate(split_axis)
-                    pl, pu = axis_transition_prob_bounds(Y, target_region, noise(dyn), axis)
-
-                    if includetransition(target_model, pu)
-                        prob_lower[axis][srcact_idx][tar_idx + 1] = pl
-                        prob_upper[axis][srcact_idx][tar_idx + 1] = pu
-                    else  # Allow sparsifying via adding probability to the absorbing avoid state
-
-                        # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-                        prob_lower[axis][srcact_idx][1] = clamp(prob_lower[axis][srcact_idx][1] + pl, 0.0, 1.0)
-                        prob_upper[axis][srcact_idx][1] = clamp(prob_upper[axis][srcact_idx][1] + pu, 0.0, 1.0)
-                    end
-                end
-            end
+            source_action_transition_prob(dyn, state_abstraction, target_model, Y, prob_lower, prob_upper, srcact_idx)
             
             srcact_idx += 1
         end
@@ -118,4 +102,35 @@ function transition_prob(dyn::AdditiveNoiseDynamics, state_abstraction::StateUni
     )
 
     return prob
+end
+
+function source_action_transition_prob(dyn::AdditiveNoiseDynamics, state_abstraction::StateUniformGridSplit, target_model::AbstractOrthogonalIMDPTarget, Y::Hyperrectangle, prob_lower, prob_upper, srcact_idx)
+    w = noise(dyn)
+    X = statespace(state_abstraction)
+
+    # For each axis... 
+    for (axis, axisregions) in enumerate(splits(state_abstraction))
+        # Transition to outside the partitioned region
+        pl, pu = axis_transition_prob_bounds(Y, X, w, axis)
+        prob_lower[axis][srcact_idx][1] = 1.0 - pu
+        prob_upper[axis][srcact_idx][1] = 1.0 - pl
+
+        # Transition to other states
+        axis_statespace = Interval(low(X, axis), high(X, axis))
+        split_axis = LazySets.split(axis_statespace, axisregions)
+        
+        for (tar_idx, target_region) in enumerate(split_axis)
+            pl, pu = axis_transition_prob_bounds(Y, target_region, w, axis)
+
+            if includetransition(target_model, pu)
+                prob_lower[axis][srcact_idx][tar_idx + 1] = pl
+                prob_upper[axis][srcact_idx][tar_idx + 1] = pu
+            else  # Allow sparsifying via adding probability to the absorbing avoid state
+
+                # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
+                prob_lower[axis][srcact_idx][1] = clamp(prob_lower[axis][srcact_idx][1] + pl, 0.0, 1.0)
+                prob_upper[axis][srcact_idx][1] = clamp(prob_upper[axis][srcact_idx][1] + pu, 0.0, 1.0)
+            end
+        end
+    end
 end

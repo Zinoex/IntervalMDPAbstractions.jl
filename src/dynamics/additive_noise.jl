@@ -62,13 +62,13 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
 end
 
 function axis_transition_prob_bounds(Y::Hyperrectangle, Z::Hyperrectangle, w::AdditiveDiagonalGaussianNoise, axis::Int)
-    z = Interval(extrema(Z, axis)...)
+    z = Interval(low(Z, axis), high(Z, axis))
 
     return axis_transition_prob_bounds(Y, z, w, axis)
 end
 
 function axis_transition_prob_bounds(Y::Hyperrectangle, z::Interval, w::AdditiveDiagonalGaussianNoise, axis::Int)
-    y = Interval(extrema(Y, axis)...)
+    y = Interval(low(Y, axis), high(Y, axis))
     σ = stddev(w, axis)
 
     return axis_transition_prob_bounds(y, z, w, σ)
