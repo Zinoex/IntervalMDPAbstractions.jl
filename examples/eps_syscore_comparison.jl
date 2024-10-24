@@ -48,18 +48,24 @@ function benchmark_intervalsyscore(problem::EpsSySCoReComparisonProblem, state_s
     V_upper, k, res = value_iteration(upper_bound_prob)
 
     V_eps = V_upper - V_lower
-    V_eps[terminal_states(system_property(lower_spec))] .= 0.0
+    # This is a bit of a hack, but it is a way to prune the terminal states,
+    # aka. keep non-terminal states only (which is the hard part).
+    # We only keep non-terminal states since only they are relevant for the
+    # benchmark. 
+    V_eps[terminal_states(system_property(lower_spec))] .= -1.0
+    V_eps = V_eps[V_eps .>= 0.0]
 
     mean_V_eps = mean(V_eps)
+    max_V_eps = maximum(V_eps)
 
-    return mean_V_eps
+    return mean_V_eps, max_V_eps
 end
 
 function benchmark_system(problem, state_split, time_horizon)
     println(("num_regions_per_axis", state_split, "time_horizon", time_horizon))
-    mean_V_eps = benchmark_intervalsyscore(problem, state_split, time_horizon)
+    mean_V_eps, max_V_eps = benchmark_intervalsyscore(problem, state_split, time_horizon)
 
-    println(("mean_V_eps", mean_V_eps))
+    println(("mean_V_eps", mean_V_eps, "max_V_eps", max_V_eps))
 end
 
 function benchmark_system(problem::EpsSySCoReComparisonProblem, time_horizon)
