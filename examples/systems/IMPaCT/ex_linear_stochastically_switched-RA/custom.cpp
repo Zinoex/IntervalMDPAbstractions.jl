@@ -1,4 +1,4 @@
-#include "../../src/IMDP.h"
+#include "IMDP.h"
 
 /// Custom PDF function, change this to the PDF function desired that will be integrated over with Monte Carlo integration
 double customPDF(double *x, size_t dim, void *params)

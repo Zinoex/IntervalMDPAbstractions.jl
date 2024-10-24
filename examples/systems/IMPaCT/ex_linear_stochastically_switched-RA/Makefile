@@ -10,7 +10,7 @@ EXECUTABLES := $(patsubst %.cpp,%,$(CPP_FILES))
 
 all: $(EXECUTABLES)
 
-%: %.cpp custom.cpp ../../src/IMDP.cpp ../../src/MDP.cpp
+%: %.cpp ../../src/IMDP.cpp ../../src/MDP.cpp
 	$(CC) $^ $(CFLAGS) -o $@
 
 clean:

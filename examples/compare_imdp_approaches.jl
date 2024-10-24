@@ -81,8 +81,8 @@ linear7d = ComparisonProblem(
 
 linear_stochastically_switched = ComparisonProblem(
     "linear_stochastically_switched",
-    () -> nothing,
-    false,
+    () -> run_impact("ex_linear_stochastically_switched-R"),
+    false, # Running IMPaCT on this problem is will result in nlopt failure for every transition.
     (40, 40),
     (1,),
 )
@@ -95,7 +95,7 @@ problems = [
     van_der_pol,
     nndm_cartpole,
     linear6d,
-    linear7d,
+    # linear7d,
     linear_stochastically_switched
 ]
 

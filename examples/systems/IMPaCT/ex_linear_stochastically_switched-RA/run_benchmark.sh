@@ -1,6 +1,7 @@
 #! /bin/bash
 
 cd examples/ex_linear_stochastically_switched-RA/
+cp custom.cpp /app/src/custom.pp
 make
 ./linear_stochastically_switched
 
