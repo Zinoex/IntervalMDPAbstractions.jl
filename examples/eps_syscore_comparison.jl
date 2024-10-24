@@ -22,7 +22,7 @@ end
 car_parking = EpsSySCoReComparisonProblem(
     "car_parking",
     (state_split, input_split, time_horizon) -> car_parking_decoupled(time_horizon; range_vs_grid=:range, state_split=state_split, input_split=input_split),
-    [(50, 50), (100, 100), (150, 150)],
+    [(50, 50), (100, 100), (150, 150), (300, 300), (600, 600)],
     (3, 3),
     [[1, 2]; collect(5:5:100)]
 )
