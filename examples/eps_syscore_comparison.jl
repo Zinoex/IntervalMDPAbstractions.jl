@@ -12,16 +12,17 @@ struct EpsSySCoReComparisonProblem
     name::String
 
     constructor::Function
+    retime_prop::Function
 
     state_splits
     input_split
     time_horizons
 end
 
-
 car_parking = EpsSySCoReComparisonProblem(
     "car_parking",
     (state_split, input_split, time_horizon) -> car_parking_decoupled(time_horizon; range_vs_grid=:range, state_split=state_split, input_split=input_split),
+    (prop, time_horizon) -> FiniteTimeReachAvoid(IntervalMDP.reach(prop), IntervalMDP.avoid(prop), time_horizon),
     [(50, 50), (100, 100), (150, 150), (300, 300), (600, 600)],
     (3, 3),
     [[1, 2]; collect(5:5:100)]
@@ -31,15 +32,19 @@ car_parking = EpsSySCoReComparisonProblem(
 bas_4d = EpsSySCoReComparisonProblem(
     "4d_bas",
     (state_split, input_split, time_horizon) -> building_automation_system_4d_decoupled(time_horizon; state_split=state_split, input_split=input_split),
+    (prop, time_horizon) -> FiniteTimeSafety(IntervalMDP.avoid(prop), time_horizon),
     [(4, 4, 4, 4), (8, 8, 8, 8), (12, 12, 12, 12), (16, 16, 16, 16)],
     4,
     [[1, 2]; collect(5:5:100)]
 )
 
-function benchmark_intervalsyscore(problem::EpsSySCoReComparisonProblem, state_split, time_horizon)
-    BenchmarkTools.gcscrub()
+function retime_spec(prob, spec, time_horizon) 
+    prop = prob.retime_prop(system_property(spec), time_horizon)
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+end
 
-    mdp, lower_spec, upper_spec = problem.constructor(state_split, problem.input_split, time_horizon)
+function benchmark_intervalsyscore(mdp, lower_spec, upper_spec)
+    BenchmarkTools.gcscrub()
 
     lower_bound_prob = Problem(mdp, lower_spec)
     strategy, V_lower, k, res = control_synthesis(lower_bound_prob)
@@ -61,22 +66,38 @@ function benchmark_intervalsyscore(problem::EpsSySCoReComparisonProblem, state_s
     return mean_V_eps, max_V_eps
 end
 
+function construct_model(problem, state_split, time_horizon=1)
+    BenchmarkTools.gcscrub()
+
+    mdp, lower_spec, upper_spec = problem.constructor(state_split, problem.input_split, time_horizon)
+    return mdp, lower_spec, upper_spec
+end
+
 function benchmark_system(problem, state_split, time_horizon)
     println(("num_regions_per_axis", state_split, "time_horizon", time_horizon))
-    mean_V_eps, max_V_eps = benchmark_intervalsyscore(problem, state_split, time_horizon)
+    mdp, lower_spec, upper_spec = construct_model(problem, state_split, time_horizon)
+
+    mean_V_eps, max_V_eps = benchmark_intervalsyscore(mdp, lower_spec, upper_spec)
 
     println(("mean_V_eps", mean_V_eps, "max_V_eps", max_V_eps))
 end
 
-function benchmark_system(problem::EpsSySCoReComparisonProblem, time_horizon)
-    for state_split in problem.state_splits
-        benchmark_system(problem, state_split, time_horizon)
+function benchmark_system(problem::EpsSySCoReComparisonProblem, state_split)
+    mdp, lower_spec, upper_spec = construct_model(problem, state_split)
+
+    for time_horizon in problem.time_horizons
+        println(("num_regions_per_axis", state_split, "time_horizon", time_horizon))
+        lower_spec = retime_spec(problem, lower_spec, time_horizon)
+        upper_spec = retime_spec(problem, upper_spec, time_horizon)
+
+        mean_V_eps, max_V_eps = benchmark_intervalsyscore(mdp, lower_spec, upper_spec)
+        println(("mean_V_eps", mean_V_eps, "max_V_eps", max_V_eps))
     end
 end
 
 function benchmark_system(problem::EpsSySCoReComparisonProblem)
-    for time_horizon in problem.time_horizons
-        benchmark_system(problem, time_horizon)
+    for state_split in problem.state_splits
+        benchmark_system(problem, state_split)
     end
 end
 
