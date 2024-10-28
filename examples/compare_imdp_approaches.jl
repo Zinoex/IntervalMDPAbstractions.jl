@@ -95,7 +95,7 @@ problems = [
     van_der_pol,
     nndm_cartpole,
     linear6d,
-    # linear7d,
+    linear7d,
     linear_stochastically_switched
 ]
 
