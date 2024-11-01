@@ -49,13 +49,12 @@ outputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 1
 """
     UncertainPWAAdditiveNoiseDynamics
 
-A struct representing dynamics with additive noise.
+A struct representing uncertain PWA dynamics with additive noise.
 I.e. `x_{k+1} = A_i(\\alpha) x_k + B_i(\\alpha) u_k + C_i(\\alpha) + w_k`, where `x_k \\in X_i` `w_k ~ p_w` and `p_w` is multivariate probability distribution.
 
 ### Fields
 - `dimstate::Int`: The dimension of the state space.
-- `diminput::Int`: The dimension of the input space.
-- `dyn::Vector{{Vector{<:UncertainAffineRegion}}`: A list (action) of lists (regions) of UncertainAffineRegions to represent an uncertain PWA dynamics.
+- `dyn::Vector{Vector{<:UncertainAffineRegion}`: A list (action) of lists (regions) of UncertainAffineRegions to represent an uncertain PWA dynamics.
 - `w::AdditiveNoiseStructure`: The additive noise.
 
 """

@@ -25,6 +25,7 @@ include("dynamics/AffineAdditiveNoiseDynamics.jl")
 include("dynamics/NonlinearAdditiveNoiseDynamics.jl")
 include("dynamics/UncertainPWAAdditiveNoiseDynamics.jl")
 include("dynamics/StochasticSwitchedDynamics.jl")
+include("dynamics/AbstractedGaussianProcess.jl")
 
 include("systems.jl")
 include("specification.jl")
@@ -37,5 +38,6 @@ include("abstractions/target.jl")
 include("abstractions/abstraction.jl")
 include("abstractions/additive_noise.jl")
 include("abstractions/mixture.jl")
+include("abstractions/gaussian_process.jl")
 
 end

@@ -6,7 +6,6 @@ export AdditiveNoiseDynamics, nominal, noise
 Dynamics with additive noise, i.e. `x_{k+1} = f(x_k, u_k) + w_k`.
 """
 abstract type AdditiveNoiseDynamics <: DiscreteTimeStochasticDynamics end
-dimnoise(dyn::AdditiveNoiseDynamics) = dimstate(dyn)
 
 """
 nominal(dyn::AdditiveNoiseDynamics, X::LazySet, U::LazySet)

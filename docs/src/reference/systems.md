@@ -4,7 +4,6 @@
 DiscreteTimeStochasticDynamics
 dimstate
 diminput
-dimnoise
 AdditiveNoiseDynamics
 nominal
 AdditiveNoiseStructure

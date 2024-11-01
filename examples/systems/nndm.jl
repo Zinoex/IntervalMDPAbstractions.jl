@@ -33,7 +33,7 @@ end
 
 function load_system(system_name::String, number_hypercubes::Int)
     filename = joinpath(@__DIR__, "nndm_data/$(system_name)_partition_data_$number_hypercubes.mat")
-    file = matopen(joinpath(@__DIR__, filename))
+    file = matopen(filename)
 
     dynamics = load_dynamics(file)
 
@@ -237,7 +237,7 @@ end
 
 function load_hdf5_system(system_name::String)
     filename = joinpath(@__DIR__, "nndm_data/$(system_name)_bounds.h5")
-    file = h5open(joinpath(@__DIR__, filename), "r")
+    file = h5open(filename, "r")
 
     dynamics = load_dynamics(file)
 

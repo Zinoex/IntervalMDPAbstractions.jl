@@ -1,5 +1,5 @@
 
-export DiscreteTimeStochasticDynamics, dimstate, diminput, dimnoise
+export DiscreteTimeStochasticDynamics, dimstate, diminput
 
 """
     DiscreteTimeStochasticDynamics
@@ -21,10 +21,3 @@ function dimstate end
 Return the dimension of the input space of the dynamics `dyn`.
 """
 function diminput end
-
-"""
-    dimnoise(dyn::DiscreteTimeStochasticDynamics)
-
-Return the dimension of the noise space of the dynamics `dyn`.
-"""
-function dimnoise end
