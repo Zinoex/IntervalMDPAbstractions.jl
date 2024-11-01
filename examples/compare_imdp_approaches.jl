@@ -419,6 +419,7 @@ function to_dataframe(res)
             "decoupled_prob_mem" => data["decoupled"]["prob_mem"],
             "decoupled_min_prob" => minimum(data["decoupled"]["value_function_lower"]),
             "decoupled_max_prob" => maximum(data["decoupled"]["value_function_lower"]),
+            "decoupled_mean_prob" => mean(data["decoupled"]["value_function_lower"]),
             "decoupled_mean_error" => mean(data["decoupled"]["value_function_upper"] - data["decoupled"]["value_function_lower"]),
         )
 
@@ -431,6 +432,7 @@ function to_dataframe(res)
                 row["direct_prob_mem"] = NaN
                 row["direct_min_prob"] = NaN
                 row["direct_max_prob"] = NaN
+                row["direct_mean_prob"] = NaN
                 row["direct_mean_error"] = NaN
                 row["direct_min_prob_diff"] = NaN
                 row["direct_max_prob_diff"] = NaN
@@ -441,6 +443,7 @@ function to_dataframe(res)
                 row["direct_prob_mem"] = data["direct"]["prob_mem"]
                 row["direct_min_prob"] = minimum(data["direct"]["value_function_lower"])
                 row["direct_max_prob"] = maximum(data["direct"]["value_function_lower"])
+                row["direct_mean_prob"] = mean(data["direct"]["value_function_lower"])
                 row["direct_mean_error"] = mean(data["direct"]["value_function_upper"] - data["direct"]["value_function_lower"])
                 row["direct_min_prob_diff"] = minimum(data["decoupled"]["value_function_lower"] - data["direct"]["value_function_lower"])
                 row["direct_max_prob_diff"] = maximum(data["decoupled"]["value_function_lower"] - data["direct"]["value_function_lower"])
@@ -452,6 +455,7 @@ function to_dataframe(res)
             row["direct_prob_mem"] = NaN
             row["direct_min_prob"] = NaN
             row["direct_max_prob"] = NaN
+            row["direct_mean_prob"] = NaN
             row["direct_mean_error"] = NaN
             row["direct_min_prob_diff"] = NaN
             row["direct_max_prob_diff"] = NaN
@@ -467,6 +471,7 @@ function to_dataframe(res)
                 row["impact_prob_mem"] = NaN
                 row["impact_min_prob"] = NaN
                 row["impact_max_prob"] = NaN
+                row["impact_mean_prob"] = NaN
                 row["impact_mean_error"] = NaN
                 row["impact_min_prob_diff"] = NaN
                 row["impact_max_prob_diff"] = NaN
@@ -480,6 +485,7 @@ function to_dataframe(res)
 
                     row["impact_min_prob"] = NaN
                     row["impact_max_prob"] = NaN
+                    row["impact_mean_prob"] = NaN
                     row["impact_mean_error"] = NaN
                     row["impact_min_prob_diff"] = NaN
                     row["impact_max_prob_diff"] = NaN
@@ -487,6 +493,7 @@ function to_dataframe(res)
                 else
                     row["impact_min_prob"] = minimum(data["impact"]["value_function_lower"])
                     row["impact_max_prob"] = maximum(data["impact"]["value_function_lower"])
+                    row["impact_mean_prob"] = mean(data["impact"]["value_function_lower"])
                     row["impact_mean_error"] = mean(data["impact"]["value_function_upper"] - data["impact"]["value_function_lower"])
                     row["impact_min_prob_diff"] = minimum(data["decoupled"]["value_function_lower"] - data["impact"]["value_function_lower"])
                     row["impact_max_prob_diff"] = maximum(data["decoupled"]["value_function_lower"] - data["impact"]["value_function_lower"])
@@ -499,6 +506,7 @@ function to_dataframe(res)
             row["impact_prob_mem"] = NaN
             row["impact_min_prob"] = NaN
             row["impact_max_prob"] = NaN
+            row["impact_mean_prob"] = NaN
             row["impact_mean_error"] = NaN
             row["impact_min_prob_diff"] = NaN
             row["impact_max_prob_diff"] = NaN
@@ -518,12 +526,14 @@ function to_dataframe(res)
         :decoupled_prob_mem,
         :decoupled_min_prob,
         :decoupled_max_prob,
+        :decoupled_mean_prob,
         :decoupled_mean_error,
         :direct_abstraction_time,
         :direct_certification_time,
         :direct_prob_mem,
         :direct_min_prob,
         :direct_max_prob,
+        :direct_mean_prob,
         :direct_mean_error,
         :direct_min_prob_diff,
         :direct_max_prob_diff,
@@ -533,6 +543,7 @@ function to_dataframe(res)
         :impact_prob_mem,
         :impact_min_prob,
         :impact_max_prob,
+        :impact_mean_prob,
         :impact_mean_error,
         :impact_min_prob_diff,
         :impact_max_prob_diff,
