@@ -89,6 +89,15 @@ linear7d = IntervalSySCoReComparisonProblem(
     10
 )
 
+dubins_car_gp_dkl = IntervalSySCoReComparisonProblem(
+    "dubins_car_gp_dkl",
+    (state_split, input_split, time_horizon) -> dubins_car_direct(time_horizon; sparse=true),
+    (state_split, input_split, time_horizon) -> dubins_car_decoupled(time_horizon; sparse=false),
+    (80, 16, 20),
+    (7,),
+    10
+)
+
 linear_stochastically_switched = IntervalSySCoReComparisonProblem(
     "linear_stochastically_switched",
     (state_split, input_split, time_horizon) -> linear_stochastically_switched_direct(time_horizon; state_split=state_split),

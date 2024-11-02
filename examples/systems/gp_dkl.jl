@@ -5,19 +5,29 @@ using NPZ
 
 function load_mode(base_path, mode, regions)
     mean = npzread(joinpath(base_path, "mean_data_$(mode)_0.npy"))
-    variance = npzread(joinpath(base_path, "sig_data_$(mode)_0.npy"))
+    stddev = npzread(joinpath(base_path, "sig_data_$(mode)_0.npy"))
 
     dyn = Vector{AbstractedGaussianProcessRegion{Float64, Vector{Float64}, eltype(regions)}}(undef, length(regions))
 
     for (i, region) in enumerate(regions)
+        stddev_lower = convert.(Float64, stddev[i, :, 1])
+        stddev_upper = convert.(Float64, stddev[i, :, 2])
+
+        # The data has 0 stddev_lower for terminal regions, which is not valid for the Gaussian process.
+        # Ultimately, it will be ignored, hence also why it is set to zero, but we need to ensure that
+        # it is not zero to pass the data validation.
+        clamp!(stddev_lower, 1e-6, Inf)
+
         dyn[i] = AbstractedGaussianProcessRegion(
             region,
             convert.(Float64, mean[i, :, 1]),
             convert.(Float64, mean[i, :, 2]),
-            convert.(Float64, variance[i, :, 1]),
-            convert.(Float64, variance[i, :, 2])
+            stddev_lower,
+            stddev_upper
         )
     end
+
+    return dyn
 end
 
 function load_npy_dynamics(base_path, num_modes)
@@ -25,7 +35,7 @@ function load_npy_dynamics(base_path, num_modes)
 
     regions = [
         Hyperrectangle(low=convert.(Float64, extent[:, 1]), high=convert.(Float64, extent[:, 2])) for extent
-        in eachrow(region_extents)
+        in eachslice(region_extents[1:end - 1, :, :]; dims=1)
     ]
 
     dyn = Vector{Vector{AbstractedGaussianProcessRegion{Float64, Vector{Float64}, eltype(regions)}}}(undef, num_modes)
@@ -45,8 +55,8 @@ function load_npy_system(system_name::String, num_modes)
 end
 
 function dubins_car_sys(time_horizon)
-    pwa_dyn = load_npy_system("dubins_car_3d", 7)
-    dyn = AbstractedGaussianProcessDynamics(pwa_dyn)
+    gp_bounds = load_npy_system("dubins_car_3d", 7)
+    dyn = AbstractedGaussianProcess(gp_bounds)
 
     initial = EmptySet(3)
     sys = System(dyn, initial)
@@ -83,7 +93,7 @@ function dubins_car_decoupled(time_horizon=10; sparse=false)
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function dubins_car_direct(time_horizon=10; sparse=false)
+function dubins_car_direct(time_horizon=10; sparse=true)
     sys, spec = dubins_car_sys(time_horizon)
 
     X = Hyperrectangle(; low=[0.0, 0.0, -0.5], high=[10.0, 2.0, 0.5])

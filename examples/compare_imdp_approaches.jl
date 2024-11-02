@@ -79,6 +79,14 @@ linear7d = ComparisonProblem(
     (1,),
 )
 
+dubins_car_gp_dkl = ComparisonProblem(
+    "dubins_car_gp_dkl",
+    () -> nothing,
+    false, # IMPaCT is not compatible with GPs.
+    (80, 16, 20),
+    (7,),
+)
+
 linear_stochastically_switched = ComparisonProblem(
     "linear_stochastically_switched",
     () -> run_impact("ex_linear_stochastically_switched-R"),
@@ -96,6 +104,7 @@ problems = [
     nndm_cartpole,
     linear6d,
     linear7d,
+    dubins_car_gp_dkl,
     linear_stochastically_switched
 ]
 
