@@ -115,6 +115,7 @@ problems = [
     nndm_cartpole,
     linear6d,
     linear7d,
+    dubins_car_gp_dkl,
     linear_stochastically_switched
 ]
 
