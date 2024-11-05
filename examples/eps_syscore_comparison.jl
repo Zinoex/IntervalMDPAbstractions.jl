@@ -120,7 +120,7 @@ function benchmark_system(problem::EpsSySCoReComparisonProblem, state_split)
     lower_spec = retime_spec(problem, lower_spec, maximum(problem.time_horizons))
     upper_spec = retime_spec(problem, upper_spec, maximum(problem.time_horizons))
 
-    println(("num_regions_per_axis", state_split))
+    println(("num_regions_per_axis", state_split, "memory (MB)", Base.summarysize(mdp) / 1024^2))
 
     mean_V_eps, max_V_eps = benchmark_intervalsyscore(mdp, lower_spec, upper_spec, problem.time_horizons)
     
