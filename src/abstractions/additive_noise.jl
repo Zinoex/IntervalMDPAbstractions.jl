@@ -110,8 +110,8 @@ function transition_prob(
         # Absorbing
         if any(Tuple(Icart) .== 1)
             for axis in eachindex(splits(state_abstraction))
-                prob_lower[axis][srcact_idx][1] = 1.0
-                prob_upper[axis][srcact_idx][1] = 1.0
+                prob_lower[axis][1, srcact_idx] = 1.0
+                prob_upper[axis][1, srcact_idx] = 1.0
             end
             srcact_idx += 1
 
@@ -142,7 +142,7 @@ function transition_prob(
 
     prob = OrthogonalIntervalProbabilities(
         Tuple(
-            IntervalProbabilities(; lower = efficient_hcat(pl), upper = efficient_hcat(pu)) for (pl, pu) in zip(prob_lower, prob_upper)
+            IntervalProbabilities(; lower = pl, upper = pu) for (pl, pu) in zip(prob_lower, prob_upper)
         ),
         Int32.(Tuple(splits(state_abstraction) .+ 1)),
     )
@@ -166,8 +166,8 @@ function source_action_transition_prob(
     for (axis, axisregions) in enumerate(splits(state_abstraction))
         # Transition to outside the partitioned region
         pl, pu = axis_transition_prob_bounds(Y, X, w, axis)
-        prob_lower[axis][srcact_idx][1] = 1.0 - pu
-        prob_upper[axis][srcact_idx][1] = 1.0 - pl
+        prob_lower[axis][1, srcact_idx] = 1.0 - pu
+        prob_upper[axis][1, srcact_idx] = 1.0 - pl
 
         # Transition to other states
         axis_statespace = Interval(low(X, axis), high(X, axis))
@@ -177,15 +177,15 @@ function source_action_transition_prob(
             pl, pu = axis_transition_prob_bounds(Y, target_region, w, axis)
 
             if includetransition(target_model, pu)
-                prob_lower[axis][srcact_idx][tar_idx+1] = pl
-                prob_upper[axis][srcact_idx][tar_idx+1] = pu
+                prob_lower[axis][tar_idx + 1, srcact_idx] = pl
+                prob_upper[axis][tar_idx + 1, srcact_idx] = pu
             else  # Allow sparsifying via adding probability to the absorbing avoid state
 
                 # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-                prob_lower[axis][srcact_idx][1] =
-                    clamp(prob_lower[axis][srcact_idx][1] + pl, 0.0, 1.0)
-                prob_upper[axis][srcact_idx][1] =
-                    clamp(prob_upper[axis][srcact_idx][1] + pu, 0.0, 1.0)
+                prob_lower[axis][1, srcact_idx] =
+                    clamp(prob_lower[axis][1, srcact_idx] + pl, 0.0, 1.0)
+                prob_upper[axis][1, srcact_idx] =
+                    clamp(prob_upper[axis][1, srcact_idx] + pu, 0.0, 1.0)
             end
         end
     end

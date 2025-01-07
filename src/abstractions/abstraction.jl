@@ -256,16 +256,16 @@ function abstraction(
 end
 
 function initprob(::OrthogonalIMDPTarget, state_abstraction::StateUniformGridSplit, ninputs)
-    prob_lower = Vector{Vector{Float64}}[]
-    prob_upper = Vector{Vector{Float64}}[]
+    prob_lower = Matrix{Float64}[]
+    prob_upper = Matrix{Float64}[]
 
     # One action for non-absorbing states is already included in the first term.
     nchoices =
         prod(splits(state_abstraction) .+ 1) + numregions(state_abstraction) * (ninputs - 1)
 
     for axisregions in splits(state_abstraction)
-        local_prob_lower = [zeros(Float64, axisregions + 1) for _ = 1:nchoices]
-        local_prob_upper = [zeros(Float64, axisregions + 1) for _ = 1:nchoices]
+        local_prob_lower = zeros(Float64, axisregions + 1, nchoices)
+        local_prob_upper = zeros(Float64, axisregions + 1, nchoices)
 
         push!(prob_lower, local_prob_lower)
         push!(prob_upper, local_prob_upper)
@@ -279,16 +279,16 @@ function initprob(
     state_abstraction::StateUniformGridSplit,
     ninputs,
 )
-    prob_lower = Vector{SparseVector{Float64,Int32}}[]
-    prob_upper = Vector{SparseVector{Float64,Int32}}[]
+    prob_lower = SparseMatrixCSC{Float64, Int32}[]
+    prob_upper = SparseMatrixCSC{Float64, Int32}[]
 
     # One action for non-absorbing states is already included in the first term.
     nchoices =
         prod(splits(state_abstraction) .+ 1) + numregions(state_abstraction) * (ninputs - 1)
 
     for axisregions in splits(state_abstraction)
-        local_prob_lower = [spzeros(Float64, Int32, axisregions + 1) for _ = 1:nchoices]
-        local_prob_upper = [spzeros(Float64, Int32, axisregions + 1) for _ = 1:nchoices]
+        local_prob_lower = spzeros(Float64, Int32, axisregions + 1, nchoices)
+        local_prob_upper = spzeros(Float64, Int32, axisregions + 1, nchoices)
 
         push!(prob_lower, local_prob_lower)
         push!(prob_upper, local_prob_upper)
