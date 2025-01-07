@@ -3,19 +3,18 @@ function efficient_hcat(X::Vector{Vector{Tv}}) where {Tv}
     return reduce(hcat, X)
 end
 
-function efficient_hcat(X::Vector{SparseVector{Tv, Ti}}) where {Tv, Ti}
+function efficient_hcat(X::Vector{SparseVector{Tv,Ti}}) where {Tv,Ti}
     # check sizes
     n = length(X)
     m = length(X[1])
     tnnz = nnz(X[1])
     for j = 2:n
-        length(X[j]) == m ||
-            throw(DimensionMismatch("Inconsistent column lengths."))
+        length(X[j]) == m || throw(DimensionMismatch("Inconsistent column lengths."))
         tnnz += nnz(X[j])
     end
 
     # construction
-    colptr = Vector{Ti}(undef, n+1)
+    colptr = Vector{Ti}(undef, n + 1)
     nzrow = Vector{Ti}(undef, tnnz)
     nzval = Vector{Tv}(undef, tnnz)
     roff = 1
@@ -33,7 +32,7 @@ function efficient_hcat(X::Vector{SparseVector{Tv, Ti}}) where {Tv, Ti}
 end
 
 function iszeromeasure(X::AbstractHyperrectangle, Y::AbstractHyperrectangle)
-    return any(high(Y, i) ≤ low(X, i) || high(X, i) ≤ low(Y, i) for i in 1:LazySets.dim(X))
+    return any(high(Y, i) ≤ low(X, i) || high(X, i) ≤ low(Y, i) for i = 1:LazySets.dim(X))
 end
 
 iszeromeasure(X::EmptySet, Y::LazySet) = true

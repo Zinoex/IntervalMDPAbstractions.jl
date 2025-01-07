@@ -6,14 +6,14 @@ function almost_identity_sys(num_dims::Int, time_horizon)
     A = zeros(Float64, num_dims, num_dims)
     B = zeros(Float64, num_dims, 1)
 
-    for i in 1:num_dims
+    for i = 1:num_dims
         A[i, i] = 0.7
         A[i, mod1(i + 1, num_dims)] = -0.1
 
         # B[i, i] = 1.0
     end
 
-    w_variance = [0.01 for _ in 1:num_dims]
+    w_variance = [0.01 for _ = 1:num_dims]
     w_stddev = sqrt.(w_variance)
 
     dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
@@ -28,10 +28,15 @@ function almost_identity_sys(num_dims::Int, time_horizon)
     return sys, spec
 end
 
-function almost_identity_decoupled(num_dims::Int, time_horizon=10; sparse=false, state_split_per_dim=8)
+function almost_identity_decoupled(
+    num_dims::Int,
+    time_horizon = 10;
+    sparse = false,
+    state_split_per_dim = 8,
+)
     sys, spec = almost_identity_sys(num_dims, time_horizon)
 
-    X = Hyperrectangle(; low=[-1.0 for _ in 1:num_dims], high=[1.0 for _ in 1:num_dims])
+    X = Hyperrectangle(; low = [-1.0 for _ = 1:num_dims], high = [1.0 for _ = 1:num_dims])
     state_abs = StateUniformGridSplit(X, ntuple(i -> state_split_per_dim, num_dims))
 
     input_abs = InputDiscrete([Singleton([0.0])])
@@ -46,15 +51,21 @@ function almost_identity_decoupled(num_dims::Int, time_horizon=10; sparse=false,
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec =
+        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function almost_identity_direct(num_dims::Int, time_horizon=10; sparse=false, state_split_per_dim=8)
+function almost_identity_direct(
+    num_dims::Int,
+    time_horizon = 10;
+    sparse = false,
+    state_split_per_dim = 8,
+)
     sys, spec = almost_identity_sys(num_dims, time_horizon)
 
-    X = Hyperrectangle(; low=[-1.0 for _ in 1:num_dims], high=[1.0 for _ in 1:num_dims])
+    X = Hyperrectangle(; low = [-1.0 for _ = 1:num_dims], high = [1.0 for _ = 1:num_dims])
     state_abs = StateUniformGridSplit(X, ntuple(i -> state_split_per_dim, num_dims))
 
     input_abs = InputDiscrete([Singleton([0.0])])
@@ -69,13 +80,14 @@ function almost_identity_direct(num_dims::Int, time_horizon=10; sparse=false, st
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec =
+        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
 function main(n)
-    @time "abstraction" mdp, spec, _ = almost_identity_decoupled(n; sparse=true)
+    @time "abstraction" mdp, spec, _ = almost_identity_decoupled(n; sparse = true)
 
     println("Memory usage: $(Base.summarysize(mdp) / 1000^2) MB")
 

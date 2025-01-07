@@ -28,15 +28,30 @@ dyn = AffineAdditiveNoiseDynamics(A, B, w)
 ```
 
 """
-struct AffineAdditiveNoiseDynamics{TA<:AbstractMatrix{Float64}, TB<:AbstractMatrix{Float64}, TC<:AbstractVector{Float64}, TW<:AdditiveNoiseStructure} <: AdditiveNoiseDynamics
+struct AffineAdditiveNoiseDynamics{
+    TA<:AbstractMatrix{Float64},
+    TB<:AbstractMatrix{Float64},
+    TC<:AbstractVector{Float64},
+    TW<:AdditiveNoiseStructure,
+} <: AdditiveNoiseDynamics
     A::TA
     B::TB
     C::TC
     w::TW
 
-    function AffineAdditiveNoiseDynamics(A::TA, B::TB, C::TC, w::TW) where {TA<:AbstractMatrix{Float64}, TB<:AbstractMatrix{Float64}, TC<:AbstractVector{Float64}, TW<:AdditiveNoiseStructure}
+    function AffineAdditiveNoiseDynamics(
+        A::TA,
+        B::TB,
+        C::TC,
+        w::TW,
+    ) where {
+        TA<:AbstractMatrix{Float64},
+        TB<:AbstractMatrix{Float64},
+        TC<:AbstractVector{Float64},
+        TW<:AdditiveNoiseStructure,
+    }
         n = LinearAlgebra.checksquare(A)
-        
+
         if n != size(B, 1)
             throw(ArgumentError("The number of rows of B must match the state dimension"))
         end
@@ -46,20 +61,31 @@ struct AffineAdditiveNoiseDynamics{TA<:AbstractMatrix{Float64}, TB<:AbstractMatr
         end
 
         if n != dim(w)
-            throw(ArgumentError("The dimensionality of w must match the dynamics dimension"))
+            throw(
+                ArgumentError("The dimensionality of w must match the dynamics dimension"),
+            )
         end
-        
-        return new{TA, TB, TC, TW}(A, B, C, w)
+
+        return new{TA,TB,TC,TW}(A, B, C, w)
     end
 end
 
-function AffineAdditiveNoiseDynamics(A::AbstractMatrix{Float64}, B::AbstractMatrix{Float64}, w::AdditiveNoiseStructure)
+function AffineAdditiveNoiseDynamics(
+    A::AbstractMatrix{Float64},
+    B::AbstractMatrix{Float64},
+    w::AdditiveNoiseStructure,
+)
     C = zeros(eltype(A), size(A, 1))
     return AffineAdditiveNoiseDynamics(A, B, C, w)
 end
 
-nominal(dyn::AffineAdditiveNoiseDynamics, X::LazySet{Float64}, U::LazySet{Float64}) = dyn.A * X + dyn.B * U + Singleton(dyn.C)
-nominal(dyn::AffineAdditiveNoiseDynamics, X::AbstractVector{Float64}, U::AbstractVector{Float64}) = dyn.A * X + dyn.B * U + dyn.C
+nominal(dyn::AffineAdditiveNoiseDynamics, X::LazySet{Float64}, U::LazySet{Float64}) =
+    dyn.A * X + dyn.B * U + Singleton(dyn.C)
+nominal(
+    dyn::AffineAdditiveNoiseDynamics,
+    X::AbstractVector{Float64},
+    U::AbstractVector{Float64},
+) = dyn.A * X + dyn.B * U + dyn.C
 noise(dyn::AffineAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::AffineAdditiveNoiseDynamics) = size(dyn.A, 1)
 diminput(dyn::AffineAdditiveNoiseDynamics) = size(dyn.B, 2)

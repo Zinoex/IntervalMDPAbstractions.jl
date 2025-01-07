@@ -1,7 +1,7 @@
 using HDF5
 
-function run_impact(name; container=:apptainer)
-    try 
+function run_impact(name; container = :apptainer)
+    try
         if container == :docker
             script = "docker_run.sh"
         elseif container == :apptainer
@@ -16,15 +16,14 @@ function run_impact(name; container=:apptainer)
 
         if occursin("timeout", output)
             @warn "Decoupled timeout"
-    
+
             return Dict(
                 "oom" => false,
                 "timeout" => true,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
-                "value_function_lower" => NaN.
-                "value_function_upper" => NaN
+                "value_function_lower" => NaN."value_function_upper" => NaN,
             )
         end
 
@@ -37,7 +36,7 @@ function run_impact(name; container=:apptainer)
                 "peak_mem" => NaN,
                 "prob_mem" => NaN,
                 "value_function_lower" => NaN,
-                "value_function_upper" => NaN
+                "value_function_upper" => NaN,
             )
         end
 
@@ -45,7 +44,10 @@ function run_impact(name; container=:apptainer)
 
         # Find memory usage
         mem = 0.0
-        for m in eachmatch(r"Approximate memory required if stored: (\d+\.\d+)(Mb|Kb)", abstraction_output)
+        for m in eachmatch(
+            r"Approximate memory required if stored: (\d+\.\d+)(Mb|Kb)",
+            abstraction_output,
+        )
             prob_mem = parse(Float64, m.captures[1])
             mem_unit = m.captures[2]
 
@@ -74,11 +76,11 @@ function run_impact(name; container=:apptainer)
         file = "$(@__DIR__)/IMPaCT/$name/controller.h5"
         table = "dataset"
         data = h5read(file, table)
-        V_lower = data[:, end - 1]
+        V_lower = data[:, end-1]
         V_upper = data[:, end]
 
         # Cleanup
-        rm(file, force=true)
+        rm(file, force = true)
 
         return Dict(
             "oom" => false,
@@ -87,12 +89,12 @@ function run_impact(name; container=:apptainer)
             "certification_time" => certification_time,
             "prob_mem" => mem,
             "value_function_lower" => V_lower,
-            "value_function_upper" => V_upper
+            "value_function_upper" => V_upper,
         )
     catch e
         if isa(e, ProcessFailedException)
             @warn "IMPACT failed with exit code $(e.termsignal) for $name"
-            
+
             return Dict(
                 "oom" => true,
                 "timeout" => false,
@@ -101,7 +103,7 @@ function run_impact(name; container=:apptainer)
                 "peak_mem" => NaN,
                 "prob_mem" => NaN,
                 "value_function_lower" => NaN,
-                "value_function_upper" => NaN
+                "value_function_upper" => NaN,
             )
         else
             rethrow(e)

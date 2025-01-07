@@ -39,22 +39,32 @@ dyn = NonlinearAdditiveNoiseDynamics(f, 2, 0, w)
 ```
 
 """
-struct NonlinearAdditiveNoiseDynamics{F<:Function, TW<:AdditiveNoiseStructure} <: AdditiveNoiseDynamics
+struct NonlinearAdditiveNoiseDynamics{F<:Function,TW<:AdditiveNoiseStructure} <:
+       AdditiveNoiseDynamics
     f::F
     nstate::Int
     ninput::Int
     w::TW
 
-    function NonlinearAdditiveNoiseDynamics(f::F, nstate, ninput, w::TW) where {F<:Function, TW<:AdditiveNoiseStructure}
+    function NonlinearAdditiveNoiseDynamics(
+        f::F,
+        nstate,
+        ninput,
+        w::TW,
+    ) where {F<:Function,TW<:AdditiveNoiseStructure}
         if nstate != dim(w)
             throw(ArgumentError("The dimensionality of w must match the state dimension"))
         end
-        
-        return new{F, TW}(f, nstate, ninput, w)
+
+        return new{F,TW}(f, nstate, ninput, w)
     end
 end
 
-function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}, U::Hyperrectangle{Float64})
+function nominal(
+    dyn::NonlinearAdditiveNoiseDynamics,
+    X::Hyperrectangle{Float64},
+    U::Hyperrectangle{Float64},
+)
     # Use the Taylor model to over-approximate the reachable set
     order = 1
 
@@ -67,28 +77,33 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}
     # It also means that this function is not thread-safe!!
     # set_variables(Float64, "z"; order=order, numvars=dimstate(dyn) + diminput(dyn))
 
-    z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i in 1:dimstate(dyn) + diminput(dyn)]
-    x, u = (z - z0)[1:dimstate(dyn)], z[dimstate(dyn)+1:end]
+    z = [
+        TaylorModelN(i, order, IntervalBox(z0), dom) for i = 1:dimstate(dyn)+diminput(dyn)
+    ]
+    x, u = (z-z0)[1:dimstate(dyn)], z[dimstate(dyn)+1:end]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
 
     # Extract the linear and constant terms + the remainder
-    C = [constant_term(y[i]) for i in 1:dimstate(dyn)]
+    C = [constant_term(y[i]) for i = 1:dimstate(dyn)]
     Clow = inf.(C)
     Cupper = sup.(C)
-    
-    AB = [linear_polynomial(y[i])[1][j] for i in 1:dimstate(dyn), j in 1:dimstate(dyn) + diminput(dyn)]
-    
+
+    AB = [
+        linear_polynomial(y[i])[1][j] for i = 1:dimstate(dyn),
+        j = 1:dimstate(dyn)+diminput(dyn)
+    ]
+
     A = AB[:, 1:dimstate(dyn)]
     Alow = inf.(A)
     Aupper = sup.(A)
-    
+
     B = AB[:, dimstate(dyn)+1:end]
     Blow = inf.(B)
     Bupper = sup.(B)
 
-    D = [remainder(y[i]) for i in 1:dimstate(dyn)]
+    D = [remainder(y[i]) for i = 1:dimstate(dyn)]
     Dlower = inf.(D)
     Dupper = sup.(D)
 
@@ -100,9 +115,17 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}
     return Yconv
 end
 
-nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}, U::Singleton{Float64}) = nominal(dyn, X, element(U))
+nominal(
+    dyn::NonlinearAdditiveNoiseDynamics,
+    X::Hyperrectangle{Float64},
+    U::Singleton{Float64},
+) = nominal(dyn, X, element(U))
 
-function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}, u::AbstractVector{Float64})
+function nominal(
+    dyn::NonlinearAdditiveNoiseDynamics,
+    X::Hyperrectangle{Float64},
+    u::AbstractVector{Float64},
+)
     # Use the Taylor model to over-approximate the reachable set
 
     x0 = center(X)
@@ -110,26 +133,26 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}
 
     # TaylorSeries.jl modifieds the global state - eww...
     # It also means that this function is not thread-safe!!
-    
+
     # We set 10 as the maximum order of the Taylor expansion
     # set_variables(Float64, "x"; order=10, numvars=dimstate(dyn))
 
     order = 1
-    x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i in 1:dimstate(dyn)]
+    x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i = 1:dimstate(dyn)]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
 
     # Extract the linear and constant terms + the remainder
-    C = [constant_term(y[i]) for i in 1:dimstate(dyn)]
+    C = [constant_term(y[i]) for i = 1:dimstate(dyn)]
     Clow = inf.(C)
     Cupper = sup.(C)
 
-    A = [linear_polynomial(y[i])[1][j] for i in 1:dimstate(dyn), j in 1:dimstate(dyn)]
+    A = [linear_polynomial(y[i])[1][j] for i = 1:dimstate(dyn), j = 1:dimstate(dyn)]
     Alow = inf.(A)
     Aupper = sup.(A)
 
-    D = [remainder(y[i]) for i in 1:dimstate(dyn)]
+    D = [remainder(y[i]) for i = 1:dimstate(dyn)]
     Dlower = inf.(D)
     Dupper = sup.(D)
 
@@ -141,7 +164,11 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Hyperrectangle{Float64}
     return Yconv
 end
 
-function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Singleton{Float64}, U::Singleton{Float64})
+function nominal(
+    dyn::NonlinearAdditiveNoiseDynamics,
+    X::Singleton{Float64},
+    U::Singleton{Float64},
+)
     x = element(X)
     u = element(U)
 
@@ -151,7 +178,11 @@ function nominal(dyn::NonlinearAdditiveNoiseDynamics, X::Singleton{Float64}, U::
 end
 
 
-nominal(dyn::NonlinearAdditiveNoiseDynamics, x::AbstractVector{Float64}, u::AbstractVector{Float64}) = dyn.f(x, u)
+nominal(
+    dyn::NonlinearAdditiveNoiseDynamics,
+    x::AbstractVector{Float64},
+    u::AbstractVector{Float64},
+) = dyn.f(x, u)
 
 noise(dyn::NonlinearAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::NonlinearAdditiveNoiseDynamics) = dyn.nstate
@@ -165,7 +196,7 @@ function prepare_nominal(dyn::NonlinearAdditiveNoiseDynamics, input_abstraction)
     end
 
     # Set the Taylor model variables
-    set_variables(Float64, "z"; order=2, numvars=n)
+    set_variables(Float64, "z"; order = 2, numvars = n)
 
     return nothing
 end

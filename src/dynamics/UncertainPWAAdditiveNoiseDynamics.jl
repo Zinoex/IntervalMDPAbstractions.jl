@@ -14,7 +14,7 @@ I.e. `A(\\alpha) x + C(\\alpha)` for `\\alpha in [0, 1]`, valid over a region `X
 - `Cupper::AbstractVector{Float64}`: The constant upper bound vector.
 
 """
-struct UncertainAffineRegion{T, VT <: AbstractVector{T}, MT <: AbstractMatrix{T}, S <: LazySet{T}}
+struct UncertainAffineRegion{T,VT<:AbstractVector{T},MT<:AbstractMatrix{T},S<:LazySet{T}}
     region::S
 
     Alower::MT
@@ -23,7 +23,13 @@ struct UncertainAffineRegion{T, VT <: AbstractVector{T}, MT <: AbstractMatrix{T}
     Aupper::MT
     Cupper::VT
 
-    function UncertainAffineRegion(region::S, Alower::MT, Clower::VT, Aupper::MT, Cupper::VT) where {T, VT <: AbstractVector{T}, MT <: AbstractMatrix{T}, S <: LazySet{T}}
+    function UncertainAffineRegion(
+        region::S,
+        Alower::MT,
+        Clower::VT,
+        Aupper::MT,
+        Cupper::VT,
+    ) where {T,VT<:AbstractVector{T},MT<:AbstractMatrix{T},S<:LazySet{T}}
         if size(Alower) != size(Aupper)
             throw(DimensionMismatch("The size of Alower and Aupper must be the same"))
         end
@@ -35,13 +41,20 @@ struct UncertainAffineRegion{T, VT <: AbstractVector{T}, MT <: AbstractMatrix{T}
         n = LazySets.dim(region)
 
         if size(Alower, 2) != n
-            throw(DimensionMismatch("The number of columns in Alower must be equal to the dimensionality of the region"))
+            throw(
+                DimensionMismatch(
+                    "The number of columns in Alower must be equal to the dimensionality of the region",
+                ),
+            )
         end
-        
-        new{T, VT, MT, S}(region, Alower, Clower, Aupper, Cupper)
+
+        new{T,VT,MT,S}(region, Alower, Clower, Aupper, Cupper)
     end
 end
-overapproximate(transformation::UncertainAffineRegion, input::LazySet) = ConvexHull(transformation.Alower * input + transformation.Clower, transformation.Aupper * input + transformation.Cupper)
+overapproximate(transformation::UncertainAffineRegion, input::LazySet) = ConvexHull(
+    transformation.Alower * input + transformation.Clower,
+    transformation.Aupper * input + transformation.Cupper,
+)
 region(transformation::UncertainAffineRegion) = transformation.region
 inputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 2)
 outputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 1)
@@ -58,29 +71,48 @@ I.e. `x_{k+1} = A_i(\\alpha) x_k + B_i(\\alpha) u_k + C_i(\\alpha) + w_k`, where
 - `w::AdditiveNoiseStructure`: The additive noise.
 
 """
-struct UncertainPWAAdditiveNoiseDynamics{TU <: UncertainAffineRegion, TW<:AdditiveNoiseStructure} <: AdditiveNoiseDynamics
+struct UncertainPWAAdditiveNoiseDynamics{
+    TU<:UncertainAffineRegion,
+    TW<:AdditiveNoiseStructure,
+} <: AdditiveNoiseDynamics
     dimstate::Int
     dynregions::Vector{Vector{TU}}
     w::TW
 
-    function UncertainPWAAdditiveNoiseDynamics(dimstate, dynregions::Vector{Vector{TU}}, w::TW) where {TU <: UncertainAffineRegion, TW<:AdditiveNoiseStructure}
+    function UncertainPWAAdditiveNoiseDynamics(
+        dimstate,
+        dynregions::Vector{Vector{TU}},
+        w::TW,
+    ) where {TU<:UncertainAffineRegion,TW<:AdditiveNoiseStructure}
         if dim(w) != dimstate
-            throw(DimensionMismatch("The dimension of the noise must be the same as the dimension of the state"))
+            throw(
+                DimensionMismatch(
+                    "The dimension of the noise must be the same as the dimension of the state",
+                ),
+            )
         end
 
         for action in dynregions
             for dynregion in action
                 if inputdim(dynregion) != dimstate
-                    throw(DimensionMismatch("The dimension of the dynamics must be the same as the dimension of the input plus the dimension of the state"))
-                end 
+                    throw(
+                        DimensionMismatch(
+                            "The dimension of the dynamics must be the same as the dimension of the input plus the dimension of the state",
+                        ),
+                    )
+                end
 
                 if outputdim(dynregion) != dimstate
-                    throw(DimensionMismatch("The dimension of the dynamics must be the same as the dimension of the noise"))
+                    throw(
+                        DimensionMismatch(
+                            "The dimension of the dynamics must be the same as the dimension of the noise",
+                        ),
+                    )
                 end
             end
         end
 
-        return new{TU, TW}(dimstate, dynregions, w)
+        return new{TU,TW}(dimstate, dynregions, w)
     end
 end
 dimstate(dyn::UncertainPWAAdditiveNoiseDynamics) = dyn.dimstate
@@ -105,7 +137,7 @@ function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, x::AbstractVector, a::I
             return overapproximate(dynregion, Singleton(X))
         end
     end
-    
+
     throw(ArgumentError("The state is not in the domain of the dynamics"))
 end
 prepare_nominal(::UncertainPWAAdditiveNoiseDynamics, input_abstraction) = nothing

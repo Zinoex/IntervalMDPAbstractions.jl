@@ -7,22 +7,30 @@ include("example_systems.jl")
 function modified_running_example_compare()
     sys = modified_running_example_sys()
 
-    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
+    X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
     state_abs = StateUniformGridSplit(X, (10, 10))
 
-    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
+    U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
     input_abs = InputGridSplit(U, [3, 3])
 
     target_model_direct = IMDPTarget()
-    mdp_direct, reach_direct, avoid_direct = abstraction(sys, state_abs, input_abs, target_model_direct)
+    mdp_direct, reach_direct, avoid_direct =
+        abstraction(sys, state_abs, input_abs, target_model_direct)
 
     target_model_decoupled = OrthogonalIMDPTarget()
-    mdp_decoupled, reach_decoupled, avoid_decoupled = abstraction(sys, state_abs, input_abs, target_model_decoupled)
+    mdp_decoupled, reach_decoupled, avoid_decoupled =
+        abstraction(sys, state_abs, input_abs, target_model_decoupled)
 
-    return mdp_direct, reach_direct, avoid_direct, mdp_decoupled, reach_decoupled, avoid_decoupled
+    return mdp_direct,
+    reach_direct,
+    avoid_direct,
+    mdp_decoupled,
+    reach_decoupled,
+    avoid_decoupled
 end
 
-mdp_direct, reach_direct, avoid_direct, mdp_decoupled, reach_decoupled, avoid_decoupled = modified_running_example_compare()
+mdp_direct, reach_direct, avoid_direct, mdp_decoupled, reach_decoupled, avoid_decoupled =
+    modified_running_example_compare()
 
 # Value iteration
 prop_direct = FiniteTimeReachAvoid(reach_direct, avoid_direct, 10)

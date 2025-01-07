@@ -1,6 +1,7 @@
 using IntervalMDP
 
-struct ExactTimeReachAvoid{VT <: AbstractVector{<:CartesianIndex}} <: IntervalMDP.AbstractReachAvoid
+struct ExactTimeReachAvoid{VT<:AbstractVector{<:CartesianIndex}} <:
+       IntervalMDP.AbstractReachAvoid
     reach::VT
     avoid::VT
     time_horizon::Any
@@ -58,14 +59,17 @@ Return the set of states to avoid.
 """
 IntervalMDP.avoid(prop::ExactTimeReachAvoid) = prop.avoid
 
-function IntervalMDP.step_postprocess_value_function!(value_function, prop::ExactTimeReachAvoid)
+function IntervalMDP.step_postprocess_value_function!(
+    value_function,
+    prop::ExactTimeReachAvoid,
+)
     @inbounds value_function.current[IntervalMDP.avoid(prop)] .= 0.0
 end
 
 IntervalMDP.postprocess_value_function!(value_function, prop::ExactTimeReachAvoid) = nothing
 
 ## Region prop
-struct ExactTimeRegionReachability{S <: LazySet, T <: Integer} <: AbstractRegionReachability
+struct ExactTimeRegionReachability{S<:LazySet,T<:Integer} <: AbstractRegionReachability
     reach_set::S
     time_horizon::T
 end
@@ -75,7 +79,11 @@ IntervalMDP.time_horizon(prop::ExactTimeRegionReachability) = prop.time_horizon
 reach(prop::ExactTimeRegionReachability) = prop.reach_set
 dim(prop::ExactTimeRegionReachability) = LazySets.dim(reach(prop))
 
-function IntervalSySCoRe.convert_specification(spec::Specification{<:ExactTimeRegionReachability}, state_abstraction::StateUniformGridSplit, target_model)
+function IntervalSySCoRe.convert_specification(
+    spec::Specification{<:ExactTimeRegionReachability},
+    state_abstraction::StateUniformGridSplit,
+    target_model,
+)
     reach, avoid = IntervalSySCoRe.convert_property(spec, state_abstraction, target_model)
     prop = ExactTimeReachAvoid(reach, avoid, time_horizon(system_property(spec)))
 

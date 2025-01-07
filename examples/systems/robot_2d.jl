@@ -8,7 +8,7 @@ Input abstraction ONLY for the 2D robot example.
 """
 struct InputRobot <: IntervalSySCoRe.InputAbstraction
     input_space::Hyperrectangle
-    ranges::NTuple{2, Real}
+    ranges::NTuple{2,Real}
 end
 IntervalSySCoRe.numinputs(input::InputRobot) = prod(input.ranges)
 IntervalSySCoRe.issetbased(input::InputRobot) = false
@@ -18,14 +18,14 @@ function IntervalSySCoRe.inputs(input::InputRobot)
     ranges = [LinRange(l, h, num_steps) for (l, h, num_steps) in zip(l, h, input.ranges)]
 
     regions = [
-        Singleton([x[1] * cos(x[2]), x[1] * sin(x[2])])
-        for x in Iterators.product(ranges...)
+        Singleton([x[1] * cos(x[2]), x[1] * sin(x[2])]) for
+        x in Iterators.product(ranges...)
     ]
-    
+
     return regions
 end
 
-function robot_2d_sys(time_horizon; spec=:reachavoid)
+function robot_2d_sys(time_horizon; spec = :reachavoid)
     # Dynamics
     # x₁[k + 1] = x₁[k] + u₁[k] * cos(u₂[k]) + w₁[k]
     # x₂[k + 1] = x₂[k] + u₁[k] * sin(u₂[k]) + w₂[k]
@@ -47,9 +47,9 @@ function robot_2d_sys(time_horizon; spec=:reachavoid)
     initial_region = EmptySet(2)
     sys = System(dyn, initial_region)
 
-    reach_region = Hyperrectangle(; low=[5.0, 5.0], high=[7.0, 7.0])
+    reach_region = Hyperrectangle(; low = [5.0, 5.0], high = [7.0, 7.0])
     if spec == :reachavoid
-        avoid_region = Hyperrectangle(; low=[-2.0, -2.0], high=[2.0, 2.0])
+        avoid_region = Hyperrectangle(; low = [-2.0, -2.0], high = [2.0, 2.0])
         prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, time_horizon)
     elseif spec == :reachability
         prop = FiniteTimeRegionReachability(reach_region, time_horizon)
@@ -61,13 +61,19 @@ function robot_2d_sys(time_horizon; spec=:reachavoid)
     return sys, spec
 end
 
-function robot_2d_decoupled(time_horizon=10; sparse=true, spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
-    sys, spec = robot_2d_sys(time_horizon; spec=spec)
+function robot_2d_decoupled(
+    time_horizon = 10;
+    sparse = true,
+    spec = :reachavoid,
+    state_split = (40, 40),
+    input_split = (21, 21),
+)
+    sys, spec = robot_2d_sys(time_horizon; spec = spec)
 
-    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
+    X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
     state_abs = StateUniformGridSplit(X, state_split)
 
-    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
+    U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
     input_abs = InputRobot(U, input_split)
 
     if sparse
@@ -80,18 +86,25 @@ function robot_2d_decoupled(time_horizon=10; sparse=true, spec=:reachavoid, stat
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec =
+        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function robot_2d_direct(time_horizon=10; sparse=true, spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
-    sys, spec = robot_2d_sys(time_horizon; spec=spec)
+function robot_2d_direct(
+    time_horizon = 10;
+    sparse = true,
+    spec = :reachavoid,
+    state_split = (40, 40),
+    input_split = (21, 21),
+)
+    sys, spec = robot_2d_sys(time_horizon; spec = spec)
 
-    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
+    X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
     state_abs = StateUniformGridSplit(X, state_split)
 
-    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
+    U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
     input_abs = InputRobot(U, input_split)
 
     if sparse
@@ -104,22 +117,35 @@ function robot_2d_direct(time_horizon=10; sparse=true, spec=:reachavoid, state_s
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec =
+        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
 function main()
-    @time "abstraction reach-avoid" mdp_reachavoid, spec_reachavoid, _ = robot_2d_decoupled(;spec=:reachavoid, state_split=(40, 40), input_split=(21, 21))
+    @time "abstraction reach-avoid" mdp_reachavoid, spec_reachavoid, _ =
+        robot_2d_decoupled(;
+            spec = :reachavoid,
+            state_split = (40, 40),
+            input_split = (21, 21),
+        )
     prob_reachavoid = Problem(mdp_reachavoid, spec_reachavoid)
 
-    @time "value-iteration reach-avoid" V_reachavoid, k_reachavoid, res_reachavoid = value_iteration(prob_reachavoid)
+    @time "value-iteration reach-avoid" V_reachavoid, k_reachavoid, res_reachavoid =
+        value_iteration(prob_reachavoid)
     V_reachavoid = V_reachavoid[2:end, 2:end]
 
-    @time "abstraction reachability" mdp_reachability, spec_reachability, _ = robot_2d_decoupled(;spec=:reachability, state_split=(20, 20), input_split=(11, 11))
+    @time "abstraction reachability" mdp_reachability, spec_reachability, _ =
+        robot_2d_decoupled(;
+            spec = :reachability,
+            state_split = (20, 20),
+            input_split = (11, 11),
+        )
     prob_reachability = Problem(mdp_reachability, spec_reachability)
 
-    @time "value-iteration reachability" V_reachability, k_reachability, res_reachability = value_iteration(prob_reachability)
+    @time "value-iteration reachability" V_reachability, k_reachability, res_reachability =
+        value_iteration(prob_reachability)
     V_reachability = V_reachability[2:end, 2:end]
 
     return V_reachavoid, V_reachability

@@ -4,22 +4,22 @@ using IntervalMDP, IntervalSySCoRe
 
 function linear_stochastically_switched_sys(time_horizon)
     A1 = [
-        0.1 0.9;
+        0.1 0.9
         0.8 0.2
     ]
     B1 = [
-        0.0;
+        0.0
         0.0
     ][:, :]
     w1_stddev = [0.3, 0.2]
     mode1 = AffineAdditiveNoiseDynamics(A1, B1, AdditiveDiagonalGaussianNoise(w1_stddev))
 
     A2 = [
-        0.8 0.2;
+        0.8 0.2
         0.1 0.9
     ]
     B2 = [
-        0.0;
+        0.0
         0.0
     ][:, :]
     w2_stddev = [0.2, 0.1]
@@ -31,18 +31,22 @@ function linear_stochastically_switched_sys(time_horizon)
 
     sys = System(dyn, initial_region)
 
-    reach_region = Hyperrectangle(; low=[-1.0, -1.0], high=[0.0, 1.0])
-    avoid_region = Hyperrectangle(; low=[1.0, 0.0], high=[2.0, 1.0])
+    reach_region = Hyperrectangle(; low = [-1.0, -1.0], high = [0.0, 1.0])
+    avoid_region = Hyperrectangle(; low = [1.0, 0.0], high = [2.0, 1.0])
     prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, time_horizon)
     spec = Specification(prop, Pessimistic, Maximize)
 
     return sys, spec
 end
 
-function linear_stochastically_switched_direct(time_horizon=10; sparse=false, state_split=(40, 40))
+function linear_stochastically_switched_direct(
+    time_horizon = 10;
+    sparse = false,
+    state_split = (40, 40),
+)
     sys, spec = linear_stochastically_switched_sys(time_horizon)
 
-    X = Hyperrectangle(; low=[-2.0, -2.0], high=[2.0, 2.0])
+    X = Hyperrectangle(; low = [-2.0, -2.0], high = [2.0, 2.0])
     state_abs = StateUniformGridSplit(X, state_split)
 
     input_abs = InputDiscrete([Singleton([0.0])])
@@ -57,15 +61,20 @@ function linear_stochastically_switched_direct(time_horizon=10; sparse=false, st
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec =
+        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function linear_stochastically_switched_mixture(time_horizon=10; sparse=false, state_split=(40, 40))
+function linear_stochastically_switched_mixture(
+    time_horizon = 10;
+    sparse = false,
+    state_split = (40, 40),
+)
     sys, spec = linear_stochastically_switched_sys(time_horizon)
 
-    X = Hyperrectangle(; low=[-2.0, -2.0], high=[2.0, 2.0])
+    X = Hyperrectangle(; low = [-2.0, -2.0], high = [2.0, 2.0])
     state_abs = StateUniformGridSplit(X, state_split)
 
     input_abs = InputDiscrete([Singleton([0.0])])
@@ -80,13 +89,15 @@ function linear_stochastically_switched_mixture(time_horizon=10; sparse=false, s
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec =
+        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
 function main()
-    @time "abstraction" mdp, spec, upper_bound_spec = linear_stochastically_switched_mixture(; state_split=(40, 40))
+    @time "abstraction" mdp, spec, upper_bound_spec =
+        linear_stochastically_switched_mixture(; state_split = (40, 40))
     prob = Problem(mdp, spec)
 
     @time "control synthesis" strategy, V_lower, k, res = control_synthesis(prob)

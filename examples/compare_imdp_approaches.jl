@@ -11,8 +11,8 @@ struct ComparisonProblem
 
     include_impact::Bool
 
-    state_split
-    input_split
+    state_split::Any
+    input_split::Any
 end
 
 car_parking = ComparisonProblem(
@@ -39,13 +39,7 @@ robot_2d_reachavoid = ComparisonProblem(
     (21, 21),
 )
 
-bas4d = ComparisonProblem(
-    "bas4d",
-    () -> run_impact("ex_4DBAS-S"),
-    true,
-    (5, 5, 7, 7),
-    (4,),
-)
+bas4d = ComparisonProblem("bas4d", () -> run_impact("ex_4DBAS-S"), true, (5, 5, 7, 7), (4,))
 
 van_der_pol = ComparisonProblem(
     "van_der_pol",
@@ -55,29 +49,12 @@ van_der_pol = ComparisonProblem(
     (11,),
 )
 
-nndm_cartpole = ComparisonProblem(
-    "nndm_cartpole",
-    () -> nothing,
-    false,
-    (20, 20, 24, 20),
-    (1,),
-)
+nndm_cartpole =
+    ComparisonProblem("nndm_cartpole", () -> nothing, false, (20, 20, 24, 20), (1,))
 
-linear6d = ComparisonProblem(
-    "linear6d",
-    () -> nothing,
-    false,
-    (8, 8, 8, 8, 8, 8),
-    (1,),
-)
+linear6d = ComparisonProblem("linear6d", () -> nothing, false, (8, 8, 8, 8, 8, 8), (1,))
 
-linear7d = ComparisonProblem(
-    "linear7d",
-    () -> nothing,
-    false,
-    (8, 8, 8, 8, 8, 8, 8),
-    (1,),
-)
+linear7d = ComparisonProblem("linear7d", () -> nothing, false, (8, 8, 8, 8, 8, 8, 8), (1,))
 
 dubins_car_gp_dkl = ComparisonProblem(
     "dubins_car_gp_dkl",
@@ -105,7 +82,7 @@ problems = [
     linear6d,
     linear7d,
     dubins_car_gp_dkl,
-    linear_stochastically_switched
+    linear_stochastically_switched,
 ]
 
 function benchmark_impact(problem::ComparisonProblem)
@@ -124,7 +101,7 @@ function to_impact_format(V, reach, avoid)
     V = vec(V)
 
     # Remove reach and avoid regions to match IMPaCT
-    V = V[V .!= -1.0]
+    V = V[V.!=-1.0]
 
     return V
 end
@@ -142,7 +119,7 @@ function benchmark_direct(problem::ComparisonProblem)
 
         if occursin("timeout", output)
             @warn "Decoupled timeout"
-    
+
             return Dict(
                 "oom" => false,
                 "timeout" => true,
@@ -150,7 +127,7 @@ function benchmark_direct(problem::ComparisonProblem)
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
                 "value_function_lower" => NaN,
-                "value_function_upper" => NaN
+                "value_function_upper" => NaN,
             )
         end
 
@@ -159,7 +136,7 @@ function benchmark_direct(problem::ComparisonProblem)
         m3 = match(r"\(\"Transition probability memory\",\s(\d+\.\d+)\)", output)
         if m1 === nothing || m2 === nothing || m3 === nothing
             @warn "Direct failed due to OOM"
-    
+
             return Dict(
                 "oom" => true,
                 "timeout" => false,
@@ -167,7 +144,7 @@ function benchmark_direct(problem::ComparisonProblem)
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
                 "value_function_lower" => NaN,
-                "value_function_upper" => NaN
+                "value_function_upper" => NaN,
             )
         end
         abstraction_time = parse(Float64, m1.captures[1])
@@ -196,7 +173,7 @@ function benchmark_direct(problem::ComparisonProblem)
         end
 
         # Read avoid states
-        avoid_lines = split(chomp(avoid), '\n') 
+        avoid_lines = split(chomp(avoid), '\n')
         avoid = map(avoid_lines) do line
             line_match = match(r"CartesianIndex\(([0-9]+),\)", line)
             return parse(Int32, line_match.captures[1])
@@ -228,12 +205,12 @@ function benchmark_direct(problem::ComparisonProblem)
             "certification_time" => certification_time,
             "prob_mem" => prob_mem,
             "value_function_lower" => V_lower,
-            "value_function_upper" => V_upper
+            "value_function_upper" => V_upper,
         )
     catch e
         if isa(e, ProcessFailedException)
             @warn "Direct failed due to OOM"
-    
+
             return Dict(
                 "oom" => true,
                 "timeout" => false,
@@ -241,7 +218,7 @@ function benchmark_direct(problem::ComparisonProblem)
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
                 "value_function_lower" => NaN,
-                "value_function_upper" => NaN
+                "value_function_upper" => NaN,
             )
         else
             rethrow(e)
@@ -257,7 +234,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
 
         if occursin("timeout", output)
             @warn "Decoupled timeout"
-    
+
             return Dict(
                 "oom" => false,
                 "timeout" => true,
@@ -265,7 +242,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
                 "value_function_lower" => NaN,
-                "value_function_upper" => NaN
+                "value_function_upper" => NaN,
             )
         end
 
@@ -274,14 +251,14 @@ function benchmark_decoupled(problem::ComparisonProblem)
         m3 = match(r"\(\"Transition probability memory\",\s(\d+\.\d+)\)", output)
         if m1 === nothing || m2 === nothing || m3 === nothing
             @warn "Direct failed due to OOM"
-    
+
             return Dict(
                 "oom" => true,
                 "abstraction_time" => NaN,
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
                 "value_function_lower" => NaN,
-                "value_function_upper" => NaN
+                "value_function_upper" => NaN,
             )
         end
         abstraction_time = parse(Float64, m1.captures[1])
@@ -293,7 +270,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
         reach, rest = split(rest, "avoid\n")
         avoid, rest = split(rest, "V_lower\n")
         V_lower, rest = split(rest, "V_upper\n")
-        
+
         # Read reach states
         if reach == ""
             reach = []
@@ -301,7 +278,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
             reach_lines = split(chomp(reach), '\n')
             reach = map(reach_lines) do line # Parse each line as a tuple of indices
                 line = replace(line, "CartesianIndex" => "")
-                indices = split(line[2:end - 1], ",")
+                indices = split(line[2:end-1], ",")
                 indices = map(index -> parse(Int32, index), indices)
                 return Tuple(indices)
             end
@@ -312,7 +289,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
         avoid_lines = split(chomp(avoid), '\n')
         avoid = map(avoid_lines) do line # Parse each line as a tuple of indices
             line = replace(line, "CartesianIndex" => "")
-            indices = split(line[2:end - 1], ",")
+            indices = split(line[2:end-1], ",")
             indices = map(index -> parse(Int32, index), indices)
             return Tuple(indices)
         end
@@ -325,7 +302,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
 
         # Remove the first element of the value function, which is the absorbing avoid state
         V_lower = reshape(V_lower, (problem.state_split .+ 1)...)
-        V_lower = V_lower[(2:size(V_lower, i) for i in 1:ndims(V_lower))...]
+        V_lower = V_lower[(2:size(V_lower, i) for i = 1:ndims(V_lower))...]
         V_lower = to_impact_format(V_lower, reach, avoid)
 
         ## V_upper
@@ -334,7 +311,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
 
         # Remove the first element of the value function, which is the absorbing avoid state
         V_upper = reshape(V_upper, (problem.state_split .+ 1)...)
-        V_upper = V_upper[(2:size(V_upper, i) for i in 1:ndims(V_upper))...]
+        V_upper = V_upper[(2:size(V_upper, i) for i = 1:ndims(V_upper))...]
         V_upper = to_impact_format(V_upper, reach, avoid)
 
         return Dict(
@@ -344,12 +321,12 @@ function benchmark_decoupled(problem::ComparisonProblem)
             "certification_time" => certification_time,
             "prob_mem" => prob_mem,
             "value_function_lower" => V_lower,
-            "value_function_upper" => V_upper
+            "value_function_upper" => V_upper,
         )
     catch e
         if isa(e, ProcessFailedException)
             @warn "Decoupled failed due to OOM"
-    
+
             return Dict(
                 "oom" => true,
                 "timeout" => false,
@@ -357,7 +334,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
                 "certification_time" => NaN,
                 "prob_mem" => NaN,
                 "value_function_lower" => NaN,
-                "value_function_upper" => NaN
+                "value_function_upper" => NaN,
             )
         else
             rethrow(e)
@@ -366,7 +343,7 @@ function benchmark_decoupled(problem::ComparisonProblem)
 end
 
 function benchmark()
-    @showprogress dt=1 desc="Benchmarking..." for problem in problems
+    @showprogress dt = 1 desc = "Benchmarking..." for problem in problems
         @info "Benchmarking problem: $(problem.name)"
 
         direct = benchmark_direct(problem)
@@ -375,7 +352,7 @@ function benchmark()
         impact = if problem.include_impact
             benchmark_impact(problem)
         else
-            Dict{String, Any}()
+            Dict{String,Any}()
         end
 
         res = Dict(
@@ -385,7 +362,7 @@ function benchmark()
             "direct" => direct,
             "decoupled" => decoupled,
             "impact" => impact,
-            "include_impact" => problem.include_impact
+            "include_impact" => problem.include_impact,
         )
 
         save_results(problem.name, res)
@@ -394,7 +371,7 @@ end
 
 
 function save_results(name, res)
-    mkpath("results/compare_imdp_approaches", mode=0o754)
+    mkpath("results/compare_imdp_approaches", mode = 0o754)
     open("results/compare_imdp_approaches/$name.json", "w") do io
         JSON.print(io, res, 4)
     end
@@ -429,12 +406,16 @@ function to_dataframe(res)
             "decoupled_min_prob" => minimum(data["decoupled"]["value_function_lower"]),
             "decoupled_max_prob" => maximum(data["decoupled"]["value_function_lower"]),
             "decoupled_mean_prob" => mean(data["decoupled"]["value_function_lower"]),
-            "decoupled_mean_error" => mean(data["decoupled"]["value_function_upper"] - data["decoupled"]["value_function_lower"]),
+            "decoupled_mean_error" => mean(
+                data["decoupled"]["value_function_upper"] -
+                data["decoupled"]["value_function_lower"],
+            ),
         )
 
         if !data["direct"]["oom"] && !data["direct"]["timeout"]
             if n_decoupled != length(data["direct"]["value_function_lower"])
-                @warn "Direct value function length mismatch" name n_decoupled n_direct=length(data["direct"]["value_function_lower"])
+                @warn "Direct value function length mismatch" name n_decoupled n_direct =
+                    length(data["direct"]["value_function_lower"])
 
                 row["direct_abstraction_time"] = NaN
                 row["direct_certification_time"] = NaN
@@ -453,10 +434,22 @@ function to_dataframe(res)
                 row["direct_min_prob"] = minimum(data["direct"]["value_function_lower"])
                 row["direct_max_prob"] = maximum(data["direct"]["value_function_lower"])
                 row["direct_mean_prob"] = mean(data["direct"]["value_function_lower"])
-                row["direct_mean_error"] = mean(data["direct"]["value_function_upper"] - data["direct"]["value_function_lower"])
-                row["direct_min_prob_diff"] = minimum(data["decoupled"]["value_function_lower"] - data["direct"]["value_function_lower"])
-                row["direct_max_prob_diff"] = maximum(data["decoupled"]["value_function_lower"] - data["direct"]["value_function_lower"])
-                row["direct_avg_prob_diff"] = mean(data["decoupled"]["value_function_lower"] - data["direct"]["value_function_lower"])
+                row["direct_mean_error"] = mean(
+                    data["direct"]["value_function_upper"] -
+                    data["direct"]["value_function_lower"],
+                )
+                row["direct_min_prob_diff"] = minimum(
+                    data["decoupled"]["value_function_lower"] -
+                    data["direct"]["value_function_lower"],
+                )
+                row["direct_max_prob_diff"] = maximum(
+                    data["decoupled"]["value_function_lower"] -
+                    data["direct"]["value_function_lower"],
+                )
+                row["direct_avg_prob_diff"] = mean(
+                    data["decoupled"]["value_function_lower"] -
+                    data["direct"]["value_function_lower"],
+                )
             end
         else
             row["direct_abstraction_time"] = NaN
@@ -472,8 +465,9 @@ function to_dataframe(res)
         end
 
         if data["include_impact"] && !data["impact"]["oom"] && !data["impact"]["timeout"]
-            if n_decoupled != length(data["impact"]["value_function_lower"]) 
-                @warn "Impact value function length mismatch" name n_decoupled n_impact=length(data["impact"]["value_function_lower"])
+            if n_decoupled != length(data["impact"]["value_function_lower"])
+                @warn "Impact value function length mismatch" name n_decoupled n_impact =
+                    length(data["impact"]["value_function_lower"])
 
                 row["impact_abstraction_time"] = NaN
                 row["impact_certification_time"] = NaN
@@ -503,10 +497,22 @@ function to_dataframe(res)
                     row["impact_min_prob"] = minimum(data["impact"]["value_function_lower"])
                     row["impact_max_prob"] = maximum(data["impact"]["value_function_lower"])
                     row["impact_mean_prob"] = mean(data["impact"]["value_function_lower"])
-                    row["impact_mean_error"] = mean(data["impact"]["value_function_upper"] - data["impact"]["value_function_lower"])
-                    row["impact_min_prob_diff"] = minimum(data["decoupled"]["value_function_lower"] - data["impact"]["value_function_lower"])
-                    row["impact_max_prob_diff"] = maximum(data["decoupled"]["value_function_lower"] - data["impact"]["value_function_lower"])
-                    row["impact_avg_prob_diff"] = mean(data["decoupled"]["value_function_lower"] - data["impact"]["value_function_lower"])
+                    row["impact_mean_error"] = mean(
+                        data["impact"]["value_function_upper"] -
+                        data["impact"]["value_function_lower"],
+                    )
+                    row["impact_min_prob_diff"] = minimum(
+                        data["decoupled"]["value_function_lower"] -
+                        data["impact"]["value_function_lower"],
+                    )
+                    row["impact_max_prob_diff"] = maximum(
+                        data["decoupled"]["value_function_lower"] -
+                        data["impact"]["value_function_lower"],
+                    )
+                    row["impact_avg_prob_diff"] = mean(
+                        data["decoupled"]["value_function_lower"] -
+                        data["impact"]["value_function_lower"],
+                    )
                 end
             end
         else
@@ -526,7 +532,8 @@ function to_dataframe(res)
     end
 
     df = DataFrame(rows)
-    select!(df, 
+    select!(
+        df,
         :name,
         :state_split,
         :input_split,
@@ -556,13 +563,13 @@ function to_dataframe(res)
         :impact_mean_error,
         :impact_min_prob_diff,
         :impact_max_prob_diff,
-        :impact_avg_prob_diff
+        :impact_avg_prob_diff,
     )
     return df
 end
 
 function save_dataframe(df)
-    mkpath("results/compare_imdp_approaches", mode=0o754)
+    mkpath("results/compare_imdp_approaches", mode = 0o754)
     CSV.write("results/compare_imdp_approaches/summarized_results.csv", df)
 end
 

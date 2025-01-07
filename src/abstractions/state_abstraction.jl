@@ -7,13 +7,13 @@ abstract type StateAbstraction end
 
 State abstraction for splitting the state space into a grid.
 """
-struct StateUniformGridSplit{N, I<:Int, H<:AbstractHyperrectangle} <: StateAbstraction
+struct StateUniformGridSplit{N,I<:Int,H<:AbstractHyperrectangle} <: StateAbstraction
     state_space::H
-    splits::NTuple{N, I}
+    splits::NTuple{N,I}
     regions::Vector{H}
 end
 
-function StateUniformGridSplit(state_space::Hyperrectangle, splits::NTuple{N, Int}) where {N}
+function StateUniformGridSplit(state_space::Hyperrectangle, splits::NTuple{N,Int}) where {N}
     regions = LazySets.split(state_space, [axisregions for axisregions in splits])
     return StateUniformGridSplit(state_space, splits, regions)
 end

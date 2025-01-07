@@ -4,22 +4,22 @@ using IntervalMDP, IntervalSySCoRe
 
 function building_automation_system_4d(time_horizon)
     A = [
-        0.6682 0.0    0.02632   0.0;
-        0.0    0.683  0.0       0.02096;
-        1.0005 0.0    -0.000499 0.0;
-        0.0    0.8004 0.0       0.1996
+        0.6682 0.0 0.02632 0.0
+        0.0 0.683 0.0 0.02096
+        1.0005 0.0 -0.000499 0.0
+        0.0 0.8004 0.0 0.1996
     ]
 
     B = [
-        0.1320;
-        0.1402;
-        0.0;
+        0.1320
+        0.1402
+        0.0
         0.0
     ][:, :]
-    
+
     C = [3.4378, 2.9272, 13.0207, 10.4166]
 
-    w_variance = [1/12.9199, 1/12.9199, 1/2.5826, 1/3.2276]
+    w_variance = [1 / 12.9199, 1 / 12.9199, 1 / 2.5826, 1 / 3.2276]
     w_stddev = sqrt.(w_variance)
 
     dyn = AffineAdditiveNoiseDynamics(A, B, C, AdditiveDiagonalGaussianNoise(w_stddev))
@@ -35,13 +35,21 @@ function building_automation_system_4d(time_horizon)
     return sys, spec
 end
 
-function building_automation_system_4d_decoupled(time_horizon=10; sparse=false, state_split=(5, 5, 7, 7), input_split=4)
+function building_automation_system_4d_decoupled(
+    time_horizon = 10;
+    sparse = false,
+    state_split = (5, 5, 7, 7),
+    input_split = 4,
+)
     sys, spec = building_automation_system_4d(time_horizon)
 
-    X = Hyperrectangle(; low=[18.75, 18.75, 29.5, 29.5], high=[21.25, 21.25, 36.5, 36.5])
+    X = Hyperrectangle(;
+        low = [18.75, 18.75, 29.5, 29.5],
+        high = [21.25, 21.25, 36.5, 36.5],
+    )
     state_abs = StateUniformGridSplit(X, state_split)
 
-    U = Hyperrectangle(; low=[17.0], high=[20.0])
+    U = Hyperrectangle(; low = [17.0], high = [20.0])
     input_abs = InputLinRange(U, input_split)
 
     if sparse
@@ -54,18 +62,27 @@ function building_automation_system_4d_decoupled(time_horizon=10; sparse=false, 
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec =
+        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function building_automation_system_4d_direct(time_horizon=10; sparse=false, state_split=(5, 5, 7, 7), input_split=4)
+function building_automation_system_4d_direct(
+    time_horizon = 10;
+    sparse = false,
+    state_split = (5, 5, 7, 7),
+    input_split = 4,
+)
     sys, spec = building_automation_system_4d(time_horizon)
 
-    X = Hyperrectangle(; low=[18.75, 18.75, 29.5, 29.5], high=[21.25, 21.25, 36.5, 36.5])
+    X = Hyperrectangle(;
+        low = [18.75, 18.75, 29.5, 29.5],
+        high = [21.25, 21.25, 36.5, 36.5],
+    )
     state_abs = StateUniformGridSplit(X, state_split)
 
-    U = Hyperrectangle(; low=[17.0], high=[20.0])
+    U = Hyperrectangle(; low = [17.0], high = [20.0])
     input_abs = InputLinRange(U, input_split)
 
     if sparse
@@ -78,13 +95,17 @@ function building_automation_system_4d_direct(time_horizon=10; sparse=false, sta
     mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
-    upper_bound_spec = IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+    upper_bound_spec =
+        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
 function main()
-    @time "abstraction" mdp, spec, _ = building_automation_system_4d_decoupled(; state_split=(5, 5, 7, 7), input_split=4)
+    @time "abstraction" mdp, spec, _ = building_automation_system_4d_decoupled(;
+        state_split = (5, 5, 7, 7),
+        input_split = 4,
+    )
     prob = Problem(mdp, spec)
 
     @time "value iteration" V_safety, k, res = value_iteration(prob)

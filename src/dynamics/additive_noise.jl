@@ -51,7 +51,7 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
     pl = 1.0
     pu = 1.0
 
-    for i in 1:LazySets.dim(Y)
+    for i = 1:LazySets.dim(Y)
         axis_pl, axis_pu = axis_transition_prob_bounds(Y, Z, w, i)
         pl *= axis_pl
         pu *= axis_pu
@@ -60,20 +60,35 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
     return pl, pu
 end
 
-function axis_transition_prob_bounds(Y::Hyperrectangle, Z::Hyperrectangle, w::AdditiveDiagonalGaussianNoise, axis::Int)
+function axis_transition_prob_bounds(
+    Y::Hyperrectangle,
+    Z::Hyperrectangle,
+    w::AdditiveDiagonalGaussianNoise,
+    axis::Int,
+)
     z = Interval(low(Z, axis), high(Z, axis))
 
     return axis_transition_prob_bounds(Y, z, w, axis)
 end
 
-function axis_transition_prob_bounds(Y::Hyperrectangle, z::Interval, w::AdditiveDiagonalGaussianNoise, axis::Int)
+function axis_transition_prob_bounds(
+    Y::Hyperrectangle,
+    z::Interval,
+    w::AdditiveDiagonalGaussianNoise,
+    axis::Int,
+)
     y = Interval(low(Y, axis), high(Y, axis))
     σ = stddev(w, axis)
 
     return axis_transition_prob_bounds(y, z, w, σ)
 end
 
-function axis_transition_prob_bounds(y::Interval, z::Interval, w::AdditiveDiagonalGaussianNoise, σ::Real)
+function axis_transition_prob_bounds(
+    y::Interval,
+    z::Interval,
+    w::AdditiveDiagonalGaussianNoise,
+    σ::Real,
+)
     # Compute the transition probability bounds for each dimension
     cy, cz = center(y, 1), center(z, 1)
 
@@ -108,7 +123,11 @@ end
 dim(w::AdditiveDiagonalCentralUniformNoise) = length(w.r)
 candecouple(w::AdditiveDiagonalCentralUniformNoise) = true
 
-function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalCentralUniformNoise)
+function transition_prob_bounds(
+    Y,
+    Z::Hyperrectangle,
+    w::AdditiveDiagonalCentralUniformNoise,
+)
     # Use the box approximation for the transition probability bounds, as 
     # that makes the computation of the bounds more efficient (altought slightly more conservative).
 
@@ -117,7 +136,7 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalCentral
     pl = 1.0
     pu = 1.0
 
-    for i in 1:LazySets.dim(Y)
+    for i = 1:LazySets.dim(Y)
         axis_pl, axis_pu = axis_transition_prob_bounds(Y, Z, w, i)
         pl *= axis_pl
         pu *= axis_pu
@@ -126,20 +145,35 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalCentral
     return pl, pu
 end
 
-function axis_transition_prob_bounds(Y::Hyperrectangle, Z::Hyperrectangle, w::AdditiveDiagonalCentralUniformNoise, axis::Int)
+function axis_transition_prob_bounds(
+    Y::Hyperrectangle,
+    Z::Hyperrectangle,
+    w::AdditiveDiagonalCentralUniformNoise,
+    axis::Int,
+)
     z = Interval(extrema(Z, axis)...)
 
     return axis_transition_prob_bounds(Y, z, w, axis)
 end
 
-function axis_transition_prob_bounds(Y::Hyperrectangle, z::Interval, w::AdditiveDiagonalCentralUniformNoise, axis::Int)
+function axis_transition_prob_bounds(
+    Y::Hyperrectangle,
+    z::Interval,
+    w::AdditiveDiagonalCentralUniformNoise,
+    axis::Int,
+)
     y = Interval(extrema(Y, axis)...)
     r = w.r[axis]
 
     return axis_transition_prob_bounds(y, z, w, r)
 end
 
-function axis_transition_prob_bounds(y::Interval, z::Interval, w::AdditiveDiagonalCentralUniformNoise, r::Real)    
+function axis_transition_prob_bounds(
+    y::Interval,
+    z::Interval,
+    w::AdditiveDiagonalCentralUniformNoise,
+    r::Real,
+)
     # Compute the transition probability bounds for each dimension
     cy, cz = center(y, 1), center(z, 1)
 

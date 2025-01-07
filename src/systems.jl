@@ -5,7 +5,7 @@ export System, dynamics, initial
 
 A struct representing a system with dynamics of type `D`, initial set of type `I`, reach set of type `R`, and avoid set of type `A`.
 """
-struct System{D <: DiscreteTimeStochasticDynamics, I<:LazySet}
+struct System{D<:DiscreteTimeStochasticDynamics,I<:LazySet}
     dynamics::D
     initial::I
 end

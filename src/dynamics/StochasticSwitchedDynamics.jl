@@ -9,20 +9,31 @@ struct StochasticSwitchedDynamics <: DiscreteTimeStochasticDynamics
     dynamics::Vector{<:DiscreteTimeStochasticDynamics}
     weights::Vector{Float64}
 
-    function StochasticSwitchedDynamics(dynamics::Vector{<:DiscreteTimeStochasticDynamics}, weights::Vector{Float64})
+    function StochasticSwitchedDynamics(
+        dynamics::Vector{<:DiscreteTimeStochasticDynamics},
+        weights::Vector{Float64},
+    )
         dstate = dimstate(first(dynamics))
         dinput = diminput(first(dynamics))
 
         for dyn in dynamics
             if dimstate(dyn) != dstate
-                throw(DimensionMismatch("The dimension of the state space must be the same for all dynamics"))
+                throw(
+                    DimensionMismatch(
+                        "The dimension of the state space must be the same for all dynamics",
+                    ),
+                )
             end
 
             if diminput(dyn) != dinput
-                throw(DimensionMismatch("The dimension of the input space must be the same for all dynamics"))
+                throw(
+                    DimensionMismatch(
+                        "The dimension of the input space must be the same for all dynamics",
+                    ),
+                )
             end
         end
-        
+
         if length(dynamics) != length(weights)
             throw(DimensionMismatch("The number of dynamics and weights must be the same"))
         end

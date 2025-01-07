@@ -12,7 +12,7 @@ if !@isdefined example_systems_included
         dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
         initial_region = EmptySet(1)
-        reach_region = Hyperrectangle(; low=[-0.5], high=[0.5])
+        reach_region = Hyperrectangle(; low = [-0.5], high = [0.5])
         avoid_region = EmptySet(1)
 
         sys = System(dyn, initial_region, reach_region, avoid_region)
@@ -28,7 +28,7 @@ if !@isdefined example_systems_included
         dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
         initial_region = EmptySet(2)
-        reach_region = Hyperrectangle(; low=[4.0, -6.0], high=[10.0, -2.0])
+        reach_region = Hyperrectangle(; low = [4.0, -6.0], high = [10.0, -2.0])
         avoid_region = EmptySet(2)
 
         sys = System(dyn, initial_region, reach_region, avoid_region)

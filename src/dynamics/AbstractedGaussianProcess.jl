@@ -16,7 +16,7 @@ for all `x \\in s` and each axis `l`.
 - `stddev_upper::AbstractVector{Float64}`: The constant upper bound vector.
 
 """
-struct AbstractedGaussianProcessRegion{T, VT <: AbstractVector{T}, S <: LazySet{T}}
+struct AbstractedGaussianProcessRegion{T,VT<:AbstractVector{T},S<:LazySet{T}}
     region::S
 
     mean_lower::VT
@@ -25,47 +25,84 @@ struct AbstractedGaussianProcessRegion{T, VT <: AbstractVector{T}, S <: LazySet{
     stddev_lower::VT
     stddev_upper::VT
 
-    function AbstractedGaussianProcessRegion(region::S, mean_lower::VT, mean_upper::VT, stddev_lower::VT, stddev_upper::VT) where {T, VT <: AbstractVector{T}, S <: LazySet{T}}
+    function AbstractedGaussianProcessRegion(
+        region::S,
+        mean_lower::VT,
+        mean_upper::VT,
+        stddev_lower::VT,
+        stddev_upper::VT,
+    ) where {T,VT<:AbstractVector{T},S<:LazySet{T}}
         n = LazySets.dim(region)
 
         if size(mean_lower, 1) != n
-            throw(DimensionMismatch("The number of rows in mean_lower must be equal to the dimensionality of the region"))
+            throw(
+                DimensionMismatch(
+                    "The number of rows in mean_lower must be equal to the dimensionality of the region",
+                ),
+            )
         end
-        
+
         if size(mean_upper, 1) != n
-            throw(DimensionMismatch("The number of rows in mean_upper must be equal to the dimensionality of the region"))
+            throw(
+                DimensionMismatch(
+                    "The number of rows in mean_upper must be equal to the dimensionality of the region",
+                ),
+            )
         end
-        
+
         if size(stddev_lower, 1) != n
-            throw(DimensionMismatch("The number of rows in stddev_lower must be equal to the dimensionality of the region"))
+            throw(
+                DimensionMismatch(
+                    "The number of rows in stddev_lower must be equal to the dimensionality of the region",
+                ),
+            )
         end
 
         if size(stddev_upper, 1) != n
-            throw(DimensionMismatch("The number of rows in stddev_upper must be equal to the dimensionality of the region"))
+            throw(
+                DimensionMismatch(
+                    "The number of rows in stddev_upper must be equal to the dimensionality of the region",
+                ),
+            )
         end
-        
-        new{T, VT, S}(region, mean_lower, mean_upper, stddev_lower, stddev_upper)
+
+        new{T,VT,S}(region, mean_lower, mean_upper, stddev_lower, stddev_upper)
     end
 end
 region(abstracted_region::AbstractedGaussianProcessRegion) = abstracted_region.region
-outputdim(abstracted_region::AbstractedGaussianProcessRegion) = size(abstracted_region.mean_lower, 1)
-inputdim(abstracted_region::AbstractedGaussianProcessRegion) = size(abstracted_region.mean_lower, 2)
-mean_lower(abstracted_region::AbstractedGaussianProcessRegion) = abstracted_region.mean_lower
-mean_lower(abstracted_region::AbstractedGaussianProcessRegion, i) = abstracted_region.mean_lower[i]
-mean_upper(abstracted_region::AbstractedGaussianProcessRegion) = abstracted_region.mean_upper
-mean_upper(abstracted_region::AbstractedGaussianProcessRegion, i) = abstracted_region.mean_upper[i]
-mean_center(abstracted_region::AbstractedGaussianProcessRegion) = 0.5 * (abstracted_region.mean_lower + abstracted_region.mean_upper)
-mean_center(abstracted_region::AbstractedGaussianProcessRegion, i) = 0.5 * (abstracted_region.mean_lower[i] + abstracted_region.mean_upper[i])
-stddev_lower(abstracted_region::AbstractedGaussianProcessRegion) = abstracted_region.stddev_lower
-stddev_lower(abstracted_region::AbstractedGaussianProcessRegion, i) = abstracted_region.stddev_lower[i]
-stddev_upper(abstracted_region::AbstractedGaussianProcessRegion) = abstracted_region.stddev_upper
-stddev_upper(abstracted_region::AbstractedGaussianProcessRegion, i) = abstracted_region.stddev_upper[i]
+outputdim(abstracted_region::AbstractedGaussianProcessRegion) =
+    size(abstracted_region.mean_lower, 1)
+inputdim(abstracted_region::AbstractedGaussianProcessRegion) =
+    size(abstracted_region.mean_lower, 2)
+mean_lower(abstracted_region::AbstractedGaussianProcessRegion) =
+    abstracted_region.mean_lower
+mean_lower(abstracted_region::AbstractedGaussianProcessRegion, i) =
+    abstracted_region.mean_lower[i]
+mean_upper(abstracted_region::AbstractedGaussianProcessRegion) =
+    abstracted_region.mean_upper
+mean_upper(abstracted_region::AbstractedGaussianProcessRegion, i) =
+    abstracted_region.mean_upper[i]
+mean_center(abstracted_region::AbstractedGaussianProcessRegion) =
+    0.5 * (abstracted_region.mean_lower + abstracted_region.mean_upper)
+mean_center(abstracted_region::AbstractedGaussianProcessRegion, i) =
+    0.5 * (abstracted_region.mean_lower[i] + abstracted_region.mean_upper[i])
+stddev_lower(abstracted_region::AbstractedGaussianProcessRegion) =
+    abstracted_region.stddev_lower
+stddev_lower(abstracted_region::AbstractedGaussianProcessRegion, i) =
+    abstracted_region.stddev_lower[i]
+stddev_upper(abstracted_region::AbstractedGaussianProcessRegion) =
+    abstracted_region.stddev_upper
+stddev_upper(abstracted_region::AbstractedGaussianProcessRegion, i) =
+    abstracted_region.stddev_upper[i]
 
-function transition_prob_bounds(gp_bounds::AbstractedGaussianProcessRegion, Z::Hyperrectangle)
+function transition_prob_bounds(
+    gp_bounds::AbstractedGaussianProcessRegion,
+    Z::Hyperrectangle,
+)
     pl = 1.0
     pu = 1.0
 
-    for i in 1:outputdim(gp_bounds)
+    for i = 1:outputdim(gp_bounds)
         axis_pl, axis_pu = axis_transition_prob_bounds(gp_bounds, Z, i)
         pl *= axis_pl
         pu *= axis_pu
@@ -74,26 +111,54 @@ function transition_prob_bounds(gp_bounds::AbstractedGaussianProcessRegion, Z::H
     return pl, pu
 end
 
-function axis_transition_prob_bounds(gp_bounds::AbstractedGaussianProcessRegion, Z::Hyperrectangle, axis::Int)
+function axis_transition_prob_bounds(
+    gp_bounds::AbstractedGaussianProcessRegion,
+    Z::Hyperrectangle,
+    axis::Int,
+)
     z = Interval(low(Z, axis), high(Z, axis))
 
     return axis_transition_prob_bounds(gp_bounds, z, axis)
 end
 
-function axis_transition_prob_bounds(gp_bounds::AbstractedGaussianProcessRegion, z::Interval, axis::Int)
+function axis_transition_prob_bounds(
+    gp_bounds::AbstractedGaussianProcessRegion,
+    z::Interval,
+    axis::Int,
+)
     # Compute the transition probability bounds for each dimension
     cμ, cz = mean_center(gp_bounds, axis), center(z, 1)
 
     min_point = ifelse(cz ≥ cμ, mean_lower(gp_bounds, axis), mean_upper(gp_bounds, axis))
     pl = min(
-        gaussian_transition(min_point, low(z, 1), high(z, 1), stddev_lower(gp_bounds, axis)),
-        gaussian_transition(min_point, low(z, 1), high(z, 1), stddev_upper(gp_bounds, axis))
+        gaussian_transition(
+            min_point,
+            low(z, 1),
+            high(z, 1),
+            stddev_lower(gp_bounds, axis),
+        ),
+        gaussian_transition(
+            min_point,
+            low(z, 1),
+            high(z, 1),
+            stddev_upper(gp_bounds, axis),
+        ),
     )
 
     max_point = min(mean_upper(gp_bounds, axis), max(cz, mean_lower(gp_bounds, axis)))
     pu = max(
-        gaussian_transition(max_point, low(z, 1), high(z, 1), stddev_lower(gp_bounds, axis)),
-        gaussian_transition(max_point, low(z, 1), high(z, 1), stddev_upper(gp_bounds, axis))
+        gaussian_transition(
+            max_point,
+            low(z, 1),
+            high(z, 1),
+            stddev_lower(gp_bounds, axis),
+        ),
+        gaussian_transition(
+            max_point,
+            low(z, 1),
+            high(z, 1),
+            stddev_upper(gp_bounds, axis),
+        ),
     )
 
     # println("pl: $pl, pu: $pu, σ_lower: $(stddev_lower(gp_bounds, axis)), σ_upper: $(stddev_upper(gp_bounds, axis)))")
@@ -111,10 +176,13 @@ A struct representing a Gaussian process over a partitioned space and for each r
 - `dyn::Vector{<:AbstractedGaussianProcessRegion}`: A list (action) of lists (regions) of AbstractedGaussianProcessRegions.
 
 """
-struct AbstractedGaussianProcess{TU <: AbstractedGaussianProcessRegion} <: DiscreteTimeStochasticDynamics
+struct AbstractedGaussianProcess{TU<:AbstractedGaussianProcessRegion} <:
+       DiscreteTimeStochasticDynamics
     dynregions::Vector{Vector{TU}}
 
-    function AbstractedGaussianProcess(dynregions::Vector{Vector{TU}}) where {TU <: AbstractedGaussianProcessRegion}
+    function AbstractedGaussianProcess(
+        dynregions::Vector{Vector{TU}},
+    ) where {TU<:AbstractedGaussianProcessRegion}
         if isempty(dynregions)
             throw(ArgumentError("The list of regions cannot be empty"))
         end
@@ -125,11 +193,19 @@ struct AbstractedGaussianProcess{TU <: AbstractedGaussianProcessRegion} <: Discr
         for action in dynregions
             for dynregion in action
                 if outputdim(dynregion) != dimstate
-                    throw(DimensionMismatch("The dimension of the GP output must be the same for all regions"))
+                    throw(
+                        DimensionMismatch(
+                            "The dimension of the GP output must be the same for all regions",
+                        ),
+                    )
                 end
 
                 if inputdim(dynregion) != diminput
-                    throw(DimensionMismatch("The number of modes in the GP must be the same for all regions"))
+                    throw(
+                        DimensionMismatch(
+                            "The number of modes in the GP must be the same for all regions",
+                        ),
+                    )
                 end
             end
         end

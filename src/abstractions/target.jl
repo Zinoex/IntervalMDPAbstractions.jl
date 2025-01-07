@@ -32,7 +32,7 @@ includetransition(target::IMDPTarget, prob) = true
 
 Similar to [`IMDPTarget`](@ref), but uses a sparse matrix to represent the transition probabilities.
 """
-Base.@kwdef struct SparseIMDPTarget <: AbstractIMDPTarget 
+Base.@kwdef struct SparseIMDPTarget <: AbstractIMDPTarget
     sparsity_threshold = 1e-9
 end
 
@@ -65,11 +65,12 @@ includetransition(target::OrthogonalIMDPTarget, prob) = true
 
 Similar to [`OrthogonalIMDPTarget`](@ref), but uses a sparse matrix to represent the transition probabilities.
 """
-Base.@kwdef struct SparseOrthogonalIMDPTarget <: AbstractOrthogonalIMDPTarget 
+Base.@kwdef struct SparseOrthogonalIMDPTarget <: AbstractOrthogonalIMDPTarget
     sparsity_threshold = 1e-9
 end
 
-includetransition(target::SparseOrthogonalIMDPTarget, prob) = target.sparsity_threshold < prob
+includetransition(target::SparseOrthogonalIMDPTarget, prob) =
+    target.sparsity_threshold < prob
 
 
 ###############################
@@ -98,8 +99,9 @@ mixture_target(::MixtureIMDPTarget) = OrthogonalIMDPTarget()
 
 Similar to [`MixtureIMDPTarget`](@ref), but uses a sparse matrix to represent the transition probabilities.
 """
-Base.@kwdef struct SparseMixtureIMDPTarget <: AbstractMixtureIMDPTarget 
+Base.@kwdef struct SparseMixtureIMDPTarget <: AbstractMixtureIMDPTarget
     sparsity_threshold = 1e-9
 end
 
-mixture_target(target::SparseMixtureIMDPTarget) = SparseOrthogonalIMDPTarget(target.sparsity_threshold)
+mixture_target(target::SparseMixtureIMDPTarget) =
+    SparseOrthogonalIMDPTarget(target.sparsity_threshold)
