@@ -1,4 +1,4 @@
-name = "IntervalSySCoRe"
+name = "IntervalMDPAbstractions"
 uuid = "6214ee8e-79dc-449b-ae00-4c9ff82a02a9"
 authors = ["Frederik Baymler Mathiesen"]
 version = "0.1.0"

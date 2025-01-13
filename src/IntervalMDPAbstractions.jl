@@ -1,4 +1,4 @@
-module IntervalSySCoRe
+module IntervalMDPAbstractions
 
 using LinearAlgebra, SparseArrays
 using SpecialFunctions: erf
