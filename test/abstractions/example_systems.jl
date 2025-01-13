@@ -1,4 +1,4 @@
-using IntervalSySCoRe, LazySets
+using IntervalMDPAbstractions, LazySets
 
 if !@isdefined example_systems_included
     example_systems_included = true

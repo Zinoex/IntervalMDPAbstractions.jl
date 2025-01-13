@@ -1,5 +1,5 @@
 using LinearAlgebra, LazySets
-using IntervalMDP, IntervalSySCoRe
+using IntervalMDP, IntervalMDPAbstractions
 
 
 function car_parking_sys(time_horizon)
@@ -53,7 +53,7 @@ function car_parking_decoupled(
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
@@ -90,7 +90,7 @@ function car_parking_direct(
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end

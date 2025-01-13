@@ -1,18 +1,18 @@
 using LinearAlgebra, LazySets
-using IntervalMDP, IntervalSySCoRe
+using IntervalMDP, IntervalMDPAbstractions
 
 """
     InputRobot
 
 Input abstraction ONLY for the 2D robot example.
 """
-struct InputRobot <: IntervalSySCoRe.InputAbstraction
+struct InputRobot <: IntervalMDPAbstractions.InputAbstraction
     input_space::Hyperrectangle
     ranges::NTuple{2,Real}
 end
-IntervalSySCoRe.numinputs(input::InputRobot) = prod(input.ranges)
-IntervalSySCoRe.issetbased(input::InputRobot) = false
-function IntervalSySCoRe.inputs(input::InputRobot)
+IntervalMDPAbstractions.numinputs(input::InputRobot) = prod(input.ranges)
+IntervalMDPAbstractions.issetbased(input::InputRobot) = false
+function IntervalMDPAbstractions.inputs(input::InputRobot)
     l = low(input.input_space)
     h = high(input.input_space)
     ranges = [LinRange(l, h, num_steps) for (l, h, num_steps) in zip(l, h, input.ranges)]
@@ -87,7 +87,7 @@ function robot_2d_decoupled(
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
@@ -118,7 +118,7 @@ function robot_2d_direct(
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end

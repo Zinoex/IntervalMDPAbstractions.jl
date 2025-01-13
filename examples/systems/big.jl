@@ -1,5 +1,5 @@
 using LinearAlgebra, LazySets
-using IntervalMDP, IntervalSySCoRe
+using IntervalMDP, IntervalMDPAbstractions
 
 
 function big_sys(num_dims::Int, time_horizon)
@@ -49,7 +49,7 @@ function big_decoupled(
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
@@ -78,7 +78,7 @@ function big_direct(
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
@@ -127,7 +127,7 @@ function small_direct(
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end

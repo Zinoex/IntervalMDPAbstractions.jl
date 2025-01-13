@@ -1,5 +1,5 @@
 using LinearAlgebra, LazySets, Plots
-using IntervalMDP, IntervalSySCoRe
+using IntervalMDP, IntervalMDPAbstractions
 
 
 function van_der_pol_sys(time_horizon; sampling_time = 0.1)
@@ -48,7 +48,7 @@ function van_der_pol_decoupled(
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
@@ -69,7 +69,7 @@ function van_der_pol_direct(time_horizon = 10; state_split = (50, 50), input_spl
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
@@ -83,8 +83,8 @@ function van_der_pol_plot_nominal()
     U = Hyperrectangle(low = [-1.0], high = [1.0])
     input_abs = InputLinRange(U, 10)
 
-    R = IntervalSySCoRe.regions(state_abs)[837]
-    u = IntervalSySCoRe.inputs(input_abs)[3]
+    R = IntervalMDPAbstractions.regions(state_abs)[837]
+    u = IntervalMDPAbstractions.inputs(input_abs)[3]
 
     Y = nominal(dynamics(sys), R, u)
 

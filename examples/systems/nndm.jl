@@ -4,7 +4,7 @@ const MatlabFile = Union{MAT_v4.Matlabv4File,MAT_v5.Matlabv5File,MAT_HDF5.Matlab
 using HDF5
 
 using LinearAlgebra, LazySets
-using IntervalMDP, IntervalSySCoRe
+using IntervalMDP, IntervalMDPAbstractions
 
 function load_dynamics(partitions::MatlabFile)
     # Extract hypercube data
@@ -322,7 +322,7 @@ function action_cartpole_decoupled(time_horizon = 10; sparse = false)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end
@@ -350,7 +350,7 @@ function action_cartpole_direct(time_horizon = 10; sparse = false)
 
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
     upper_bound_spec =
-        IntervalSySCoRe.convert_specification(upper_bound_spec, state_abs, target_model)
+        IntervalMDPAbstractions.convert_specification(upper_bound_spec, state_abs, target_model)
 
     return mdp, abstract_spec, upper_bound_spec
 end

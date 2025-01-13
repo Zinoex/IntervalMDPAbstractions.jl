@@ -1,14 +1,14 @@
 ```@meta
-CurrentModule = IntervalSySCoRe
+CurrentModule = IntervalMDPAbstractions
 ```
 
-# IntervalSySCoRe
+# IntervalMDPAbstractions
 
-Documentation for [IntervalSySCoRe](https://github.com/Zinoex/IntervalSySCoRe.jl).
+Documentation for [IntervalMDPAbstractions](https://github.com/Zinoex/IntervalMDPAbstractions.jl).
 
 ```@index
 ```
 
 ```@autodocs
-Modules = [IntervalSySCoRe]
+Modules = [IntervalMDPAbstractions]
 ```

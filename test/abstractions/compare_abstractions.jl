@@ -1,6 +1,6 @@
 using Revise, Test
 using LinearAlgebra, LazySets
-using IntervalMDP, IntervalSySCoRe
+using IntervalMDP, IntervalMDPAbstractions
 
 include("example_systems.jl")
 

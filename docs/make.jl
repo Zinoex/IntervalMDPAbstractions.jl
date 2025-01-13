@@ -1,23 +1,23 @@
-using IntervalSySCoRe
+using IntervalMDPAbstractions
 using Documenter
 
 DocMeta.setdocmeta!(
-    IntervalSySCoRe,
+    IntervalMDPAbstractions,
     :DocTestSetup,
-    :(using IntervalSySCoRe);
+    :(using IntervalMDPAbstractions);
     recursive = true,
 )
 
 makedocs(;
-    modules = [IntervalSySCoRe],
+    modules = [IntervalMDPAbstractions],
     authors = "Frederik Baymler Mathiesen",
-    sitename = "IntervalSySCoRe.jl",
+    sitename = "IntervalMDPAbstractions.jl",
     format = Documenter.HTML(;
-        canonical = "https://Zinoex.github.io/IntervalSySCoRe.jl",
+        canonical = "https://Zinoex.github.io/IntervalMDPAbstractions.jl",
         edit_link = "main",
         assets = String[],
     ),
     pages = ["Home" => "index.md"],
 )
 
-deploydocs(; repo = "github.com/Zinoex/IntervalSySCoRe.jl", devbranch = "main")
+deploydocs(; repo = "github.com/Zinoex/IntervalMDPAbstractions.jl", devbranch = "main")

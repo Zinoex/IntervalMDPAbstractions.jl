@@ -73,6 +73,6 @@ jobs:
         shell: julia --project=docs --color=yes {0}
         run: |
           using Documenter: DocMeta, doctest
-          using IntervalSySCoRe
-          DocMeta.setdocmeta!(IntervalSySCoRe, :DocTestSetup, :(using IntervalSySCoRe); recursive=true)
-          doctest(IntervalSySCoRe)
+          using IntervalMDPAbstractions
+          DocMeta.setdocmeta!(IntervalMDPAbstractions, :DocTestSetup, :(using IntervalMDPAbstractions); recursive=true)
+          doctest(IntervalMDPAbstractions)
