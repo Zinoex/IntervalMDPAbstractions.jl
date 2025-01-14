@@ -111,7 +111,7 @@ function main()
     @time "value iteration" V_safety, k, res = value_iteration(prob)
 
     # Remove the first state from each axis (the avoid state, whose value is always 0).
-    V_safety = V_safety[(2:d for d in size(V_safety))...]
+    V_safety = V_safety[(1:d-1 for d in size(V_safety))...]
 
     return V_safety
 end

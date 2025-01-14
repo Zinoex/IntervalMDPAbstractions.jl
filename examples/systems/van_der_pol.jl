@@ -117,5 +117,5 @@ function main()
     prob = Problem(mdp, spec)
 
     @time "value iteration" V, k, res = value_iteration(prob)
-    return V[2:end, 2:end]
+    return V[1:d-1, 1:d-1]
 end

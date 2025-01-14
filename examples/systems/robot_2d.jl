@@ -134,7 +134,7 @@ function main()
 
     @time "value-iteration reach-avoid" V_reachavoid, k_reachavoid, res_reachavoid =
         value_iteration(prob_reachavoid)
-    V_reachavoid = V_reachavoid[2:end, 2:end]
+    V_reachavoid = V_reachavoid[1:d-1, 1:d-1]
 
     @time "abstraction reachability" mdp_reachability, spec_reachability, _ =
         robot_2d_decoupled(;
@@ -146,7 +146,7 @@ function main()
 
     @time "value-iteration reachability" V_reachability, k_reachability, res_reachability =
         value_iteration(prob_reachability)
-    V_reachability = V_reachability[2:end, 2:end]
+    V_reachability = V_reachability[1:d-1, 1:d-1]
 
     return V_reachavoid, V_reachability
 end

@@ -91,8 +91,8 @@ function abstraction(
 
     # State pointer
     stateptr = Int32[
-        [1, 2]
-        (1:numregions(state_abstraction)) .* numinputs(input_abstraction) .+ 2
+        [1]
+        (1:numregions(state_abstraction)) .* numinputs(input_abstraction) .+ 1
     ]
 
     # Transition probabilities
@@ -108,7 +108,7 @@ function abstraction(
     initial_states = Int32[]
     for (i, source_region) in enumerate(regions(state_abstraction))
         if !isdisjoint(initial(sys), source_region)
-            push!(initial_states, i + 1)
+            push!(initial_states, i)
         end
     end
 
@@ -121,15 +121,17 @@ function abstraction(
 end
 
 function initprob(::IMDPTarget, nregions, ninputs)
-    prob_lower = [zeros(Float64, nregions) for _ = 1:((nregions-1)*ninputs+1)]
-    prob_upper = [zeros(Float64, nregions) for _ = 1:((nregions-1)*ninputs+1)]
+    nchoices = nregions * ninputs
+    prob_lower = zeros(Float64, nregions + 1, nchoices)
+    prob_upper = zeros(Float64, nregions + 1, nchoices)
 
     return prob_lower, prob_upper
 end
 
 function initprob(::SparseIMDPTarget, nregions, ninputs)
-    prob_lower = [spzeros(Float64, nregions) for _ = 1:((nregions-1)*ninputs+1)]
-    prob_upper = [spzeros(Float64, nregions) for _ = 1:((nregions-1)*ninputs+1)]
+    nchoices = nregions * ninputs
+    prob_lower = spzeros(Float64, nregions + 1, nchoices)
+    prob_upper = spzeros(Float64, nregions + 1, nchoices)
 
     return prob_lower, prob_upper
 end
@@ -142,13 +144,13 @@ function convert_property(
     prop = system_property(spec)
 
     reach_states = Int32[]
-    avoid_states = Int32[1]  # Absorbing state
+    avoid_states = Int32[numregions(state_abstraction)]  # Absorbing state
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         if ispessimistic(spec) && source_region ⊆ reach(prop)
-            push!(reach_states, i + 1)
+            push!(reach_states, i)
         elseif isoptimistic(spec) && !iszeromeasure(reach(prop), source_region)
-            push!(reach_states, i + 1)
+            push!(reach_states, i)
         end
     end
 
@@ -163,17 +165,17 @@ function convert_property(
     prop = system_property(spec)
 
     reach_states = Int32[]
-    avoid_states = Int32[1]  # Absorbing state
+    avoid_states = Int32[numregions(state_abstraction)]  # Absorbing state
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
-            push!(avoid_states, i + 1)
+            push!(avoid_states, i)
         elseif isoptimistic(spec) && source_region ⊆ avoid(prop)
-            push!(avoid_states, i + 1)
+            push!(avoid_states, i)
         elseif ispessimistic(spec) && source_region ⊆ reach(prop)
-            push!(reach_states, i + 1)
+            push!(reach_states, i)
         elseif isoptimistic(spec) && !iszeromeasure(reach(prop), source_region)
-            push!(reach_states, i + 1)
+            push!(reach_states, i)
         end
     end
 
@@ -187,13 +189,13 @@ function convert_property(
 )
     prop = system_property(spec)
 
-    avoid_states = Int32[1]  # Absorbing state
+    avoid_states = Int32[numregions(state_abstraction)]  # Absorbing state
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
-            push!(avoid_states, i + 1)
+            push!(avoid_states, i)
         elseif isoptimistic(spec) && source_region ⊆ avoid(prop)
-            push!(avoid_states, i + 1)
+            push!(avoid_states, i)
         end
     end
 
@@ -220,14 +222,10 @@ function abstraction(
 
     # State pointer
     stateptr = Int32[1]
-    sizehint!(stateptr, prod(splits(state_abstraction) .+ 1))
+    sizehint!(stateptr, prod(splits(state_abstraction)) + 1)
 
-    for I in CartesianIndices(splits(state_abstraction) .+ 1)
-        if any(Tuple(I) .== 1)
-            push!(stateptr, stateptr[end] + 1)
-        else
-            push!(stateptr, stateptr[end] + numinputs(input_abstraction))
-        end
+    for I in CartesianIndices(splits(state_abstraction))
+        push!(stateptr, stateptr[end] + numinputs(input_abstraction))
     end
 
     interval_prob = transition_prob(
@@ -239,11 +237,11 @@ function abstraction(
     )
 
     # Initial states
-    initial_states = NTuple{dimstate(sys),Int32}[]
+    initial_states = CartesianIndex{dimstate(sys)}[]
     for (I, source_region) in
         zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
         if !isdisjoint(initial(sys), source_region)
-            push!(initial_states, Tuple(I) .+ 1)
+            push!(initial_states, I)
         end
     end
 
@@ -259,9 +257,7 @@ function initprob(::OrthogonalIMDPTarget, state_abstraction::StateUniformGridSpl
     prob_lower = Matrix{Float64}[]
     prob_upper = Matrix{Float64}[]
 
-    # One action for non-absorbing states is already included in the first term.
-    nchoices =
-        prod(splits(state_abstraction) .+ 1) + numregions(state_abstraction) * (ninputs - 1)
+    nchoices = numregions(state_abstraction) * ninputs
 
     for axisregions in splits(state_abstraction)
         local_prob_lower = zeros(Float64, axisregions + 1, nchoices)
@@ -282,9 +278,7 @@ function initprob(
     prob_lower = SparseMatrixCSC{Float64, Int32}[]
     prob_upper = SparseMatrixCSC{Float64, Int32}[]
 
-    # One action for non-absorbing states is already included in the first term.
-    nchoices =
-        prod(splits(state_abstraction) .+ 1) + numregions(state_abstraction) * (ninputs - 1)
+    nchoices = numregions(state_abstraction) * ninputs
 
     for axisregions in splits(state_abstraction)
         local_prob_lower = spzeros(Float64, Int32, axisregions + 1, nchoices)
@@ -304,22 +298,23 @@ function convert_property(
 )
     prop = system_property(spec)
 
-    reach_states = NTuple{dim(prop),Int32}[]
-    avoid_states = NTuple{dim(prop),Int32}[]
+    reach_states = CartesianIndex{dim(prop)}[]
+    avoid_states = CartesianIndex{dim(prop)}[]
 
     # Absorbing states
-    for I in CartesianIndices(splits(state_abstraction) .+ 1)
-        if any(Tuple(I) .== 1)
-            push!(avoid_states, Tuple(I))
+    extended_states = splits(state_abstraction) .+ 1
+    for I in CartesianIndices(extended_states)
+        if any(Tuple(I) .== extended_states)
+            push!(avoid_states, I)
         end
     end
 
     for (I, source_region) in
         zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
         if ispessimistic(spec) && source_region ⊆ reach(prop)
-            push!(reach_states, Tuple(I) .+ 1)
+            push!(reach_states, I)
         elseif isoptimistic(spec) && !iszeromeasure(reach(prop), source_region)
-            push!(reach_states, Tuple(I) .+ 1)
+            push!(reach_states, I)
         end
     end
 
@@ -333,26 +328,27 @@ function convert_property(
 )
     prop = system_property(spec)
 
-    reach_states = NTuple{dim(prop),Int32}[]
-    avoid_states = NTuple{dim(prop),Int32}[]
+    reach_states = CartesianIndex{dim(prop)}[]
+    avoid_states = CartesianIndex{dim(prop)}[]
 
     # Absorbing states
-    for I in CartesianIndices(splits(state_abstraction) .+ 1)
-        if any(Tuple(I) .== 1)
-            push!(avoid_states, Tuple(I))
+    extended_states = splits(state_abstraction) .+ 1
+    for I in CartesianIndices(extended_states)
+        if any(Tuple(I) .== extended_states)
+            push!(avoid_states, I)
         end
     end
 
     for (I, source_region) in
         zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
         if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
-            push!(avoid_states, Tuple(I) .+ 1)
+            push!(avoid_states, I)
         elseif isoptimistic(spec) && source_region ⊆ avoid(prop)
-            push!(avoid_states, Tuple(I) .+ 1)
+            push!(avoid_states, I)
         elseif ispessimistic(spec) && source_region ⊆ reach(prop)
-            push!(reach_states, Tuple(I) .+ 1)
+            push!(reach_states, I)
         elseif isoptimistic(spec) && !iszeromeasure(reach(prop), source_region)
-            push!(reach_states, Tuple(I) .+ 1)
+            push!(reach_states, I)
         end
     end
 
@@ -366,21 +362,22 @@ function convert_property(
 )
     prop = system_property(spec)
 
-    avoid_states = NTuple{dim(prop),Int32}[]
+    avoid_states = CartesianIndex{dim(prop)}[]
 
     # Absorbing states
-    for I in CartesianIndices(splits(state_abstraction) .+ 1)
-        if any(Tuple(I) .== 1)
-            push!(avoid_states, Tuple(I))
+    extended_states = splits(state_abstraction) .+ 1
+    for I in CartesianIndices(extended_states)
+        if any(Tuple(I) .== extended_states)
+            push!(avoid_states, I)
         end
     end
 
     for (I, source_region) in
         zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
         if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
-            push!(avoid_states, Tuple(I) .+ 1)
+            push!(avoid_states, I)
         elseif isoptimistic(spec) && source_region ⊆ avoid(prop)
-            push!(avoid_states, Tuple(I) .+ 1)
+            push!(avoid_states, I)
         end
     end
 
@@ -407,14 +404,10 @@ function abstraction(
 
     # State pointer
     stateptr = Int32[1]
-    sizehint!(stateptr, prod(splits(state_abstraction) .+ 1))
+    sizehint!(stateptr, prod(splits(state_abstraction)) + 1)
 
-    for I in CartesianIndices(splits(state_abstraction) .+ 1)
-        if any(Tuple(I) .== 1)
-            push!(stateptr, stateptr[end] + 1)
-        else
-            push!(stateptr, stateptr[end] + numinputs(input_abstraction))
-        end
+    for I in CartesianIndices(splits(state_abstraction))
+        push!(stateptr, stateptr[end] + numinputs(input_abstraction))
     end
 
     # Transition probabilities
@@ -427,11 +420,11 @@ function abstraction(
     )
 
     # Initial states
-    initial_states = NTuple{dimstate(sys),Int32}[]
+    initial_states = CartesianIndex{dimstate(sys)}[]
     for (I, source_region) in
         zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
         if !isdisjoint(initial(sys), source_region)
-            push!(initial_states, Tuple(I) .+ 1)
+            push!(initial_states, I)
         end
     end
 

@@ -106,8 +106,8 @@ function main()
     @time "upper bound" V_upper, _, _ = value_iteration(upper_bound_prob)
 
     # Remove the first state from each axis (the avoid state, whose value is always 0).
-    V_lower = V_lower[(2:d for d in size(V_lower))...]
-    V_upper = V_upper[(2:d for d in size(V_upper))...]
+    V_lower = V_lower[(1:d-1 for d in size(V_lower))...]
+    V_upper = V_upper[(1:d-1 for d in size(V_upper))...]
 
     return V_lower, V_upper
 end

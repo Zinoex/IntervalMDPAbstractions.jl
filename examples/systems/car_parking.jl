@@ -110,7 +110,7 @@ function main()
     @time "value iteration decoupled" V_decoupled, k_decoupled, res_decoupled =
         value_iteration(prob_decoupled)
 
-    V_diff = V_decoupled[2:end, 2:end] - reshape(V_direct[2:end], 20, 20)
+    V_diff = V_decoupled[1:end-1, 1:end-1] - reshape(V_direct[1:end-1], 20, 20)
 
-    return V_diff, V_decoupled[2:end, 2:end], reshape(V_direct[2:end], 20, 20)
+    return V_diff, V_decoupled[1:end-1, 1:end-1], reshape(V_direct[1:end-1], 20, 20)
 end

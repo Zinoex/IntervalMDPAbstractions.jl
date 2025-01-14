@@ -133,7 +133,7 @@ function small_direct(
 end
 
 function main(n)
-    @time "abstraction" mdp, spec, _ = small_direct(; sparse = false)
+    @time "abstraction" mdp, spec, _ = big_decoupled(n; sparse = false)
 
     println("Memory usage: $(Base.summarysize(mdp) / 1000^2) MB")
 
@@ -142,7 +142,7 @@ function main(n)
     @time "value iteration" V, k, res = value_iteration(prob)
 
     # Remove the first state from each axis (the avoid state, whose value is always 0).
-    V = V[(2:d for d in size(V))...]
+    V = V[(1:d-1 for d in size(V))...]
 
     return V
 end
