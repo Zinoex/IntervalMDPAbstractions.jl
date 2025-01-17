@@ -132,8 +132,8 @@ function small_direct(
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function main(n)
-    @time "abstraction" mdp, spec, _ = big_decoupled(n; sparse = false)
+function main(n, time_horizon = 10)
+    @time "abstraction" mdp, spec, _ = big_decoupled(n, time_horizon; sparse = false)
 
     println("Memory usage: $(Base.summarysize(mdp) / 1000^2) MB")
 
