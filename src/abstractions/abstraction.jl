@@ -155,7 +155,7 @@ function convert_property(
     prop = system_property(spec)
 
     reach_states = Int32[]
-    avoid_states = Int32[numregions(state_abstraction)]  # Absorbing state
+    avoid_states = Int32[numregions(state_abstraction) + 1]  # Absorbing state
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         if ispessimistic(spec) && source_region ⊆ reach(prop)
@@ -176,7 +176,7 @@ function convert_property(
     prop = system_property(spec)
 
     reach_states = Int32[]
-    avoid_states = Int32[numregions(state_abstraction)]  # Absorbing state
+    avoid_states = Int32[numregions(state_abstraction) + 1]  # Absorbing state
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
@@ -200,7 +200,7 @@ function convert_property(
 )
     prop = system_property(spec)
 
-    avoid_states = Int32[numregions(state_abstraction)]  # Absorbing state
+    avoid_states = Int32[numregions(state_abstraction) + 1]  # Absorbing state
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
