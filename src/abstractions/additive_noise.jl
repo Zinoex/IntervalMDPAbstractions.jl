@@ -36,6 +36,8 @@ function transition_prob(
         end
     end
 
+    prob_lower, prob_upper = postprocessprob(target_model, prob_lower, prob_upper)
+
     prob = IntervalProbabilities(;
         lower = prob_lower,
         upper = prob_upper,
@@ -57,9 +59,8 @@ function source_action_transition_prob(
     w = noise(dyn)
 
     # Transition to outside the partitioned region
-    pl, pu = transition_prob_bounds(Y, X, w)
-    prob_lower[end, srcact_idx] = 1.0 - pu
-    prob_upper[end, srcact_idx] = 1.0 - pl
+    pl_outside, pu_outside = transition_prob_bounds(Y, X, w)
+    pl_outside, pu_outside = 1.0 - pu_outside, 1.0 - pl_outside
 
     # Transition to other states
     for (tar_idx, target_region) in enumerate(regions(state_abstraction))
@@ -69,12 +70,14 @@ function source_action_transition_prob(
             prob_lower[tar_idx, srcact_idx] = pl
             prob_upper[tar_idx, srcact_idx] = pu
         else  # Allow sparsifying via adding probability to the absorbing avoid state
-
-            # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-            prob_lower[end, srcact_idx] = clamp(prob_lower[end, srcact_idx] + pl, 0.0, 1.0)
-            prob_upper[end, srcact_idx] = clamp(prob_upper[end, srcact_idx] + pu, 0.0, 1.0)
+            pl_outside = pl_outside + pl
+            pu_outside = pu_outside + pu
         end
     end
+
+    # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
+    prob_lower[end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
+    prob_upper[end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
 end
 
 function transition_prob(
@@ -127,6 +130,8 @@ function transition_prob(
         end
     end
 
+    prob_lower, prob_upper = postprocessprob(target_model, prob_lower, prob_upper)
+
     prob = OrthogonalIntervalProbabilities(
         Tuple(
             IntervalProbabilities(; lower = pl, upper = pu) for (pl, pu) in zip(prob_lower, prob_upper)
@@ -152,9 +157,8 @@ function source_action_transition_prob(
     # For each axis... 
     for (axis, axisregions) in enumerate(splits(state_abstraction))
         # Transition to outside the partitioned region
-        pl, pu = axis_transition_prob_bounds(Y, X, w, axis)
-        prob_lower[axis][end, srcact_idx] = 1.0 - pu
-        prob_upper[axis][end, srcact_idx] = 1.0 - pl
+        pl_outside, pu_outside = axis_transition_prob_bounds(Y, X, w, axis)
+        pl_outside, pu_outside = 1.0 - pu_outside, 1.0 - pl_outside
 
         # Transition to other states
         axis_statespace = Interval(low(X, axis), high(X, axis))
@@ -167,13 +171,13 @@ function source_action_transition_prob(
                 prob_lower[axis][tar_idx, srcact_idx] = pl
                 prob_upper[axis][tar_idx, srcact_idx] = pu
             else  # Allow sparsifying via adding probability to the absorbing avoid state
-
-                # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-                prob_lower[axis][end, srcact_idx] =
-                    clamp(prob_lower[axis][end, srcact_idx] + pl, 0.0, 1.0)
-                prob_upper[axis][end, srcact_idx] =
-                    clamp(prob_upper[axis][end, srcact_idx] + pu, 0.0, 1.0)
+                pl_outside = pl_outside + pl
+                pu_outside = pu_outside + pu
             end
         end
+
+        # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
+        prob_lower[axis][end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
+        prob_upper[axis][end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
     end
 end

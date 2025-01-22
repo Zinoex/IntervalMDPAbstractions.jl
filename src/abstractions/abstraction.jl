@@ -128,11 +128,22 @@ function initprob(::IMDPTarget, nregions, ninputs)
     return prob_lower, prob_upper
 end
 
+function postprocessprob(::IMDPTarget, prob_lower, prob_upper)
+    return prob_lower, prob_upper
+end
+
 function initprob(::SparseIMDPTarget, nregions, ninputs)
     nchoices = nregions * ninputs
-    prob_lower = spzeros(Float64, nregions + 1, nchoices)
-    prob_upper = spzeros(Float64, nregions + 1, nchoices)
+    prob_lower = AtomicSparseMatrixCOO{Float64, Int32}(undef, nregions + 1, nchoices)
+    prob_upper = AtomicSparseMatrixCOO{Float64, Int32}(undef, nregions + 1, nchoices)
 
+    return prob_lower, prob_upper
+end
+
+function postprocessprob(::SparseIMDPTarget, prob_lower, prob_upper)
+    prob_lower = sparse(prob_lower.rows, prob_lower.cols, prob_lower.values, prob_lower.m, prob_lower.n)
+    prob_upper = sparse(prob_upper.rows, prob_upper.cols, prob_upper.values, prob_upper.m, prob_upper.n)
+    
     return prob_lower, prob_upper
 end
 
@@ -270,23 +281,34 @@ function initprob(::OrthogonalIMDPTarget, state_abstraction::StateUniformGridSpl
     return prob_lower, prob_upper
 end
 
+function postprocessprob(::OrthogonalIMDPTarget, prob_lower, prob_upper)
+    return prob_lower, prob_upper
+end
+
 function initprob(
     ::SparseOrthogonalIMDPTarget,
     state_abstraction::StateUniformGridSplit,
     ninputs,
 )
-    prob_lower = SparseMatrixCSC{Float64, Int32}[]
-    prob_upper = SparseMatrixCSC{Float64, Int32}[]
+    prob_lower = AtomicSparseMatrixCOO{Float64, Int32}[]
+    prob_upper = AtomicSparseMatrixCOO{Float64, Int32}[]
 
     nchoices = numregions(state_abstraction) * ninputs
 
     for axisregions in splits(state_abstraction)
-        local_prob_lower = spzeros(Float64, Int32, axisregions + 1, nchoices)
-        local_prob_upper = spzeros(Float64, Int32, axisregions + 1, nchoices)
+        local_prob_lower = AtomicSparseMatrixCOO{Float64, Int32}(undef, axisregions + 1, nchoices)
+        local_prob_upper = AtomicSparseMatrixCOO{Float64, Int32}(undef, axisregions + 1, nchoices)
 
         push!(prob_lower, local_prob_lower)
         push!(prob_upper, local_prob_upper)
     end
+
+    return prob_lower, prob_upper
+end
+
+function postprocessprob(::SparseOrthogonalIMDPTarget, prob_lower, prob_upper)
+    prob_lower = [sparse(p.rows, p.cols, p.values, p.m, p.n) for p in prob_lower]
+    prob_upper = [sparse(p.rows, p.cols, p.values, p.m, p.n) for p in prob_upper]
 
     return prob_lower, prob_upper
 end

@@ -17,6 +17,7 @@ function __init__()
 end
 
 include("utils.jl")
+include("matrix.jl")
 
 # Dynamics
 include("dynamics/base.jl")
