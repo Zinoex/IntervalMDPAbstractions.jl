@@ -1,3 +1,6 @@
+using Revise, Test
+using IntervalMDPAbstractions, LazySets
+
 A1 = [
     0.1 0.9
     0.8 0.2

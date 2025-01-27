@@ -28,7 +28,8 @@ include("example_systems.jl")
     # Dense
     mdp_dense, spec_dense = simple_1d_direct()
     @test num_states(mdp_dense) == 11
-    @test stateptr(mdp_dense)[end] == 11
+    @test length(stateptr(mdp_dense)) == 11  # 10 non-sink states
+    @test stateptr(mdp_dense)[end] == 11  # No control actions
 
     prob_dense = Problem(mdp_dense, spec_dense)
 
@@ -38,7 +39,8 @@ include("example_systems.jl")
     # Sparse
     mdp_sparse, spec_sparse = simple_1d_direct(; sparse = true)
     @test num_states(mdp_sparse) == 11
-    @test stateptr(mdp_sparse)[end] == 11
+    @test length(stateptr(mdp_sparse)) == 11  # 10 non-sink states
+    @test stateptr(mdp_sparse)[end] == 11  # No control actions
 
     prob_sparse = Problem(mdp_sparse, spec_sparse)
 
@@ -87,7 +89,8 @@ end
         # Dense, input grid
         mdp_dense, spec_dense = modified_running_example_direct()
         @test num_states(mdp_dense) == 101
-        @test stateptr(mdp_dense)[end] == 10 * 10 * 9 + 1
+        @test length(stateptr(mdp_dense)) == 10 * 10 + 1  # 10 * 10 non-sink states
+        @test stateptr(mdp_dense)[end] == 10 * 10 * 9 + 1  # 10 * 10 non-sink states, 9 actions
 
         prob_dense = Problem(mdp_dense, spec_dense)
 
@@ -97,7 +100,8 @@ end
         # Sparse, input grid
         mdp_sparse, spec_sparse = modified_running_example_direct(; sparse = true)
         @test num_states(mdp_sparse) == 101
-        @test stateptr(mdp_sparse)[end] == 10 * 10 * 9 + 1
+        @test length(stateptr(mdp_sparse)) == 10 * 10 + 1  # 10 non-sink states
+        @test stateptr(mdp_sparse)[end] == 10 * 10 * 9 + 1  # 10 * 10 non-sink states, 9 actions
 
         prob_sparse = Problem(mdp_sparse, spec_sparse)
 

@@ -35,8 +35,8 @@ end
 
     target_model = IMDPTarget()
 
-    time_horizon = 10
-    prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, time_horizon)
+    horizon = 10
+    prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, horizon)
     spec = Specification(prop, Pessimistic, Maximize)
 
     prob = AbstractionProblem(sys, spec)

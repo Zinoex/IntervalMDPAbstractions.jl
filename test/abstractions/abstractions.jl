@@ -1,5 +1,4 @@
 
-test_files = ["additive_noise/additive_noise.jl", "mixture.jl"]
-for f in test_files
-    @testset "abstractions/$f" include(f)
-end
+@testset verbose=true "abstractions/additive_noise" include("additive_noise/additive_noise.jl")
+@testset verbose=true "abstractions/gaussian_process.jl" include("gaussian_process.jl")
+@testset verbose=true "abstractions/mixture.jl" include("mixture.jl")

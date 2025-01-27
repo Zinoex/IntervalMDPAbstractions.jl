@@ -19,13 +19,13 @@ function transition_prob(
                          collect(enumerate(regions(state_abstraction)))
         for (j, input) in enumerate(inputs(input_abstraction))
             srcact_idx = (i - 1) * ninputs + j
-            gp_bounds = bounds(dyn, source_region, input)
+            bounds = gp_bounds(dyn, source_region, input)
 
             source_action_transition_prob(
                 dyn,
                 state_abstraction,
                 target_model,
-                gp_bounds,
+                bounds,
                 prob_lower,
                 prob_upper,
                 srcact_idx,
