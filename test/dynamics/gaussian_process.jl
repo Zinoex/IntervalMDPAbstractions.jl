@@ -73,6 +73,8 @@ w_stddev = sqrt.(w_variance)
 w = AdditiveDiagonalGaussianNoise(w_stddev)
 
 dyn = AbstractedGaussianProcess([gp_action1, gp_action2])
+initial_region = Hyperrectangle(low = [-0.1, -0.1], high = [0.1, 0.1])
+sys = System(dyn, initial_region)
 @test dimstate(sys) == 2
 @test diminput(sys) == 1
 

@@ -72,24 +72,14 @@ end
 region(abstracted_region::AbstractedGaussianProcessRegion) = abstracted_region.region
 outputdim(abstracted_region::AbstractedGaussianProcessRegion) =
     size(abstracted_region.mean_lower, 1)
-mean_lower(abstracted_region::AbstractedGaussianProcessRegion) =
-    abstracted_region.mean_lower
 mean_lower(abstracted_region::AbstractedGaussianProcessRegion, i) =
     abstracted_region.mean_lower[i]
-mean_upper(abstracted_region::AbstractedGaussianProcessRegion) =
-    abstracted_region.mean_upper
 mean_upper(abstracted_region::AbstractedGaussianProcessRegion, i) =
     abstracted_region.mean_upper[i]
-mean_center(abstracted_region::AbstractedGaussianProcessRegion) =
-    0.5 * (abstracted_region.mean_lower + abstracted_region.mean_upper)
 mean_center(abstracted_region::AbstractedGaussianProcessRegion, i) =
     0.5 * (abstracted_region.mean_lower[i] + abstracted_region.mean_upper[i])
-stddev_lower(abstracted_region::AbstractedGaussianProcessRegion) =
-    abstracted_region.stddev_lower
 stddev_lower(abstracted_region::AbstractedGaussianProcessRegion, i) =
     abstracted_region.stddev_lower[i]
-stddev_upper(abstracted_region::AbstractedGaussianProcessRegion) =
-    abstracted_region.stddev_upper
 stddev_upper(abstracted_region::AbstractedGaussianProcessRegion, i) =
     abstracted_region.stddev_upper[i]
 
