@@ -19,7 +19,7 @@ function nominal end
 function noise end
 
 #### Noise structures
-export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise
+export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise, AdditiveCentralUniformNoise
 
 """
     AdditiveNoiseStructure
@@ -36,6 +36,13 @@ Zero mean is without loss of generality, since the mean can be absorbed into the
 """
 struct AdditiveDiagonalGaussianNoise <: AdditiveNoiseStructure
     w_stddev::Vector{Float64}
+
+    function AdditiveDiagonalGaussianNoise(w_stddev::Vector{Float64})
+        if any(w_stddev .< 0.0)
+            throw(ArgumentError("Standard deviation must be non-negative"))
+        end
+        return new(w_stddev)
+    end
 end
 stddev(w::AdditiveDiagonalGaussianNoise) = w.w_stddev
 stddev(w::AdditiveDiagonalGaussianNoise, i) = w.w_stddev[i]
@@ -110,23 +117,30 @@ function gaussian_transition(v, l, h, σ)
 end
 
 """
-    AdditiveDiagonalCentralUniformNoise
+    AdditiveCentralUniformNoise
 
 Additive diagonal uniform noise structure, i.e. `w_k ~ U(-r, r)`. 
 This is without loss of generality, since the mean can be absorbed into the nominal dynamics.
 That is, `w_k ~ U(a, b)` is equivalent to `c + w_k` where `w_k ~ U(-r, r)` with `c = (a + b) / 2`
 and `r = (b - a) / 2`, such that `c` can be absorbed into the nominal dynamics.
 """
-struct AdditiveDiagonalCentralUniformNoise <: AdditiveNoiseStructure
+struct AdditiveCentralUniformNoise <: AdditiveNoiseStructure
     r::Vector{Float64}
+
+    function AdditiveCentralUniformNoise(r::Vector{Float64})
+        if any(r .< 0.0)
+            throw(ArgumentError("Half-width must be non-negative"))
+        end
+        return new(r)
+    end
 end
-dim(w::AdditiveDiagonalCentralUniformNoise) = length(w.r)
-candecouple(w::AdditiveDiagonalCentralUniformNoise) = true
+dim(w::AdditiveCentralUniformNoise) = length(w.r)
+candecouple(w::AdditiveCentralUniformNoise) = true
 
 function transition_prob_bounds(
     Y,
     Z::Hyperrectangle,
-    w::AdditiveDiagonalCentralUniformNoise,
+    w::AdditiveCentralUniformNoise,
 )
     # Use the box approximation for the transition probability bounds, as 
     # that makes the computation of the bounds more efficient (altought slightly more conservative).
@@ -148,7 +162,7 @@ end
 function axis_transition_prob_bounds(
     Y::Hyperrectangle,
     Z::Hyperrectangle,
-    w::AdditiveDiagonalCentralUniformNoise,
+    w::AdditiveCentralUniformNoise,
     axis::Int,
 )
     z = Interval(extrema(Z, axis)...)
@@ -159,7 +173,7 @@ end
 function axis_transition_prob_bounds(
     Y::Hyperrectangle,
     z::Interval,
-    w::AdditiveDiagonalCentralUniformNoise,
+    w::AdditiveCentralUniformNoise,
     axis::Int,
 )
     y = Interval(extrema(Y, axis)...)
@@ -171,7 +185,7 @@ end
 function axis_transition_prob_bounds(
     y::Interval,
     z::Interval,
-    w::AdditiveDiagonalCentralUniformNoise,
+    w::AdditiveCentralUniformNoise,
     r::Real,
 )
     # Compute the transition probability bounds for each dimension
