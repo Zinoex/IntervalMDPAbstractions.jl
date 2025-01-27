@@ -12,12 +12,17 @@ if !@isdefined example_systems_included
         dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
         initial_region = EmptySet(1)
+
+        sys = System(dyn, initial_region)
+
         reach_region = Hyperrectangle(; low = [-0.5], high = [0.5])
         avoid_region = EmptySet(1)
 
-        sys = System(dyn, initial_region, reach_region, avoid_region)
+        time_horizon = 10
+        prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, time_horizon)
+        spec = Specification(prop, Pessimistic, Maximize)
 
-        return sys
+        return sys, spec
     end
 
     function modified_running_example_sys()
@@ -28,11 +33,15 @@ if !@isdefined example_systems_included
         dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
         initial_region = EmptySet(2)
+
+        sys = System(dyn, initial_region)
+
         reach_region = Hyperrectangle(; low = [4.0, -6.0], high = [10.0, -2.0])
         avoid_region = EmptySet(2)
+        time_horizon = 10
+        prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, time_horizon)
+        spec = Specification(prop, Pessimistic, Maximize)
 
-        sys = System(dyn, initial_region, reach_region, avoid_region)
-
-        return sys
+        return sys, spec
     end
 end
