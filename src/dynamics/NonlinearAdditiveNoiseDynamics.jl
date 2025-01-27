@@ -74,7 +74,7 @@ function nominal(
     dom = IntervalBox([low(X); low(U)], [high(X); high(U)])
 
     # TaylorSeries.jl modifieds the global state - eww...
-    # It also means that this function is not thread-safe!!
+    # Therefore, we prepare the global state before entering the threaded section.
     # set_variables(Float64, "z"; order=order, numvars=dimstate(dyn) + diminput(dyn))
 
     z = [
