@@ -42,23 +42,6 @@ function inputs(input::InputLinRange)
 end
 
 """
-    InputRandom
-
-Input abstraction for random points in the input space.
-"""
-struct InputRandom <: InputAbstraction
-    input_space::Hyperrectangle
-    num_points::Int
-end
-numinputs(input::InputRandom) = input.num_points
-issetbased(input::InputRandom) = false
-function inputs(input::InputRandom)
-    regions = [Singleton(rand(input.input_space)) for _ = 1:input.num_points]
-
-    return regions
-end
-
-"""
     InputDiscrete
 
 Input abstraction for a set of discrete points in the input space.
