@@ -134,7 +134,7 @@ end
 function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, x::AbstractVector, a::Integer)
     for dynregion in dyn.dynregions[a]
         if x ∈ region(dynregion)
-            return overapproximate(dynregion, Singleton(X))
+            return overapproximate(dynregion, Singleton(x))
         end
     end
 
