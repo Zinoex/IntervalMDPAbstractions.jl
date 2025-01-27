@@ -72,8 +72,6 @@ end
 region(abstracted_region::AbstractedGaussianProcessRegion) = abstracted_region.region
 outputdim(abstracted_region::AbstractedGaussianProcessRegion) =
     size(abstracted_region.mean_lower, 1)
-inputdim(abstracted_region::AbstractedGaussianProcessRegion) =
-    size(abstracted_region.mean_lower, 2)
 mean_lower(abstracted_region::AbstractedGaussianProcessRegion) =
     abstracted_region.mean_lower
 mean_lower(abstracted_region::AbstractedGaussianProcessRegion, i) =
@@ -161,8 +159,6 @@ function axis_transition_prob_bounds(
         ),
     )
 
-    # println("pl: $pl, pu: $pu, σ_lower: $(stddev_lower(gp_bounds, axis)), σ_upper: $(stddev_upper(gp_bounds, axis)))")
-
     # Just in case the numerical computation is slightly off
     return max(pl, 0.0), min(pu, 1.0)
 end
@@ -214,7 +210,7 @@ struct AbstractedGaussianProcess{TU<:AbstractedGaussianProcessRegion} <:
     end
 end
 dimstate(dyn::AbstractedGaussianProcess) = outputdim(first(first(dyn.dynregions)))
-diminput(dyn::AbstractedGaussianProcess) = inputdim(first(first(dyn.dynregions)))
+diminput(dyn::AbstractedGaussianProcess) = 1
 
 function bounds(dyn::AbstractedGaussianProcess, X::LazySet, input::Int)
     # Subtract epsilon from set to avoid numerical issues
