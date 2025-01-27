@@ -32,3 +32,10 @@ U = Singleton([2.0])
 
 Y = concretize(nominal(dyn, X, U))
 @test isequivalent(Y, Singleton([1.5, 3.0]))
+
+# Vector inputs
+X = [1.0, 1.0]
+U = [2.0]
+
+Y = nominal(dyn, X, U)
+@test Y ≈ [1.5, 3.0]

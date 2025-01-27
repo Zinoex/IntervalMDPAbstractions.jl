@@ -10,10 +10,15 @@ f(x, u) = [
 
 w_variance = [0.2, 0.2]
 w_stddev = sqrt.(w_variance)
+w = AdditiveDiagonalGaussianNoise(w_stddev)
 
-dyn = NonlinearAdditiveNoiseDynamics(f, 2, 1, AdditiveDiagonalGaussianNoise(w_stddev))
+dyn = NonlinearAdditiveNoiseDynamics(f, 2, 1, w)
 initial_region = Hyperrectangle(low = [-1.0, -1.0], high = [1.0, 1.0])
 sys = System(dyn, initial_region)
+
+@test noise(dyn) == w
+@test dimstate(sys) == 2
+@test diminput(sys) == 1
 
 # Hyperrectangular control
 X = Hyperrectangle(low = [0.0, 0.0], high = [1.0, 1.0])
@@ -52,3 +57,14 @@ Y_expected = concretize(MinkowskiSum(AXD, Hyperrectangle(low = [0.0, -0.025], hi
     Y,
     Y_expected,
 )
+
+# Vector inputs
+X = [0.5, 0.5]
+U = [2.0]
+
+Y = nominal(dyn, X, U)
+Y_expected = [
+    X[1] + X[2] * sampling_time,
+    X[2] + (-X[1] + (1 - X[1])^2 * X[2]) * sampling_time + U[1],
+]
+@test Y ≈ Y_expected
