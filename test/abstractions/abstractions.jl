@@ -1,5 +1,5 @@
 
-test_files = ["direct.jl", "decoupled.jl", "compare_abstractions.jl"]
+test_files = ["additive_noise/additive_noise.jl", "mixture.jl"]
 for f in test_files
-    @testset "dynamics/$f" include(f)
+    @testset "abstractions/$f" include(f)
 end
