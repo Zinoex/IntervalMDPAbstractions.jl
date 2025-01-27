@@ -1,4 +1,4 @@
-export AbstractedGaussianProcessRegion, AbstractedGaussianProcess
+export AbstractedGaussianProcessRegion, AbstractedGaussianProcess, gp_bounds
 
 """
     AbstractedGaussianProcessRegion
@@ -184,7 +184,6 @@ struct AbstractedGaussianProcess{TU<:AbstractedGaussianProcessRegion} <:
         end
 
         dimstate = outputdim(first(first(dynregions)))
-        diminput = inputdim(first(first(dynregions)))
 
         for action in dynregions
             for dynregion in action
@@ -192,14 +191,6 @@ struct AbstractedGaussianProcess{TU<:AbstractedGaussianProcessRegion} <:
                     throw(
                         DimensionMismatch(
                             "The dimension of the GP output must be the same for all regions",
-                        ),
-                    )
-                end
-
-                if inputdim(dynregion) != diminput
-                    throw(
-                        DimensionMismatch(
-                            "The number of modes in the GP must be the same for all regions",
                         ),
                     )
                 end
@@ -212,7 +203,7 @@ end
 dimstate(dyn::AbstractedGaussianProcess) = outputdim(first(first(dyn.dynregions)))
 diminput(dyn::AbstractedGaussianProcess) = 1
 
-function bounds(dyn::AbstractedGaussianProcess, X::LazySet, input::Int)
+function gp_bounds(dyn::AbstractedGaussianProcess, X::LazySet, input::Int)
     # Subtract epsilon from set to avoid numerical issues
     eps_ball = BallInf(zeros(LazySets.dim(X)), 1e-6)
     Xquery = minkowski_difference(X, eps_ball)
