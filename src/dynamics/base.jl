@@ -4,7 +4,7 @@ export DiscreteTimeStochasticDynamics, dimstate, diminput
 """
     DiscreteTimeStochasticDynamics
 
-Abstract type for discrete-time stochastic dynamicss, i.e. `x_{k+1} = f(x_k, u_k, w_k)`.
+Abstract type for discrete-time stochastic dynamicss, i.e. ``x_{k+1} = f(x_k, u_k, w_k)``.
 """
 abstract type DiscreteTimeStochasticDynamics end
 

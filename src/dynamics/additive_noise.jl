@@ -1,21 +1,45 @@
-export AdditiveNoiseDynamics, nominal, noise
+export AdditiveNoiseDynamics, nominal, prepare_nominal, noise
 
 """
     AdditiveNoiseDynamics
 
-Dynamics with additive noise, i.e. `x_{k+1} = f(x_k, u_k) + w_k`.
+Dynamics with additive noise, i.e. ``x_{k+1} = f(x_k, u_k) + w_k`` with some i.i.d. noise structure ``w_k``.
 """
 abstract type AdditiveNoiseDynamics <: DiscreteTimeStochasticDynamics end
 
 """
-nominal(dyn::AdditiveNoiseDynamics, X::LazySet, U::LazySet)
+    nominal
 
-Compute the reachable set under the nominal dynamics of the dynamics `dyn` over the state region `X` and control region `U`.
-The nominal dynamics are given by `x_{k+1} = f(x_k, u_k)`, i.e. only well-defined for dynamicss with additive noise.
+Compute the reachable set under the nominal dynamics of the dynamics `dyn` over the state region `X` and control `u`.
+The nominal dynamics are given by ``\\hat{x}_{k+1} = f(x_k, u_k)``, which implies that nominal dynamics are only well-defined for additive noise dynamics.
 Since for some non-linear dynamics, no analytical formula exists for the one-step reachable set under the nominal dynamics,
 the function `nominal` only guarantees that the returned set is a superset of the one-step true reachable set, i.e. an over-approximation.
+
+Note that for [`NonlinearAdditiveNoiseDynamics`](@ref), you must first call [`prepare_nominal`](@ref) before calling `nominal`.
+If the method is called with a single state `x::Vector{<:Real}`, it is not necessary to call `prepare_nominal` first.
+
 """
 function nominal end
+
+"""
+    prepare_nominal
+
+The need for this method is a result of using `TaylorModels.jl` for the over-approximation of the reachable set under non-linear nominal dynamics.
+This package relies on global variables to store the variables of the Taylor models, which can be problematic when using multi-threading.
+Furthermore, when setting the variables, it invalidates existing Taylor models. Therefore, before entering the loop of [`abstraction`](@ref) to compute
+the transition probability bounds for all regions, we call this method to set up the global state appropriately.
+
+This method is a no-op for dynamics that are not [`NonlinearAdditiveNoiseDynamics`](@ref).
+
+Eventually, we hope to remove the need for this method by using a more thread-safe library for Taylor models, e.g. akin to `MultivariatePolynomials.jl`.
+"""
+function prepare_nominal end
+
+"""
+    noise
+
+For additive dynamics ``x_{k+1} = f(x_k, u_k) + w_k``, return ``w_k`` as a struct. See [`AdditiveNoiseStructure`](@ref) for implementations.
+"""
 function noise end
 
 #### Noise structures
@@ -24,14 +48,14 @@ export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise, AdditiveCentralUni
 """
     AdditiveNoiseStructure
 
-Structure to represent the noise of additive noise dynamics.
+Structure to represent the noise of additive noise dynamics. See [`AdditiveDiagonalGaussianNoise`](@ref) and [`AdditiveCentralUniformNoise`](@ref) for concrete types.
 """
 abstract type AdditiveNoiseStructure end
 
 """
     AdditiveDiagonalGaussianNoise
 
-Additive diagonal Gaussian noise structure with zero mean, i.e. `w_k ~ N(0, diag(w_stddev))`.
+Additive diagonal Gaussian noise structure with zero mean, i.e. ``w_k \\sim \\mathcal{N}(0, \\mathrm{diag}(\\sigma))``.
 Zero mean is without loss of generality, since the mean can be absorbed into the nominal dynamics.
 """
 struct AdditiveDiagonalGaussianNoise <: AdditiveNoiseStructure
@@ -119,10 +143,10 @@ end
 """
     AdditiveCentralUniformNoise
 
-Additive diagonal uniform noise structure, i.e. `w_k ~ U(-r, r)`. 
+Additive diagonal uniform noise structure, i.e. ``w_k \\sim \\mathcal{U}(-r, r)``. 
 This is without loss of generality, since the mean can be absorbed into the nominal dynamics.
-That is, `w_k ~ U(a, b)` is equivalent to `c + w_k` where `w_k ~ U(-r, r)` with `c = (a + b) / 2`
-and `r = (b - a) / 2`, such that `c` can be absorbed into the nominal dynamics.
+That is, ``w_k \\sim \\mathcal{U}(a, b)`` is equivalent to ``c + w_k`` where ``w_k \\sim \\mathcal{U}(-r, r)`` with ``c = (a + b) / 2``
+and ``r = (b - a) / 2``, such that ``c`` can be absorbed into the nominal dynamics.
 """
 struct AdditiveCentralUniformNoise <: AdditiveNoiseStructure
     r::Vector{Float64}

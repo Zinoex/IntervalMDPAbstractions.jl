@@ -1,12 +1,12 @@
-export AbstractedGaussianProcessRegion, AbstractedGaussianProcess, gp_bounds
+export AbstractedGaussianProcessRegion, AbstractedGaussianProcess, gp_bounds, mean_lower, mean_upper, stddev_lower, stddev_upper, region
 
 """
     AbstractedGaussianProcessRegion
 
-A struct representing an bounds on the mean and stddev of a Gaussian process over a region.
-I.e. `\\underline{\\mu}_{s} \\leq \\mu(x) \\leq \\overline{\\mu}_{s}` and 
-`\\underline{\\Sigma}_{s,ll} \\leq \\Sigma(x)_{ll} \\leq \\overline{\\Sigma}_{s,ll}`
-for all `x \\in s` and each axis `l`.
+A struct representing an bounds on the mean and stddev of a Gaussian process over a region ``X_i``.
+That is, ``\\underline{\\mu}_{i} \\leq \\mu(x) \\leq \\overline{\\mu}_{i}`` and 
+``\\underline{\\Sigma}_{i,ll} \\leq \\Sigma(x)_{i,ll} \\leq \\overline{\\Sigma}_{i,ll}``
+for all ``x \\in X_i`` and each axis ``l``.
 
 ### Fields
 - `region::LazySet{Float64}`: The region over which the affine transition is valid.
@@ -69,17 +69,49 @@ struct AbstractedGaussianProcessRegion{T,VT<:AbstractVector{T},S<:LazySet{T}}
         new{T,VT,S}(region, mean_lower, mean_upper, stddev_lower, stddev_upper)
     end
 end
+
+"""
+    region(abstracted_region::AbstractedGaussianProcessRegion)
+
+Return the region over which the Gaussian process bounds are valid.
+"""
 region(abstracted_region::AbstractedGaussianProcessRegion) = abstracted_region.region
+
 outputdim(abstracted_region::AbstractedGaussianProcessRegion) =
     size(abstracted_region.mean_lower, 1)
+
+"""
+    mean_lower(abstracted_region::AbstractedGaussianProcessRegion, i)
+
+Return the lower bound on the mean of the Gaussian process for axis `i`.
+"""
 mean_lower(abstracted_region::AbstractedGaussianProcessRegion, i) =
     abstracted_region.mean_lower[i]
+
+"""
+    mean_upper(abstracted_region::AbstractedGaussianProcessRegion, i)
+
+Return the upper bound on the mean of the Gaussian process for axis `i`.
+"""
 mean_upper(abstracted_region::AbstractedGaussianProcessRegion, i) =
     abstracted_region.mean_upper[i]
+
 mean_center(abstracted_region::AbstractedGaussianProcessRegion, i) =
     0.5 * (abstracted_region.mean_lower[i] + abstracted_region.mean_upper[i])
+
+"""
+    stddev_lower(abstracted_region::AbstractedGaussianProcessRegion, i)
+
+Return the lower bound on the stddev of the Gaussian process for axis `i`.
+"""
 stddev_lower(abstracted_region::AbstractedGaussianProcessRegion, i) =
     abstracted_region.stddev_lower[i]
+
+"""
+    stddev_upper(abstracted_region::AbstractedGaussianProcessRegion, i)
+
+Return the upper bound on the stddev of the Gaussian process for axis `i`.
+"""
 stddev_upper(abstracted_region::AbstractedGaussianProcessRegion, i) =
     abstracted_region.stddev_upper[i]
 
@@ -156,10 +188,10 @@ end
 """
     AbstractedGaussianProcess
 
-A struct representing a Gaussian process over a partitioned space and for each region, bounds are computed on the mean and stddev.
+A struct representing bounds on the mean and stddev of a Gaussian process for each region over a partitioned space.
 
 ### Fields
-- `dyn::Vector{<:AbstractedGaussianProcessRegion}`: A list (action) of lists (regions) of AbstractedGaussianProcessRegions.
+- `dyn::Vector{Vector{<:AbstractedGaussianProcessRegion}}`: A list (action) of lists (regions) of [`AbstractedGaussianProcessRegion`](@ref)`.
 
 """
 struct AbstractedGaussianProcess{TU<:AbstractedGaussianProcessRegion} <:
@@ -193,6 +225,14 @@ end
 dimstate(dyn::AbstractedGaussianProcess) = outputdim(first(first(dyn.dynregions)))
 diminput(dyn::AbstractedGaussianProcess) = 1
 
+"""
+    gp_bounds(dyn::AbstractedGaussianProcess, X::LazySet, input::Int)
+
+Return the bounds on the mean and stddev of the Gaussian process for a given state region `X` and control action `input`. 
+The return type is an [`AbstractedGaussianProcessRegion`](@ref).
+
+If the state region is not in the domain of the dynamics, an `ArgumentError` is thrown.
+"""
 function gp_bounds(dyn::AbstractedGaussianProcess, X::LazySet, input::Int)
     # Subtract epsilon from set to avoid numerical issues
     eps_ball = BallInf(zeros(LazySets.dim(X)), 1e-6)
@@ -200,6 +240,24 @@ function gp_bounds(dyn::AbstractedGaussianProcess, X::LazySet, input::Int)
 
     for dynregion in dyn.dynregions[input]
         if issubset(Xquery, region(dynregion))
+            return dynregion
+        end
+    end
+
+    throw(ArgumentError("The state is not in the domain of the dynamics"))
+end
+
+"""
+    gp_bounds(dyn::AbstractedGaussianProcess, x::Vector{<:Real}, input::Int)
+
+Return the bounds on the mean and stddev of the Gaussian process for a given state `x` and control action `input`.
+The return type is an [`AbstractedGaussianProcessRegion`](@ref).
+
+If the state is not in the domain of the dynamics, an `ArgumentError` is thrown.
+"""
+function gp_bounds(dyn::AbstractedGaussianProcess, x::Vector, input::Int)
+    for dynregion in dyn.dynregions[input]
+        if x ∈ region(dynregion)
             return dynregion
         end
     end

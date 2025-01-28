@@ -4,7 +4,8 @@ export UncertainAffineRegion, UncertainPWAAdditiveNoiseDynamics
     UncertainAffineRegion
 
 A struct representing an uncertain affine transition, valid over a region.
-I.e. `A(\\alpha) x + C(\\alpha)` for `\\alpha in [0, 1]`, valid over a region `X`.
+That is, ``A(\\alpha) x + C(\\alpha)`` where ``A(\\alpha) = \\alpha \\underline{A} + (1 - \\alpha) \\overline{A}``
+and ``C(\\alpha) = \\alpha \\underline{C} + (1 - \\alpha) \\overline{C}`` for ``\\alpha \\in [0, 1]``, valid over a region ``X``.
 
 ### Fields
 - `region::LazySet{Float64}`: The region over which the affine transition is valid.
@@ -63,11 +64,14 @@ outputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 1
     UncertainPWAAdditiveNoiseDynamics
 
 A struct representing uncertain PWA dynamics with additive noise.
-I.e. `x_{k+1} = A_i(\\alpha) x_k + B_i(\\alpha) u_k + C_i(\\alpha) + w_k`, where `x_k \\in X_i` `w_k ~ p_w` and `p_w` is multivariate probability distribution.
+That is, ``x_{k+1} = A_{iu}(\\alpha) x_k + C_{iu}(\\alpha) + w_k``, where ``x_k \\in X_i`` is the state, 
+``A_{iu}(\\alpha) = \\alpha \\underline{A}_{iu} + (1 - \\alpha) \\overline{A}_{iu}`` and 
+``C_{iu}(\\alpha) = \\alpha \\underline{C}_{iu} + (1 - \\alpha) \\overline{C}_{iu}`` with ``\\alpha \\in [0, 1]`` is the dynamics
+for region ``X_i`` under control action ``u``, and ``w_k \\sim p_w`` is the additive noise where ``p_w`` is multivariate probability distribution.
 
 ### Fields
 - `dimstate::Int`: The dimension of the state space.
-- `dyn::Vector{Vector{<:UncertainAffineRegion}`: A list (action) of lists (regions) of UncertainAffineRegions to represent an uncertain PWA dynamics.
+- `dynregions::Vector{Vector{<:UncertainAffineRegion}`: A list (action) of lists (regions) of [`UncertainAffineRegion`](@ref) to represent the uncertain PWA dynamics.
 - `w::AdditiveNoiseStructure`: The additive noise.
 
 """

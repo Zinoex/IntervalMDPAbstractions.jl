@@ -1,4 +1,3 @@
-export TargetAbstractionModel
 export IMDPTarget, SparseIMDPTarget
 export OrthogonalIMDPTarget, SparseOrthogonalIMDPTarget
 export MixtureIMDPTarget, SparseMixtureIMDPTarget
@@ -48,13 +47,13 @@ abstract type AbstractOrthogonalIMDPTarget <: TargetAbstractionModel end
     OrthogonalIMDPTarget
 
 A target for IMDP abstractions where, for each source state, the transition probabilities
-are orthogonally decomposed. One state is appended along each axis to capture the transitions
+are orthogonally decomposed [1]. One state is appended along each axis to capture the transitions
 to outside the partitioned region. 
 
 Benefits compared to `IMDPTarget` include less memory usage, faster computation of the
 transition probabilities and value iteration, and tighter uncertainty set (see [1] for a proof).
 
-[1] TODO: Add reference to paper.
+[1] Mathiesen, Frederik Baymler, Sofie Haesaert, and Luca Laurenti. "Scalable control synthesis for stochastic systems via structural IMDP abstractions." arXiv preprint arXiv:2411.11803 (2024).
 """
 struct OrthogonalIMDPTarget <: AbstractOrthogonalIMDPTarget end
 
@@ -82,13 +81,13 @@ abstract type AbstractMixtureIMDPTarget <: AbstractOrthogonalIMDPTarget end
     MixtureIMDPTarget
 
 A target for IMDP abstractions where, for each source state, the transition probabilities
-are Mixturely decomposed. One state is appended along each axis to capture the transitions
+are decomposed as a mixture [1]. One state is appended along each axis to capture the transitions
 to outside the partitioned region. 
 
-Benefits compared to `IMDPTarget` include less memory usage, faster computation of the
-transition probabilities and value iteration, and tighter uncertainty set (see [1] for a proof).
+Benefits compared to `IMDPTarget` include less memory usage and faster computation of the
+transition probabilities and value iteration.
 
-[1] TODO: Add reference to paper.
+[1] Mathiesen, Frederik Baymler, Sofie Haesaert, and Luca Laurenti. "Scalable control synthesis for stochastic systems via structural IMDP abstractions." arXiv preprint arXiv:2411.11803 (2024).
 """
 struct MixtureIMDPTarget <: AbstractMixtureIMDPTarget end
 

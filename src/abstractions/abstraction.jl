@@ -76,9 +76,20 @@ end
 # IMDP target #
 ###############
 """
-    abstraction(prob::AbstractionProblem, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractIMDPTarget)
+    abstraction(prob, state_abstraction::StateUniformGridSplit, input_abstraction, target_model::AbstractIMDPTarget)
 
-Abstract function for creating an abstraction of a system with additive noise with an IMDP as the target model.
+Construct an abstraction of a system and a specification under a uniform grid partitioning of the state space with an arbitrary input abstraction
+and an IMDP as the target model.
+
+The argument `prob` contains both the system and the specification. The type of the system determines how the transition probability bounds are computed.
+The resulting IMDP has `numregions(state_abstraction) + 1` states, where the last state is an absorbing state, representing transitioning to outside
+the partitioned region. This absorbing state is implicitly encoded in the ambiguity sets, i.e. not stored and automatically handled by `IntervalMDP.jl`.
+
+The specification is converted based on the `state_abstraction` and `target_model` arguments in addition to whether the specification is pessimistic or optimistic.
+To encode the specification, at least one avoid state is required, i.e. the last, absorbing state. As a consequence, (concrete) reachability specifications are
+converted to (abstract) reach-avoid specifications with the last state as the avoid state.
+
+Returns `mdp` and `spec` as the abstracted IMDP and the converted specification, respectively.
 """
 function abstraction(
     prob::AbstractionProblem,
@@ -218,9 +229,21 @@ end
 # Orthogonal IMDP target #
 ##########################
 """
-    abstraction(prob::AbstractionProblem, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractOrthogonalIMDPTarget)
+    abstraction(prob, state_abstraction::StateUniformGridSplit, input_abstraction, target_model::AbstractOrthogonalIMDPTarget)
 
-Abstract function for creating an abstraction of a system with additive noise with a decoupled IMDP as the target model.
+Construct an abstraction of a system and a specification under a uniform grid partitioning of the state space with an arbitrary input abstraction
+and an orthogonal IMDP as the target model.
+
+The argument `prob` contains both the system and the specification. The type of the system determines how the *marginal* transition probability bounds are computed.
+The resulting *orthogonal* IMDP has `IntervalMDPAbstractions.splits(state_abstraction) .+ 1` states along each axis, 
+where the last state along each axis is an absorbing state, representing transitioning to outside the partitioned region.
+This absorbing state for each axis is implicitly encoded in the ambiguity sets, i.e. not stored and automatically handled by `IntervalMDP.jl`.
+
+The specification is converted based on the `state_abstraction` and `target_model` arguments in addition to whether the specification is pessimistic or optimistic.
+To encode the specification, at least one avoid state is required, i.e. the last, absorbing state. As a consequence, (concrete) reachability specifications are
+converted to (abstract) reach-avoid specifications with the last state as the avoid state.
+
+Returns `mdp` and `spec` as the abstracted IMDP and the converted specification, respectively.
 """
 function abstraction(
     prob::AbstractionProblem,
@@ -411,9 +434,21 @@ end
 # Mixture IMDP target #
 #######################
 """
-    abstraction(prob::AbstractionProblem, state_abstraction::StateUniformGridSplit, input_abstraction::InputAbstraction, target_model::AbstractMixtureIMDPTarget)
+    abstraction(prob, state_abstraction::StateUniformGridSplit, input_abstraction, target_model::AbstractMixtureIMDPTarget)
 
-Abstract function for creating an abstraction of a system with a mixture of orthogonal IMDPs as the target model.
+Construct an abstraction of a system and a specification under a uniform grid partitioning of the state space with an arbitrary input abstraction
+and a mixture of orthogonal IMDPs as the target model.
+
+The argument `prob` contains both the system and the specification. The type of the system determines how the *marginal mixture* transition probability bounds are computed.
+The resulting *mixture* IMDP has `IntervalMDPAbstractions.splits(state_abstraction) .+ 1` states along each axis, 
+where the last state along each axis is an absorbing state, representing transitioning to outside the partitioned region.
+This absorbing state for each axis is implicitly encoded in the ambiguity sets, i.e. not stored and automatically handled by `IntervalMDP.jl`.
+
+The specification is converted based on the `state_abstraction` and `target_model` arguments in addition to whether the specification is pessimistic or optimistic.
+To encode the specification, at least one avoid state is required, i.e. the last, absorbing state. As a consequence, (concrete) reachability specifications are
+converted to (abstract) reach-avoid specifications with the last state as the avoid state.
+
+Returns `mdp` and `spec` as the abstracted IMDP and the converted specification, respectively.
 """
 function abstraction(
     prob::AbstractionProblem,

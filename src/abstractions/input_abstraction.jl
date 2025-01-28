@@ -1,7 +1,26 @@
-export InputAbstraction, InputGridSplit, InputLinRange, InputRandom, InputDiscrete
+export InputAbstraction, InputGridSplit, InputLinRange, InputDiscrete
 export inputs, numinputs
 
+"""
+    InputAbstraction
+
+Abstract type for input abstractions.
+"""
 abstract type InputAbstraction end
+
+"""
+    inputs(input::InputAbstraction)
+
+Return the set of inputs of a given input abstraction.
+"""
+function inputs end
+
+"""
+    numinputs(input::InputAbstraction)
+
+Return the number of inputs, i.e. the size of the set of inputs, of a given input abstraction.
+"""
+function numinputs end
 
 """
     InputGridSplit

@@ -5,7 +5,7 @@ export AffineAdditiveNoiseDynamics
     AffineAdditiveNoiseDynamics
 
 A struct representing dynamics with additive noise.
-I.e. `x_{k+1} = A x_k + B u_k + C + w_k`, where `w_k ~ p_w` and `p_w` is multivariate probability distribution.
+That is, ``x_{k+1} = A x_k + B u_k + C + w_k``, where ``w_k ~ p_w`` and ``p_w`` is multivariate probability distribution.
 
 ### Fields
 - `A::AbstractMatrix{Float64}`: The linear state matrix.
@@ -16,7 +16,6 @@ I.e. `x_{k+1} = A x_k + B u_k + C + w_k`, where `w_k ~ p_w` and `p_w` is multiva
 ### Examples
 
 ```julia
-
 A = [1.0 0.1; 0.0 1.0]
 B = [0.0; 1.0]
 

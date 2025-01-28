@@ -5,18 +5,20 @@ export NonlinearAdditiveNoiseDynamics
     NonlinearAdditiveNoiseDynamics
 
 A struct representing dynamics with additive noise.
-I.e. `x_{k+1} = f(x_k, u_k) + w_k`, where `w_k ~ p_w` and `p_w` is multivariate probability distribution.
+That is, ``x_{k+1} = f(x_k, u_k) + w_k``, where ``w_k \\sim p_w`` and ``p_w`` is multivariate probability distribution.
 
 !!! note
     The nominal dynamics of this class are _assumed_ to be infinitely differentiable, i.e. 
     the Taylor expansion of the dynamics function `f` is well-defined. This is because to over-approximate
     the one-step reachable set, we rely on Taylor models, which are Taylor expansions + a remainder term.
-    If you are dealing wit a non-differentiable dynamics function, consider using `PiecewiseNonlinearAdditiveNoiseDynamics` instead.
-    The one-step reachable set of `PiecewiseNonlinearAdditiveNoiseDynamics` is over-approximated using
-    Linear Bound Propagation.
+    If you are dealing wit a non-differentiable dynamics function, consider using [`UncertainPWAAdditiveNoiseDynamics`](@ref) instead.
+    To obtain an `UncertainPWAAdditiveNoiseDynamics`, you can partitoned the state space and use Linear Bound Propagation
+    with each region (see [bound_propagation](https://github.com/Zinoex/bound_propagation)).
 
 !!! warning
-    The `nominal_dynamics` is _not_ thread-safe. This is because the TaylorSeries.jl package modifies its global state.
+    Before calling [`nominal`](@ref) with a `LazySet` as input, you must call [`prepare_nominal`](@ref). 
+    This is because the `TaylorSeries.jl` package modifies its global state. If you are using multi-threading,
+    [`prepare_nominal`](@ref) must be called before entering the threaded section.
 
 ### Fields
 - `f::Function`: A function taking `x::Vector` and `u::Vector` as input and returns a `Vector` of the dynamics output.

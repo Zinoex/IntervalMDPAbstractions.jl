@@ -3,7 +3,9 @@ export StochasticSwitchedDynamics
 """
     StochasticSwitchedDynamics
 
-A type that represents dynamics with a stochastic transition between the modes.
+A type that represents dynamics with a stochastic transition between the modes. When abstracting
+stochastic switched dynamics, the transition probability bounds are computed individually for each
+mode and then combined using the weights.
 """
 struct StochasticSwitchedDynamics <: DiscreteTimeStochasticDynamics
     dynamics::Vector{<:DiscreteTimeStochasticDynamics}
