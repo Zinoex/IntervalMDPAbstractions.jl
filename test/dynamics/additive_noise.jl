@@ -13,8 +13,8 @@ using IntervalMDPAbstractions, LazySets
     @test IntervalMDPAbstractions.candecouple(w) == true
 
     @testset "transition_prob_bounds" begin
-        Y = Hyperrectangle(low=[0.0, 0.0], high=[1.0, 1.0])
-        Z = Hyperrectangle(low=[1.0, 0.0], high=[2.0, 1.0])
+        Y = Hyperrectangle(low = [0.0, 0.0], high = [1.0, 1.0])
+        Z = Hyperrectangle(low = [1.0, 0.0], high = [2.0, 1.0])
 
         pl, pu = IntervalMDPAbstractions.axis_transition_prob_bounds(Y, Z, w, 1)
         @test pl ≈ 0.02271846070634608727902886
@@ -31,7 +31,7 @@ using IntervalMDPAbstractions, LazySets
 
     @testset "transition_prob_bounds not hyperrectangular" begin
         Y = VPolytope([[0.5, 0.0], [1.0, 0.7], [0.0, 1.0]])
-        Z = Hyperrectangle(low=[1.0, 0.0], high=[2.0, 1.0])
+        Z = Hyperrectangle(low = [1.0, 0.0], high = [2.0, 1.0])
 
         pl, pu = IntervalMDPAbstractions.transition_prob_bounds(Y, Z, w)
         @test pl ≈ 0.00961982036364639498159342
@@ -50,8 +50,8 @@ end
     @test IntervalMDPAbstractions.candecouple(w) == true
 
     @testset "transition_prob_bounds" begin
-        Y = Hyperrectangle(low=[0.0, 0.0], high=[1.0, 1.0])
-        Z = Hyperrectangle(low=[1.0, 0.0], high=[2.0, 1.0])
+        Y = Hyperrectangle(low = [0.0, 0.0], high = [1.0, 1.0])
+        Z = Hyperrectangle(low = [1.0, 0.0], high = [2.0, 1.0])
 
         pl, pu = IntervalMDPAbstractions.axis_transition_prob_bounds(Y, Z, w, 1)
         @test pl ≈ 0.0
@@ -68,7 +68,7 @@ end
 
     @testset "transition_prob_bounds not hyperrectangular" begin
         Y = VPolytope([[0.5, 0.0], [1.0, 0.7], [0.0, 1.0]])
-        Z = Hyperrectangle(low=[1.0, 0.0], high=[2.0, 1.0])
+        Z = Hyperrectangle(low = [1.0, 0.0], high = [2.0, 1.0])
 
         pl, pu = IntervalMDPAbstractions.transition_prob_bounds(Y, Z, w)
         @test pl ≈ 0.0

@@ -1,4 +1,11 @@
-export AbstractedGaussianProcessRegion, AbstractedGaussianProcess, gp_bounds, mean_lower, mean_upper, stddev_lower, stddev_upper, region
+export AbstractedGaussianProcessRegion,
+    AbstractedGaussianProcess,
+    gp_bounds,
+    mean_lower,
+    mean_upper,
+    stddev_lower,
+    stddev_upper,
+    region
 
 """
     AbstractedGaussianProcessRegion

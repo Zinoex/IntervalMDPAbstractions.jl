@@ -7,20 +7,20 @@ include("example_systems.jl")
 @testset "1d dense vs sparse" begin
     function simple_1d_decoupled(; sparse = false)
         sys, spec = simple_1d_sys()
-    
+
         X = Hyperrectangle(; low = [-2.5], high = [2.5])
         state_abs = StateUniformGridSplit(X, (10,))
         input_abs = InputDiscrete([Singleton([0.0])])
-    
+
         if sparse
             target_model = SparseOrthogonalIMDPTarget()
         else
             target_model = OrthogonalIMDPTarget()
         end
-    
+
         prob = AbstractionProblem(sys, spec)
         mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
-    
+
         return mdp, abstract_spec
     end
 
@@ -46,10 +46,10 @@ include("example_systems.jl")
     V_sparse, k, res = value_iteration(prob_sparse)
     @test k == 10
     @test all(V_dense .≥ V_sparse)
-    
+
     @test satisfaction_mode(spec_dense) == satisfaction_mode(spec_sparse)
     @test strategy_mode(spec_dense) == strategy_mode(spec_sparse)
-    
+
     prop_dense = system_property(spec_dense)
     prop_sparse = system_property(spec_sparse)
     @test all(IntervalMDP.reach(prop_dense) .== IntervalMDP.reach(prop_sparse))
@@ -107,10 +107,10 @@ end
         V_sparse, k, res = value_iteration(prob_sparse)
         @test k == 10
         @test all(V_dense .≥ V_sparse)
-    
+
         @test satisfaction_mode(spec_dense) == satisfaction_mode(spec_sparse)
         @test strategy_mode(spec_dense) == strategy_mode(spec_sparse)
-        
+
         prop_dense = system_property(spec_dense)
         prop_sparse = system_property(spec_sparse)
         @test all(IntervalMDP.reach(prop_dense) .== IntervalMDP.reach(prop_sparse))
@@ -134,10 +134,10 @@ end
 
         @test k == 10
         @test all(V_range .≥ V_grid)
-    
+
         @test satisfaction_mode(spec_grid) == satisfaction_mode(spec_range)
         @test strategy_mode(spec_grid) == strategy_mode(spec_range)
-        
+
         prop_grid = system_property(spec_grid)
         prop_range = system_property(spec_range)
         @test all(IntervalMDP.reach(prop_grid) .== IntervalMDP.reach(prop_range))

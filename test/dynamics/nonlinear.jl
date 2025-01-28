@@ -34,11 +34,10 @@ Y = concretize(nominal(dyn, X, U))
 AXD = AffineMap([1.0 0.1; -0.1 1.1], Translation(X, [-0.5, -0.5]), [0.0, 0.5])
 BU = LinearMap([0.0, 1.0][:], Translation(U, [-0.5]))
 AXBUD = MinkowskiSum(AXD, BU)
-Y_expected = concretize(MinkowskiSum(AXBUD, Hyperrectangle(low = [0.0, -0.0625], high = [0.0, 0.0625])))
-@test isequivalent(
-    Y,
-    Y_expected,
+Y_expected = concretize(
+    MinkowskiSum(AXBUD, Hyperrectangle(low = [0.0, -0.0625], high = [0.0, 0.0625])),
 )
+@test isequivalent(Y, Y_expected)
 
 # Singleton control
 X = Hyperrectangle(low = [0.0, 0.0], high = [1.0, 1.0])
@@ -52,11 +51,9 @@ U_abs = InputDiscrete([U])
 IntervalMDPAbstractions.prepare_nominal(dyn, U_abs)
 Y = concretize(nominal(dyn, X, U))
 AXD = AffineMap([1.0 0.1; -0.15 1.025], Translation(X, [-0.5, -0.5]), [0.55, 2.4625])
-Y_expected = concretize(MinkowskiSum(AXD, Hyperrectangle(low = [0.0, -0.025], high = [0.0, 0.05])))
-@test isequivalent(
-    Y,
-    Y_expected,
-)
+Y_expected =
+    concretize(MinkowskiSum(AXD, Hyperrectangle(low = [0.0, -0.025], high = [0.0, 0.05])))
+@test isequivalent(Y, Y_expected)
 
 # Vector inputs
 X = [0.5, 0.5]

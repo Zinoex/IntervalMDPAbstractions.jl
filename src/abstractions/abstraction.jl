@@ -145,16 +145,28 @@ end
 
 function initprob(::SparseIMDPTarget, nregions, ninputs)
     nchoices = nregions * ninputs
-    prob_lower = AtomicSparseMatrixCOO{Float64, Int32}(undef, nregions + 1, nchoices)
-    prob_upper = AtomicSparseMatrixCOO{Float64, Int32}(undef, nregions + 1, nchoices)
+    prob_lower = AtomicSparseMatrixCOO{Float64,Int32}(undef, nregions + 1, nchoices)
+    prob_upper = AtomicSparseMatrixCOO{Float64,Int32}(undef, nregions + 1, nchoices)
 
     return prob_lower, prob_upper
 end
 
 function postprocessprob(::SparseIMDPTarget, prob_lower, prob_upper)
-    prob_lower = sparse(prob_lower.rows, prob_lower.cols, prob_lower.values, prob_lower.m, prob_lower.n)
-    prob_upper = sparse(prob_upper.rows, prob_upper.cols, prob_upper.values, prob_upper.m, prob_upper.n)
-    
+    prob_lower = sparse(
+        prob_lower.rows,
+        prob_lower.cols,
+        prob_lower.values,
+        prob_lower.m,
+        prob_lower.n,
+    )
+    prob_upper = sparse(
+        prob_upper.rows,
+        prob_upper.cols,
+        prob_upper.values,
+        prob_upper.m,
+        prob_upper.n,
+    )
+
     return prob_lower, prob_upper
 end
 
@@ -166,7 +178,7 @@ function convert_property(
     prop = system_property(spec)
 
     reach_states = Int32[]
-    avoid_states = Int32[numregions(state_abstraction) + 1]  # Absorbing state
+    avoid_states = Int32[numregions(state_abstraction)+1]  # Absorbing state
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         if ispessimistic(spec) && source_region ⊆ reach(prop)
@@ -187,7 +199,7 @@ function convert_property(
     prop = system_property(spec)
 
     reach_states = Int32[]
-    avoid_states = Int32[numregions(state_abstraction) + 1]  # Absorbing state
+    avoid_states = Int32[numregions(state_abstraction)+1]  # Absorbing state
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
@@ -211,7 +223,7 @@ function convert_property(
 )
     prop = system_property(spec)
 
-    avoid_states = Int32[numregions(state_abstraction) + 1]  # Absorbing state
+    avoid_states = Int32[numregions(state_abstraction)+1]  # Absorbing state
 
     for (i, source_region) in enumerate(regions(state_abstraction))
         if ispessimistic(spec) && !iszeromeasure(avoid(prop), source_region)
@@ -313,14 +325,16 @@ function initprob(
     state_abstraction::StateUniformGridSplit,
     ninputs,
 )
-    prob_lower = AtomicSparseMatrixCOO{Float64, Int32}[]
-    prob_upper = AtomicSparseMatrixCOO{Float64, Int32}[]
+    prob_lower = AtomicSparseMatrixCOO{Float64,Int32}[]
+    prob_upper = AtomicSparseMatrixCOO{Float64,Int32}[]
 
     nchoices = numregions(state_abstraction) * ninputs
 
     for axisregions in splits(state_abstraction)
-        local_prob_lower = AtomicSparseMatrixCOO{Float64, Int32}(undef, axisregions + 1, nchoices)
-        local_prob_upper = AtomicSparseMatrixCOO{Float64, Int32}(undef, axisregions + 1, nchoices)
+        local_prob_lower =
+            AtomicSparseMatrixCOO{Float64,Int32}(undef, axisregions + 1, nchoices)
+        local_prob_upper =
+            AtomicSparseMatrixCOO{Float64,Int32}(undef, axisregions + 1, nchoices)
 
         push!(prob_lower, local_prob_lower)
         push!(prob_upper, local_prob_upper)

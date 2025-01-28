@@ -15,17 +15,17 @@ function modified_running_example_compare()
     input_abs = InputGridSplit(U, [3, 3])
 
     target_model_direct = IMDPTarget()
-    mdp_direct, abstract_spec_direct = abstraction(prob, state_abs, input_abs, target_model_direct)
+    mdp_direct, abstract_spec_direct =
+        abstraction(prob, state_abs, input_abs, target_model_direct)
 
     target_model_decoupled = OrthogonalIMDPTarget()
-    mdp_decoupled, abstract_spec_decoupled = abstraction(prob, state_abs, input_abs, target_model_decoupled)
+    mdp_decoupled, abstract_spec_decoupled =
+        abstraction(prob, state_abs, input_abs, target_model_decoupled)
 
-    return mdp_direct, abstract_spec_direct,
-           mdp_decoupled, abstract_spec_decoupled
+    return mdp_direct, abstract_spec_direct, mdp_decoupled, abstract_spec_decoupled
 end
 
-mdp_direct, spec_direct, mdp_decoupled, spec_decoupled =
-    modified_running_example_compare()
+mdp_direct, spec_direct, mdp_decoupled, spec_decoupled = modified_running_example_compare()
 
 # Value iteration
 prob_direct = Problem(mdp_direct, spec_direct)

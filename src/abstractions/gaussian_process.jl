@@ -35,10 +35,7 @@ function transition_prob(
 
     prob_lower, prob_upper = postprocessprob(target_model, prob_lower, prob_upper)
 
-    prob = IntervalProbabilities(;
-        lower = prob_lower,
-        upper = prob_upper,
-    )
+    prob = IntervalProbabilities(; lower = prob_lower, upper = prob_upper)
 
     return prob
 end
@@ -120,7 +117,8 @@ function transition_prob(
 
     prob = OrthogonalIntervalProbabilities(
         Tuple(
-            IntervalProbabilities(; lower = pl, upper = pu) for (pl, pu) in zip(prob_lower, prob_upper)
+            IntervalProbabilities(; lower = pl, upper = pu) for
+            (pl, pu) in zip(prob_lower, prob_upper)
         ),
         Int32.(Tuple(splits(state_abstraction))),
     )

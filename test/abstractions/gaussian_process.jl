@@ -34,7 +34,8 @@ gp_region4_action1 = AbstractedGaussianProcessRegion(
     [0.2, 0.4],
 )
 
-gp_action1 = [gp_region1_action1, gp_region2_action1, gp_region3_action1, gp_region4_action1]
+gp_action1 =
+    [gp_region1_action1, gp_region2_action1, gp_region3_action1, gp_region4_action1]
 
 # Action 2
 gp_region1_action2 = AbstractedGaussianProcessRegion(
@@ -66,7 +67,8 @@ gp_region4_action2 = AbstractedGaussianProcessRegion(
     [0.2, 0.4],
 )
 
-gp_action2 = [gp_region1_action2, gp_region2_action2, gp_region3_action2, gp_region4_action2]
+gp_action2 =
+    [gp_region1_action2, gp_region2_action2, gp_region3_action2, gp_region4_action2]
 
 # Noise
 w_variance = [0.2, 0.2]
@@ -92,8 +94,9 @@ input_abs = InputDiscrete([1, 2])
 @testset "direct vs decoupled" begin
     # Decoupled
     target_model = OrthogonalIMDPTarget()
-    mdp_decoupled, abstract_spec_decoupled = abstraction(prob, state_abs, input_abs, target_model)
-    
+    mdp_decoupled, abstract_spec_decoupled =
+        abstraction(prob, state_abs, input_abs, target_model)
+
     @test num_states(mdp_decoupled) == 3 * 3
     @test length(stateptr(mdp_decoupled)) == 5  # 4 non-sink states
     @test stateptr(mdp_decoupled)[end] == 4 * 2 + 1  # 4 non-sink states, 2 control actions

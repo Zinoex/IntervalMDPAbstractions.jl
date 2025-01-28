@@ -44,8 +44,9 @@ state_abs = StateUniformGridSplit(X, state_split)
 input_abs = InputDiscrete([Singleton([0.0])])
 
 @testset "mixture vs direct" begin
-    mdp_mixture, abstract_spec_mixture = abstraction(prob, state_abs, input_abs, MixtureIMDPTarget())
-    
+    mdp_mixture, abstract_spec_mixture =
+        abstraction(prob, state_abs, input_abs, MixtureIMDPTarget())
+
     @test num_states(mdp_mixture) == 21 * 21
     @test length(stateptr(mdp_mixture)) == 20 * 20 + 1  # 20 * 20 non-sink states
     @test stateptr(mdp_mixture)[end] == 20 * 20 + 1  # No control actions

@@ -21,13 +21,13 @@ makedocs(;
     pages = [
         "Home" => "index.md"
         "Reference" => Any[
-            "Dynamics" => "reference/dynamics.md",
-            "Specifications" => "reference/specifications.md",
-            "Abstractions" => "reference/abstractions.md",
+            "Dynamics"=>"reference/dynamics.md",
+            "Specifications"=>"reference/specifications.md",
+            "Abstractions"=>"reference/abstractions.md",
         ]
     ],
     doctest = true,
-    checkdocs = :exports
+    checkdocs = :exports,
 )
 
 deploydocs(; repo = "github.com/Zinoex/IntervalMDPAbstractions.jl", devbranch = "main")

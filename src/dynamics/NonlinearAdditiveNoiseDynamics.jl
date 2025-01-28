@@ -79,9 +79,7 @@ function nominal(
     # Therefore, we prepare the global state before entering the threaded section.
     # set_variables(Float64, "z"; order=order, numvars=dimstate(dyn) + diminput(dyn))
 
-    z = [
-        TaylorModelN(i, order, IntervalBox(z0), dom) for i = 1:dimstate(dyn)+diminput(dyn)
-    ]
+    z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i = 1:dimstate(dyn)+diminput(dyn)]
     x, u = (z-z0)[1:dimstate(dyn)], z[dimstate(dyn)+1:end]
 
     # Perform the Taylor expansion

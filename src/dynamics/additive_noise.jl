@@ -161,11 +161,7 @@ end
 dim(w::AdditiveCentralUniformNoise) = length(w.r)
 candecouple(w::AdditiveCentralUniformNoise) = true
 
-function transition_prob_bounds(
-    Y,
-    Z::Hyperrectangle,
-    w::AdditiveCentralUniformNoise,
-)
+function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveCentralUniformNoise)
     # Use the box approximation for the transition probability bounds, as 
     # that makes the computation of the bounds more efficient (altought slightly more conservative).
 

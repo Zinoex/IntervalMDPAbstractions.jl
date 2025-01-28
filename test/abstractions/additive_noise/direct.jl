@@ -47,10 +47,10 @@ include("example_systems.jl")
     V_sparse, k, res = value_iteration(prob_sparse)
     @test k == 10
     @test all(V_dense .≥ V_sparse)
-    
+
     @test satisfaction_mode(spec_dense) == satisfaction_mode(spec_sparse)
     @test strategy_mode(spec_dense) == strategy_mode(spec_sparse)
-    
+
     prop_dense = system_property(spec_dense)
     prop_sparse = system_property(spec_sparse)
     @test all(IntervalMDP.reach(prop_dense) .== IntervalMDP.reach(prop_sparse))
@@ -108,10 +108,10 @@ end
         V_sparse, k, res = value_iteration(prob_sparse)
         @test k == 10
         @test all(V_dense .≥ V_sparse)
-    
+
         @test satisfaction_mode(spec_dense) == satisfaction_mode(spec_sparse)
         @test strategy_mode(spec_dense) == strategy_mode(spec_sparse)
-        
+
         prop_dense = system_property(spec_dense)
         prop_sparse = system_property(spec_sparse)
         @test all(IntervalMDP.reach(prop_dense) .== IntervalMDP.reach(prop_sparse))
@@ -137,10 +137,10 @@ end
         V_range, k, res = value_iteration(prob_range)
         @test k == 10
         @test all(V_range .≥ V_grid)
-    
+
         @test satisfaction_mode(spec_grid) == satisfaction_mode(spec_range)
         @test strategy_mode(spec_grid) == strategy_mode(spec_range)
-        
+
         prop_grid = system_property(spec_grid)
         prop_range = system_property(spec_range)
         @test all(IntervalMDP.reach(prop_grid) .== IntervalMDP.reach(prop_range))

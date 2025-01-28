@@ -33,7 +33,8 @@ upwa_region4_action1 = UncertainAffineRegion(
     [0.0, 0.5],
 )
 
-upwa_action1 = [upwa_region1_action1, upwa_region2_action1, upwa_region3_action1, upwa_region4_action1]
+upwa_action1 =
+    [upwa_region1_action1, upwa_region2_action1, upwa_region3_action1, upwa_region4_action1]
 
 # Action 2
 upwa_region1_action2 = UncertainAffineRegion(
@@ -65,7 +66,8 @@ upwa_region4_action2 = UncertainAffineRegion(
     [0.0, 0.5],
 )
 
-upwa_action2 = [upwa_region1_action2, upwa_region2_action2, upwa_region3_action2, upwa_region4_action2]
+upwa_action2 =
+    [upwa_region1_action2, upwa_region2_action2, upwa_region3_action2, upwa_region4_action2]
 
 # Noise
 w_variance = [0.2, 0.2]
@@ -83,22 +85,19 @@ X = Hyperrectangle(low = [0.0, -0.5], high = [0.5, 0.0])
 a = 2
 
 Y = concretize(nominal(dyn, X, a))
-Y_expected = concretize(ConvexHull(
-    AffineMap([1.0 0.1; -0.2 1.1], X, [0.0, 0.5]),
-    AffineMap([1.0 0.1; 0.0 1.1], X, [0.0, 0.5])
-))
-@test isequivalent(
-    Y,
-    Y_expected,
+Y_expected = concretize(
+    ConvexHull(
+        AffineMap([1.0 0.1; -0.2 1.1], X, [0.0, 0.5]),
+        AffineMap([1.0 0.1; 0.0 1.1], X, [0.0, 0.5]),
+    ),
 )
+@test isequivalent(Y, Y_expected)
 
 # Vector states
 X = [-0.25, 0.25]
 a = 1
 
 Y = concretize(nominal(dyn, X, a))
-Y_expected = VPolytope([[1.0 0.1; -0.3 1.1] * X + [0.0, 0.5], [1.0 0.1; 0.3 1.1] * X + [0.0, 0.5]])
-@test isequivalent(
-    Y,
-    Y_expected,
-)
+Y_expected =
+    VPolytope([[1.0 0.1; -0.3 1.1] * X + [0.0, 0.5], [1.0 0.1; 0.3 1.1] * X + [0.0, 0.5]])
+@test isequivalent(Y, Y_expected)
