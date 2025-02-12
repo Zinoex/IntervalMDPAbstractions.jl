@@ -4,8 +4,9 @@ export NonlinearAdditiveNoiseDynamics
 """
     NonlinearAdditiveNoiseDynamics
 
-A struct representing dynamics with additive noise.
-That is, ``x_{k+1} = f(x_k, u_k) + w_k``, where ``w_k \\sim p_w`` and ``p_w`` is multivariate probability distribution.
+A struct representing continuous non-linear dynamics with additive noise.
+That is, ``x_{k+1} = f(x_k, u_k) + w_k``, where ``f(\\cdot, u_k)`` is continuously differentiable function for each ``u_k \\in U`` and
+``w_k \\sim p_w`` and ``p_w`` is multivariate probability distribution.
 
 !!! note
     The nominal dynamics of this class are _assumed_ to be infinitely differentiable, i.e. 
@@ -35,7 +36,7 @@ That is, ``x_{k+1} = f(x_k, u_k) + w_k``, where ``w_k \\sim p_w`` and ``p_w`` is
 f(x, u) = [x[1] + x[2] * τ, x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * τ]
 
 w_stddev = [0.1, 0.1]
-w = AdditiveDiagonalUniformNoise(w_stddev)
+w = AdditiveCentralUniformNoise(w_stddev)
 
 dyn = NonlinearAdditiveNoiseDynamics(f, 2, 0, w)
 ```
