@@ -5,16 +5,23 @@ export PiecewiseNonlinearAdditiveNoiseDynamics, NonlinearDynamicsRegion
 
 A struct representing a non-linear dynamics, valid over a region.
 """
-struct NonlinearDynamicsRegion{F<:Function, S<:LazySet}
+struct NonlinearDynamicsRegion{F<:Function,S<:LazySet}
     f::F
     region::S
 end
 
-function (dyn::NonlinearDynamicsRegion)(X::Hyperrectangle{Float64}, U::Hyperrectangle{Float64})
+function (dyn::NonlinearDynamicsRegion)(
+    X::Hyperrectangle{Float64},
+    U::Hyperrectangle{Float64},
+)
     # Use the Taylor model to over-approximate the reachable set
     active_region = intersection(X, dyn.region)
     if isempty(active_region)
-        throw(ArgumentError("The input region X does not intersect with the valid region of the dynamics"))
+        throw(
+            ArgumentError(
+                "The input region X does not intersect with the valid region of the dynamics",
+            ),
+        )
     end
     active_region_box = box_approximation(active_region)
 
@@ -28,7 +35,10 @@ function (dyn::NonlinearDynamicsRegion)(X::Hyperrectangle{Float64}, U::Hyperrect
     # set_variables(Float64, "z"; order=order, numvars=LazySets.dim(X) + LazySets.dim(U))
 
     order = 1
-    z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i = 1:LazySets.dim(X)+LazySets.dim(U)]
+    z = [
+        TaylorModelN(i, order, IntervalBox(z0), dom) for
+        i = 1:LazySets.dim(X)+LazySets.dim(U)
+    ]
     x, u = (z-z0)[1:LazySets.dim(X)], z[LazySets.dim(X)+1:end]
 
     # Perform the Taylor expansion
@@ -57,7 +67,11 @@ function (dyn::NonlinearDynamicsRegion)(X::Hyperrectangle{Float64}, U::Hyperrect
     Dupper = sup.(D)
 
     Y1 = Alow * Translation(active_region, -x0) + Blow * Translation(U, -u0) + Clow + Dlower
-    Y2 = Aupper * Translation(active_region, -x0) + Bupper * Translation(U, -u0) + Cupper + Dupper
+    Y2 =
+        Aupper * Translation(active_region, -x0) +
+        Bupper * Translation(U, -u0) +
+        Cupper +
+        Dupper
 
     Yconv = ConvexHull(Y1, Y2)
 
@@ -69,12 +83,19 @@ function (dyn::NonlinearDynamicsRegion)(X::Hyperrectangle{Float64}, U::Singleton
     return dyn(X, element(U))
 end
 
-function (dyn::NonlinearDynamicsRegion)(X::Hyperrectangle{Float64}, u::AbstractVector{Float64})
+function (dyn::NonlinearDynamicsRegion)(
+    X::Hyperrectangle{Float64},
+    u::AbstractVector{Float64},
+)
     # Use the Taylor model to over-approximate the reachable set
 
     active_region = intersection(X, dyn.region)
     if isempty(active_region)
-        throw(ArgumentError("The input region X does not intersect with the valid region of the dynamics"))
+        throw(
+            ArgumentError(
+                "The input region X does not intersect with the valid region of the dynamics",
+            ),
+        )
     end
     active_region_box = box_approximation(active_region)
 
@@ -123,9 +144,16 @@ function (dyn::NonlinearDynamicsRegion)(X::Singleton{Float64}, U::Singleton{Floa
     return Singleton(y)
 end
 
-function (dyn::NonlinearDynamicsRegion)(x::AbstractVector{Float64}, u::AbstractVector{Float64})
+function (dyn::NonlinearDynamicsRegion)(
+    x::AbstractVector{Float64},
+    u::AbstractVector{Float64},
+)
     if x ∉ dyn.region
-        throw(ArgumentError("The input x does not belong to the valid region of the dynamics"))
+        throw(
+            ArgumentError(
+                "The input x does not belong to the valid region of the dynamics",
+            ),
+        )
     end
 
     return dyn.f(x, u)
@@ -220,7 +248,7 @@ function nominal(
     dyn::PiecewiseNonlinearAdditiveNoiseDynamics,
     x::AbstractVector{Float64},
     u,
-) 
+)
     for region in dyn.regions
         if x ∈ region.region
             return region(x, u)
