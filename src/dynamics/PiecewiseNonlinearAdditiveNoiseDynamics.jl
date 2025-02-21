@@ -139,7 +139,7 @@ function (dyn::NonlinearDynamicsRegion)(X::Singleton{Float64}, U::Singleton{Floa
     x = element(X)
     u = element(U)
 
-    y = dyn.f(x, u)
+    y = dyn(x, u)
 
     return Singleton(y)
 end
