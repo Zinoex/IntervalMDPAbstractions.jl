@@ -256,6 +256,18 @@ function nominal(
     end
 end
 
+function nominal(
+    dyn::PiecewiseNonlinearAdditiveNoiseDynamics,
+    X::Singleton{Float64},
+    u,
+)
+    for region in dyn.regions
+        if element(X) ∈ region.region
+            return region(X, u)
+        end
+    end
+end
+
 noise(dyn::PiecewiseNonlinearAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::PiecewiseNonlinearAdditiveNoiseDynamics) = dyn.nstate
 diminput(dyn::PiecewiseNonlinearAdditiveNoiseDynamics) = dyn.ninput
