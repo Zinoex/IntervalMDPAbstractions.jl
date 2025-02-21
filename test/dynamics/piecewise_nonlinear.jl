@@ -100,7 +100,9 @@ Y_expected = concretize(ConvexHull(Y1_expected, Y2_expected))
 # Vector inputs
 x = [0.5, 0.5]
 u = [0.0]
+X = Singleton(x)
+U = Singleton(u)
 
-y = nominal(dyn, x, u)
+y = nominal(dyn, X, U)
 y_expected = g(x, u)
-@test y ≈ y_expected
+@test element(y) ≈ y_expected
