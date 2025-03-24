@@ -10,6 +10,10 @@ struct System{D<:DiscreteTimeStochasticDynamics,I<:LazySet}
     initial::I
 end
 
+function System(dynamics::D) where {D<:DiscreteTimeStochasticDynamics}
+    return System(dynamics, EmptySet(dimstate(dynamics)))
+end
+
 """
     dynamics(sys::System)
 
