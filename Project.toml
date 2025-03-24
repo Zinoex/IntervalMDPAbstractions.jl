@@ -11,11 +11,13 @@ IrrationalConstants = "92d709cd-6900-40b7-9082-c6be49f344b6"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Polyhedra = "67491407-f73d-577b-9b50-8179a7c68029"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 TaylorModels = "314ce334-5f6e-57ae-acf6-00b6e903104a"
 
 [compat]
+Polyhedra = "0.8.1"
 julia = "1.10"
 
 [extras]

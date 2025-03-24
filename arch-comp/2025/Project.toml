@@ -1,0 +1,10 @@
+[deps]
+ArchCompStochasticModels = "64888ec4-9db0-4860-a6f8-fd142b085b09"
+IntervalMDP = "051c988a-e73c-45a4-90ec-875cac0402c7"
+IntervalMDPAbstractions = "6214ee8e-79dc-449b-ae00-4c9ff82a02a9"
+LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+
+[sources]
+IntervalMDPAbstractions = {path = "../.."}
+ArchCompStochasticModels = {url = "https://github.com/Zinoex/ArchCompStochasticModels.jl", rev = "main"}
