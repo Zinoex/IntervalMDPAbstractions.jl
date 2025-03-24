@@ -5,7 +5,7 @@ using SpecialFunctions: erf
 using IrrationalConstants: invsqrt2
 using TaylorModels: TaylorModelN, set_variables, constant_term, linear_polynomial, remainder
 using IntervalArithmetic: IntervalBox, inf, sup
-using LazySets, IntervalMDP
+using Polyhedra, LazySets, IntervalMDP
 using HiGHS, JuMP
 
 function __init__()

@@ -143,14 +143,14 @@ function axis_transition_prob_bounds(
     Z::Hyperrectangle,
     axis::Int,
 )
-    z = Interval(low(Z, axis), high(Z, axis))
+    z = LazySets.Interval(low(Z, axis), high(Z, axis))
 
     return axis_transition_prob_bounds(gp_bounds, z, axis)
 end
 
 function axis_transition_prob_bounds(
     gp_bounds::AbstractedGaussianProcessRegion,
-    z::Interval,
+    z::LazySets.Interval,
     axis::Int,
 )
     # Compute the transition probability bounds for each dimension

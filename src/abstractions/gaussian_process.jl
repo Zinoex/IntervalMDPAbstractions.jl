@@ -144,7 +144,7 @@ function source_action_transition_prob(
         pl_outside, pu_outside = 1.0 - pu_outside, 1.0 - pl_outside
 
         # Transition to other states
-        axis_statespace = Interval(low(X, axis), high(X, axis))
+        axis_statespace = LazySets.Interval(low(X, axis), high(X, axis))
         split_axis = LazySets.split(axis_statespace, axisregions)
 
         for (tar_idx, target_region) in enumerate(split_axis)
