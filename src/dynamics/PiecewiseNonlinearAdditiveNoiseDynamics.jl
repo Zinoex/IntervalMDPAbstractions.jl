@@ -46,7 +46,7 @@ function (dyn::NonlinearDynamicsRegion)(
 
     # Extract the linear and constant terms + the remainder
     C = [constant_term(y[i]) for i = 1:LazySets.dim(X)]
-    Clow = inf.(C)
+    Clower = inf.(C)
     Cupper = sup.(C)
 
     AB = [
@@ -55,18 +55,18 @@ function (dyn::NonlinearDynamicsRegion)(
     ]
 
     A = AB[:, 1:LazySets.dim(X)]
-    Alow = inf.(A)
+    Alower = inf.(A)
     Aupper = sup.(A)
 
     B = AB[:, LazySets.dim(X)+1:end]
-    Blow = inf.(B)
+    Blower = inf.(B)
     Bupper = sup.(B)
 
     D = [remainder(y[i]) for i = 1:LazySets.dim(X)]
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alow * Translation(active_region, -x0) + Blow * Translation(U, -u0) + Clow + Dlower
+    Y1 = Alower * Translation(active_region, -x0) + Blower * Translation(U, -u0) + Clower + Dlower
     Y2 =
         Aupper * Translation(active_region, -x0) +
         Bupper * Translation(U, -u0) +
@@ -116,18 +116,18 @@ function (dyn::NonlinearDynamicsRegion)(
 
     # Extract the linear and constant terms + the remainder
     C = [constant_term(y[i]) for i = 1:LazySets.dim(X)]
-    Clow = inf.(C)
+    Clower = inf.(C)
     Cupper = sup.(C)
 
     A = [linear_polynomial(y[i])[1][j] for i = 1:LazySets.dim(X), j = 1:LazySets.dim(X)]
-    Alow = inf.(A)
+    Alower = inf.(A)
     Aupper = sup.(A)
 
     D = [remainder(y[i]) for i = 1:LazySets.dim(X)]
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alow * Translation(active_region, -x0) + Clow + Dlower
+    Y1 = Alower * Translation(active_region, -x0) + Clower + Dlower
     Y2 = Aupper * Translation(active_region, -x0) + Cupper + Dupper
 
     Yconv = ConvexHull(Y1, Y2)

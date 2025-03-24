@@ -88,7 +88,7 @@ function nominal(
 
     # Extract the linear and constant terms + the remainder
     C = [constant_term(y[i]) for i = 1:dimstate(dyn)]
-    Clow = inf.(C)
+    Clower = inf.(C)
     Cupper = sup.(C)
 
     AB = [
@@ -97,18 +97,18 @@ function nominal(
     ]
 
     A = AB[:, 1:dimstate(dyn)]
-    Alow = inf.(A)
+    Alower = inf.(A)
     Aupper = sup.(A)
 
     B = AB[:, dimstate(dyn)+1:end]
-    Blow = inf.(B)
+    Blower = inf.(B)
     Bupper = sup.(B)
 
     D = [remainder(y[i]) for i = 1:dimstate(dyn)]
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alow * Translation(X, -x0) + Blow * Translation(U, -u0) + Clow + Dlower
+    Y1 = Alower * Translation(X, -x0) + Blower * Translation(U, -u0) + Clower + Dlower
     Y2 = Aupper * Translation(X, -x0) + Bupper * Translation(U, -u0) + Cupper + Dupper
 
     Yconv = ConvexHull(Y1, Y2)
@@ -146,18 +146,18 @@ function nominal(
 
     # Extract the linear and constant terms + the remainder
     C = [constant_term(y[i]) for i = 1:dimstate(dyn)]
-    Clow = inf.(C)
+    Clower = inf.(C)
     Cupper = sup.(C)
 
     A = [linear_polynomial(y[i])[1][j] for i = 1:dimstate(dyn), j = 1:dimstate(dyn)]
-    Alow = inf.(A)
+    Alower = inf.(A)
     Aupper = sup.(A)
 
     D = [remainder(y[i]) for i = 1:dimstate(dyn)]
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alow * Translation(X, -x0) + Clow + Dlower
+    Y1 = Alower * Translation(X, -x0) + Clower + Dlower
     Y2 = Aupper * Translation(X, -x0) + Cupper + Dupper
 
     Yconv = ConvexHull(Y1, Y2)
