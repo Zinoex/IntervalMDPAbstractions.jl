@@ -188,3 +188,6 @@ system(prob::AbstractionProblem) = prob.system
 Return the specification of an abstraction problem.
 """
 specification(prob::AbstractionProblem) = prob.specification
+
+transform(spec::Specification, transformation::LinearTransformation) =
+    transform(spec.spec, transformation)

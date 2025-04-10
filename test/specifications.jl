@@ -61,6 +61,8 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
+            # TODO: Test transform
+
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
@@ -76,6 +78,8 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
+            # TODO: Test transform
+
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
@@ -90,6 +94,8 @@ end
             prop = FiniteTimeRegionSafety(avoid_region, horizon)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
+
+            # TODO: Test transform
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -110,6 +116,8 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
+            # TODO: Test transform
+
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
@@ -125,6 +133,8 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
+            # TODO: Test transform
+
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
@@ -139,6 +149,8 @@ end
             prop = InfiniteTimeRegionSafety(avoid_region, eps)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
+
+            # TODO: Test transform
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
