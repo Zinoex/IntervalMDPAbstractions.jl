@@ -4,12 +4,12 @@ using IntervalMDPAbstractions, LazySets
 τ = 0.1
 
 region1 = Hyperrectangle(low = [-1.0, -1.0], high = [0.0, 1.0])
-f(x, u) = [x[1] + x[2] * τ, x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * τ]
-dyn_reg1 = NonlinearDynamicsRegion(f, region1)
+f_piecewise(x, u) = [x[1] + x[2] * τ, x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * τ]
+dyn_reg1 = NonlinearDynamicsRegion(f_piecewise, region1)
 
 region2 = Hyperrectangle(low = [0.0, -1.0], high = [1.0, 1.0])
-g(x, u) = [x[1] + x[2] * τ, x[2] + (-x[2] + (1 - x[2])^2 * x[1]) * τ]
-dyn_reg2 = NonlinearDynamicsRegion(g, region2)
+g_piecewise(x, u) = [x[1] + x[2] * τ, x[2] + (-x[2] + (1 - x[2])^2 * x[1]) * τ]
+dyn_reg2 = NonlinearDynamicsRegion(g_piecewise, region2)
 
 w_stddev = [0.1, 0.1]
 w = AdditiveDiagonalGaussianNoise(w_stddev)
@@ -51,8 +51,8 @@ Y_expected = concretize(ConvexHull(Y1_expected, Y2_expected))
 
 #### Region-based actions
 region2 = Hyperrectangle(low = [0.0, -1.0], high = [1.0, 1.0])
-h(x, u) = [x[1] + x[2] * τ, x[2] + (-x[2] + (1 - x[2])^2 * x[1] + u[1]) * τ]
-dyn_reg2 = NonlinearDynamicsRegion(h, region2)
+h_piecewise(x, u) = [x[1] + x[2] * τ, x[2] + (-x[2] + (1 - x[2])^2 * x[1] + u[1]) * τ]
+dyn_reg2 = NonlinearDynamicsRegion(h_piecewise, region2)
 
 w_stddev = [0.1, 0.1]
 w = AdditiveDiagonalGaussianNoise(w_stddev)
@@ -97,6 +97,8 @@ Y2_expected =
 Y_expected = concretize(ConvexHull(Y1_expected, Y2_expected))
 @test isequivalent(Y, Y_expected)
 
+# TODO: Test transform
+
 # Vector inputs
 x = [0.5, 0.5]
 u = [0.0]
@@ -104,5 +106,5 @@ X = Singleton(x)
 U = Singleton(u)
 
 y = nominal(dyn, X, U)
-y_expected = g(x, u)
+y_expected = g_piecewise(x, u)
 @test element(y) ≈ y_expected

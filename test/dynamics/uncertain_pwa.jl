@@ -93,6 +93,8 @@ Y_expected = concretize(
 )
 @test isequivalent(Y, Y_expected)
 
+# TODO: Test transform
+
 # Vector states
 X = [-0.25, 0.25]
 a = 1

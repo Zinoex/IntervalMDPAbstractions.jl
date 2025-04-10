@@ -143,4 +143,6 @@ end
         @test all(IntervalMDP.reach(prop_grid) .== IntervalMDP.reach(prop_range))
         @test all(IntervalMDP.avoid(prop_grid) .== IntervalMDP.avoid(prop_range))
     end
+
+    # TODO: Test transform
 end

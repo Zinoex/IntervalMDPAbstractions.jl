@@ -3,7 +3,7 @@ using IntervalMDPAbstractions, LazySets
 
 # System definition
 sampling_time = 0.1
-f(x, u) = [
+f_nonlinear(x, u) = [
     x[1] + x[2] * sampling_time,
     x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * sampling_time + u[1],
 ]
@@ -12,7 +12,7 @@ w_variance = [0.2, 0.2]
 w_stddev = sqrt.(w_variance)
 w = AdditiveDiagonalGaussianNoise(w_stddev)
 
-dyn = NonlinearAdditiveNoiseDynamics(f, 2, 1, w)
+dyn = NonlinearAdditiveNoiseDynamics(f_nonlinear, 2, 1, w)
 initial_region = Hyperrectangle(low = [-1.0, -1.0], high = [1.0, 1.0])
 sys = System(dyn, initial_region)
 
@@ -38,6 +38,8 @@ Y_expected = concretize(
     MinkowskiSum(AXBUD, Hyperrectangle(low = [0.0, -0.0625], high = [0.0, 0.0625])),
 )
 @test isequivalent(Y, Y_expected)
+
+# TODO: Test transform
 
 # Singleton control
 X = Hyperrectangle(low = [0.0, 0.0], high = [1.0, 1.0])
