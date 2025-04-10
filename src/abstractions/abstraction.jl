@@ -101,11 +101,7 @@ function abstraction(
     spec = specification(prob)
 
     if decouplingmode(sys) isa CannotDecouple
-        throw(
-            ArgumentError(
-                "The system dynamics cannot be decoupled.",
-            ),
-        )
+        throw(ArgumentError("The system dynamics cannot be decoupled."))
     elseif decouplingmode(sys) isa LinearTransformationRequired
         T, sys = decouple(sys)
         spec = transform(spec, T)
@@ -278,11 +274,7 @@ function abstraction(
     spec = specification(prob)
 
     if decouplingmode(sys) isa CannotDecouple
-        throw(
-            ArgumentError(
-                "The system dynamics cannot be decoupled.",
-            ),
-        )
+        throw(ArgumentError("The system dynamics cannot be decoupled."))
     elseif decouplingmode(sys) isa LinearTransformationRequired
         T, sys = decouple(sys)
         spec = transform(spec, T)
@@ -496,11 +488,7 @@ function abstraction(
     spec = specification(prob)
 
     if decouplingmode(sys) isa CannotDecouple
-        throw(
-            ArgumentError(
-                "The system dynamics cannot be decoupled.",
-            ),
-        )
+        throw(ArgumentError("The system dynamics cannot be decoupled."))
     elseif decouplingmode(sys) isa LinearTransformationRequired
         T, sys = decouple(sys)
         spec = transform(spec, T)

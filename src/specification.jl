@@ -55,7 +55,10 @@ IntervalMDP.convergence_eps(prop::InfiniteTimeRegionReachability) = prop.converg
 reach(prop::InfiniteTimeRegionReachability) = prop.reach_set
 dim(prop::InfiniteTimeRegionReachability) = LazySets.dim(reach(prop))
 
-function transform(prop::InfiniteTimeRegionReachability, transformation::LinearTransformation)
+function transform(
+    prop::InfiniteTimeRegionReachability,
+    transformation::LinearTransformation,
+)
     reach_set = concretize(transformation.T * prop.reach_set)
     return InfiniteTimeRegionReachability(reach_set, prop.convergence_eps)
 end

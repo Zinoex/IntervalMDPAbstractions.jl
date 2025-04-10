@@ -1,6 +1,6 @@
 
 
-function odimdp_bs_cs1_safety(state_split=(5, 5, 7, 7), input_split=(4,))
+function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     arch_comp_problem = ArchCompStochasticModels.cs1_bas_finite_time_safety()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
@@ -21,17 +21,18 @@ function odimdp_bs_cs1_safety(state_split=(5, 5, 7, 7), input_split=(4,))
     arch_comp_prop = arch_comp_spec.underlying_spec
 
     prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)
-    spec = Specification(prop, Pessimistic, synthesismode2strategymode(arch_comp_spec.synthesis_mode))
+    spec = Specification(
+        prop,
+        Pessimistic,
+        synthesismode2strategymode(arch_comp_spec.synthesis_mode),
+    )
 
     abs_problem = AbstractionProblem(system, spec)
 
     # Define abstraction parameters
     safe_set_refinement = intersection(
         arch_comp_prop.safe_set,
-        Hyperrectangle(
-            [19.0, 19.0, 30.0, 30.0],
-            [21.0, 21.0, 36.0, 36.0],
-        ),
+        Hyperrectangle([19.0, 19.0, 30.0, 30.0], [21.0, 21.0, 36.0, 36.0]),
     )
     target_model = OrthogonalIMDPTarget()
     state_abs = StateUniformGridSplit(safe_set_refinement, state_split)
@@ -64,7 +65,7 @@ function odimdp_bs_cs1_safety(state_split=(5, 5, 7, 7), input_split=(4,))
     return maximum_lower_bound, maximum_error, total_time
 end
 
-function odimdp_bs_cs2_safety(state_split=(5, 5, 7, 7), input_split=(4,))
+function odimdp_bs_cs2_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     arch_comp_problem = ArchCompStochasticModels.cs1_bas_finite_time_safety()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
@@ -84,17 +85,18 @@ function odimdp_bs_cs2_safety(state_split=(5, 5, 7, 7), input_split=(4,))
     arch_comp_prop = arch_comp_spec.underlying_spec
 
     prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)
-    spec = Specification(prop, Pessimistic, synthesismode2strategymode(arch_comp_spec.synthesis_mode))
+    spec = Specification(
+        prop,
+        Pessimistic,
+        synthesismode2strategymode(arch_comp_spec.synthesis_mode),
+    )
 
     abs_problem = AbstractionProblem(system, spec)
 
     # Define abstraction parameters
     safe_set_refinement = intersection(
         arch_comp_prop.safe_set,
-        Hyperrectangle(
-            [19.0, 19.0, 30.0, 30.0],
-            [21.0, 21.0, 36.0, 36.0],
-        ),
+        Hyperrectangle([19.0, 19.0, 30.0, 30.0], [21.0, 21.0, 36.0, 36.0]),
     )
     target_model = OrthogonalIMDPTarget()
     state_abs = StateUniformGridSplit(safe_set_refinement, state_split)

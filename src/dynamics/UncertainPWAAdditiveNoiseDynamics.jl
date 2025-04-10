@@ -60,10 +60,7 @@ region(transformation::UncertainAffineRegion) = transformation.region
 inputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 2)
 outputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 1)
 
-function transform(
-    dyn::UncertainAffineRegion,
-    transformation::LinearTransformation,
-)
+function transform(dyn::UncertainAffineRegion, transformation::LinearTransformation)
     # Transform the region
     region = concretize(transformation.T * dyn.region)
 
@@ -73,13 +70,7 @@ function transform(
     Aupper = transformation.A * dyn.Aupper * transformation.Tinv
     Cupper = transformation.A * dyn.Cupper
 
-    return UncertainAffineRegion(
-        region,
-        Alower,
-        Clower,
-        Aupper,
-        Cupper,
-    )
+    return UncertainAffineRegion(region, Alower, Clower, Aupper, Cupper)
 end
 
 """
@@ -176,18 +167,11 @@ function transform(
 )
     # Transform the dynamics
     dynregions = deepcopy(dyn.dynregions)
-    for i in 1:length(dyn.dynregions)
-        for j in 1:length(dyn.dynregions[i])
-            dynregions[i][j] = transform(
-                dyn.dynregions[i][j],
-                transformation,
-            )
+    for i = 1:length(dyn.dynregions)
+        for j = 1:length(dyn.dynregions[i])
+            dynregions[i][j] = transform(dyn.dynregions[i][j], transformation)
         end
     end
 
-    return UncertainPWAAdditiveNoiseDynamics(
-        dimstate(dyn),
-        dynregions,
-        w,
-    )
+    return UncertainPWAAdditiveNoiseDynamics(dimstate(dyn), dynregions, w)
 end

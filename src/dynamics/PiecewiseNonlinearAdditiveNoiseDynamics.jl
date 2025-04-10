@@ -66,7 +66,11 @@ function (dyn::NonlinearDynamicsRegion)(
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alower * Translation(active_region, -x0) + Blower * Translation(U, -u0) + Clower + Dlower
+    Y1 =
+        Alower * Translation(active_region, -x0) +
+        Blower * Translation(U, -u0) +
+        Clower +
+        Dlower
     Y2 =
         Aupper * Translation(active_region, -x0) +
         Bupper * Translation(U, -u0) +
@@ -256,11 +260,7 @@ function nominal(
     end
 end
 
-function nominal(
-    dyn::PiecewiseNonlinearAdditiveNoiseDynamics,
-    X::Singleton{Float64},
-    u,
-)
+function nominal(dyn::PiecewiseNonlinearAdditiveNoiseDynamics, X::Singleton{Float64}, u)
     for region in dyn.regions
         if element(X) ∈ region.region
             return region(X, u)
@@ -288,7 +288,7 @@ end
 function transform(
     dyn::PiecewiseNonlinearAdditiveNoiseDynamics,
     transformation::LinearTransformation,
-    w::AdditiveNoiseStructure  # Noise is already transformed
+    w::AdditiveNoiseStructure,  # Noise is already transformed
 )
     # Transform the dynamics
     regions = [

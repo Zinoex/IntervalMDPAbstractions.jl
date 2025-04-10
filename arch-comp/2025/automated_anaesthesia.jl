@@ -1,9 +1,10 @@
 
 
-function odimdp_abs_faa_safety(state_split=(12, 20, 20), input_split=(3,))
+function odimdp_abs_faa_safety(state_split = (12, 20, 20), input_split = (3,))
 
     # Load the problem
-    arch_comp_problem = ArchCompStochasticModels.fully_automated_anaesthesia_finite_time_safety()
+    arch_comp_problem =
+        ArchCompStochasticModels.fully_automated_anaesthesia_finite_time_safety()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
 
@@ -24,7 +25,11 @@ function odimdp_abs_faa_safety(state_split=(12, 20, 20), input_split=(3,))
     @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeSafetySpecification
 
     prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)
-    spec = Specification(prop, Pessimistic, synthesismode2strategymode(arch_comp_spec.synthesis_mode))
+    spec = Specification(
+        prop,
+        Pessimistic,
+        synthesismode2strategymode(arch_comp_spec.synthesis_mode),
+    )
 
     abs_problem = AbstractionProblem(system, spec)
 
