@@ -7,7 +7,12 @@ Dynamics with additive noise, i.e. ``x_{k+1} = f(x_k, u_k) + w_k`` with some i.i
 """
 abstract type AdditiveNoiseDynamics <: DiscreteTimeStochasticDynamics end
 decouplingmode(dyn::AdditiveNoiseDynamics) = decouplingmode(noise(dyn))
-decouple(dyn::AdditiveNoiseStructure) = decouple(dyn, noise(dyn))
+function decouple(dyn::AdditiveNoiseDynamics)
+    transformation, w = decouple(noise(dyn))
+
+    dyn = transform(dyn, transformation, w)
+    return transformation, dyn
+end
 
 """
     nominal
@@ -45,7 +50,7 @@ For additive dynamics ``x_{k+1} = f(x_k, u_k) + w_k``, return ``w_k`` as a struc
 function noise end
 
 #### Noise structures
-export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise, AdditiveCentralUniformNoise
+export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise, AdditiveGaussianNoise, AdditiveCentralUniformNoise
 
 """
     AdditiveNoiseStructure
@@ -164,7 +169,7 @@ struct AdditiveGaussianNoise <: AdditiveNoiseStructure
     w_cov::Matrix{Float64}
 
     function AdditiveGaussianNoise(w_cov::Matrix{Float64})
-        if !isposdef(w_cov)
+        if eigmin(w_cov) < 0.0
             throw(ArgumentError("Covariance matrix must be positive definite"))
         end
         return new(w_cov)
@@ -172,7 +177,7 @@ struct AdditiveGaussianNoise <: AdditiveNoiseStructure
 end
 dim(w::AdditiveGaussianNoise) = size(w.w_cov, 1)
 decouplingmode(::AdditiveGaussianNoise) = LinearTransformationRequired()
-function decouple(dyn::AdditiveNoiseDynamics, w::AdditiveGaussianNoise)
+function decouple(w::AdditiveGaussianNoise)
     # Compute the SVD of the covariance matrix
     F = svd(w.w_cov)
     T = F.U'
@@ -182,10 +187,8 @@ function decouple(dyn::AdditiveNoiseDynamics, w::AdditiveGaussianNoise)
     stddev = sqrt.(F.S)
     w = AdditiveDiagonalGaussianNoise(stddev)
 
-    dyn = transform(dyn, transformation, w)
-
-    # Transform the dynamics
-    return T, dyn
+    # Transform the noise
+    return transformation, w
 end
 
 """
