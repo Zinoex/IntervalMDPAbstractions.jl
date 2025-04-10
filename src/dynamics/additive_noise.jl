@@ -119,9 +119,21 @@ end
 function axis_transition_prob_bounds(
     y::LazySets.Interval,
     z::LazySets.Interval,
-    w::AdditiveDiagonalGaussianNoise,
+    ::AdditiveDiagonalGaussianNoise,
     σ::Real,
 )
+    # Handle the special case where the standard deviation is zero (degenerate normal distribution)
+    if σ == 0.0
+        # y is the set of means, z is the destination set
+        if y ⊆ z  # any point in y is in z, so the transition is certain/deterministic
+            return 1.0, 1.0
+        elseif isdisjoint(y, z)  # no point in y is in z, so the transition is impossible
+            return 0.0, 0.0
+        else  # y and z overlap, so the transition is uncertain/non-deterministic
+            return 0.0, 1.0
+        end
+    end
+
     # Compute the transition probability bounds for each dimension
     cy, cz = center(y, 1), center(z, 1)
 
