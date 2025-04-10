@@ -1,26 +1,27 @@
 
 
-function imdp_abs_faa_safety()
+function odimdp_abs_faa_safety(state_split=(12, 20, 20), input_split=(3,))
+
+    # Load the problem
     arch_comp_problem = ArchCompStochasticModels.fully_automated_anaesthesia_finite_time_safety()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
 
     # Define the abstraction
     Tx = ArchCompStochasticModels.transition_kernel(arch_comp_system)
-    noise = AdditiveDiagonalGaussianNoise(sqrt.(Tx.variance))
+    stddev = sqrt.(Tx.variance)
+    noise = AdditiveDiagonalGaussianNoise(stddev)
 
-    nstate = ArchCompStochasticModels.num_continuous_dims(arch_comp_system)
     U = ArchCompStochasticModels.control_space(arch_comp_system)
-    ninput = LazySets.dim(U)
 
-    # I know the dynamics are linear, but I can wlog. use the nonlinear dynamics, via Taylor models tracing the mean function.
-    # It'll be a little slower, but it's a good test of the abstraction.
-    additive_dynamics = NonlinearAdditiveNoiseDynamics(Tx.mean, nstate, ninput, noise)
+    @assert Tx.mean isa Linear2
+    additive_dynamics = AffineAdditiveNoiseDynamics(Tx.mean.A, Tx.mean.B, noise)
     system = System(additive_dynamics)
 
     # Specification
     @assert arch_comp_spec isa ArchCompStochasticModels.ControllerSynthesisSpecification
     arch_comp_prop = arch_comp_spec.underlying_spec
+    @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeSafetySpecification
 
     prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)
     spec = Specification(prop, Pessimistic, synthesismode2strategymode(arch_comp_spec.synthesis_mode))
@@ -29,8 +30,8 @@ function imdp_abs_faa_safety()
 
     # Define abstraction parameters
     target_model = OrthogonalIMDPTarget()
-    state_abs = StateUniformGridSplit(arch_comp_prop.safe_set, (12, 20, 20))
-    input_abs = InputLinRange(U, (3,))
+    state_abs = StateUniformGridSplit(arch_comp_prop.safe_set, state_split)
+    input_abs = InputLinRange(U, input_split)
 
     # Abstract and compute lower bound - Warmup (and take values) then measure time
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
