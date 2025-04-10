@@ -84,15 +84,6 @@ function transition_prob(
     stateptr,
     target_model::AbstractOrthogonalIMDPTarget,
 )
-    if decouplingmode(noise(dyn)) isa CannotDecouple
-        throw(
-            ArgumentError(
-                "Cannot decouple noise dynamics with decoupling mode `CannotDecouple` for orthogonal IMDP target.",
-            ),
-        )
-    elseif decouplingmode(noise(dyn)) isa TransformationRequired
-        dyn = decouple(dyn, noise(dyn))
-    end
     prepare_nominal(dyn, input_abstraction)
 
     # The first state along each axis is absorbing, representing transitioning to outside the partitioned along that axis.

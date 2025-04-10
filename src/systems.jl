@@ -30,3 +30,10 @@ initial(sys) = sys.initial
 
 dimstate(sys::System) = dimstate(dynamics(sys))
 diminput(sys::System) = diminput(dynamics(sys))
+
+
+function decouple(sys::System)
+    T, dyn = decouple(dynamics(sys))
+    initial = concretize(T * sys.initial)
+    return T, System(dyn, initial)
+end

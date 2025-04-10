@@ -201,3 +201,14 @@ function prepare_nominal(dyn::NonlinearAdditiveNoiseDynamics, input_abstraction)
 
     return nothing
 end
+
+function transform(
+    dyn::NonlinearAdditiveNoiseDynamics,
+    transformation::LinearTransformation,
+    w::AdditiveNoiseStructure,  # Noise is already transformed
+)
+    # Transform the dynamics
+    f = (z, u) -> transformation.T * dyn.f(transformation.Tinv * z, u)
+
+    return NonlinearAdditiveNoiseDynamics(f, dimstate(dyn), diminput(dyn), w)
+end

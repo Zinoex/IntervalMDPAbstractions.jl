@@ -89,3 +89,16 @@ noise(dyn::AffineAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::AffineAdditiveNoiseDynamics) = size(dyn.A, 1)
 diminput(dyn::AffineAdditiveNoiseDynamics) = size(dyn.B, 2)
 prepare_nominal(::AffineAdditiveNoiseDynamics, input_abstraction) = nothing
+
+function transform(
+    dyn::AffineAdditiveNoiseDynamics,
+    transformation::LinearTransformation,
+    w::AdditiveNoiseStructure,  # Noise is already transformed
+)
+    # Transform the dynamics
+    A = transformation.T * dyn.A * transformation.Tinv
+    B = transformation.T * dyn.B
+    C = transformation.T * dyn.C
+
+    return AffineAdditiveNoiseDynamics(A, B, C, w)
+end

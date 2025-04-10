@@ -60,6 +60,28 @@ region(transformation::UncertainAffineRegion) = transformation.region
 inputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 2)
 outputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 1)
 
+function transform(
+    dyn::UncertainAffineRegion,
+    transformation::LinearTransformation,
+)
+    # Transform the region
+    region = concretize(transformation.T * dyn.region)
+
+    # Transform the dynamics
+    Alower = transformation.A * dyn.Alower * transformation.Tinv
+    Clower = transformation.A * dyn.Clower
+    Aupper = transformation.A * dyn.Aupper * transformation.Tinv
+    Cupper = transformation.A * dyn.Cupper
+
+    return UncertainAffineRegion(
+        region,
+        Alower,
+        Clower,
+        Aupper,
+        Cupper,
+    )
+end
+
 """
     UncertainPWAAdditiveNoiseDynamics
 
@@ -145,3 +167,27 @@ function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, x::AbstractVector, a::I
     throw(ArgumentError("The state is not in the domain of the dynamics"))
 end
 prepare_nominal(::UncertainPWAAdditiveNoiseDynamics, input_abstraction) = nothing
+
+
+function transform(
+    dyn::UncertainPWAAdditiveNoiseDynamics,
+    transformation::LinearTransformation,
+    w::AdditiveNoiseStructure,  # Noise is already transformed
+)
+    # Transform the dynamics
+    dynregions = deepcopy(dyn.dynregions)
+    for i in 1:length(dyn.dynregions)
+        for j in 1:length(dyn.dynregions[i])
+            dynregions[i][j] = transform(
+                dyn.dynregions[i][j],
+                transformation,
+            )
+        end
+    end
+
+    return UncertainPWAAdditiveNoiseDynamics(
+        dimstate(dyn),
+        dynregions,
+        w,
+    )
+end

@@ -284,3 +284,19 @@ function prepare_nominal(dyn::PiecewiseNonlinearAdditiveNoiseDynamics, input_abs
 
     return nothing
 end
+
+function transform(
+    dyn::PiecewiseNonlinearAdditiveNoiseDynamics,
+    transformation::LinearTransformation,
+    w::AdditiveNoiseStructure  # Noise is already transformed
+)
+    # Transform the dynamics
+    regions = [
+        NonlinearDynamicsRegion(
+            (z, u) -> transformation.T * region.f(transformation.Tinv * z, u),
+            concretize(transformation.T * region.region),
+        ) for region in dyn.regions
+    ]
+
+    return PiecewiseNonlinearAdditiveNoiseDynamics(regions, dimstate(dyn), diminput(dyn), w)
+end

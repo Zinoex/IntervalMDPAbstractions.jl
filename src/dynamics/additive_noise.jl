@@ -6,6 +6,8 @@ export AdditiveNoiseDynamics, nominal, prepare_nominal, noise
 Dynamics with additive noise, i.e. ``x_{k+1} = f(x_k, u_k) + w_k`` with some i.i.d. noise structure ``w_k``.
 """
 abstract type AdditiveNoiseDynamics <: DiscreteTimeStochasticDynamics end
+decouplingmode(dyn::AdditiveNoiseDynamics) = decouplingmode(noise(dyn))
+decouple(dyn::AdditiveNoiseStructure) = decouple(dyn, noise(dyn))
 
 """
     nominal
@@ -45,12 +47,6 @@ function noise end
 #### Noise structures
 export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise, AdditiveCentralUniformNoise
 
-abstract type CanDecouple end
-abstract type TransformationRequired <: CanDecouple end
-struct DirectDecoupling <: CanDecouple end
-struct LinearTransformationRequired <: TransformationRequired end
-struct CannotDecouple <: CanDecouple end
-
 """
     AdditiveNoiseStructure
 
@@ -77,7 +73,7 @@ end
 stddev(w::AdditiveDiagonalGaussianNoise) = w.w_stddev
 stddev(w::AdditiveDiagonalGaussianNoise, i) = w.w_stddev[i]
 dim(w::AdditiveDiagonalGaussianNoise) = length(w.w_stddev)
-decouplingmode(w::AdditiveDiagonalGaussianNoise) = DirectDecoupling()
+decouplingmode(::AdditiveDiagonalGaussianNoise) = DirectDecoupling()
 
 function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussianNoise)
     # Use the box approximation for the transition probability bounds, as 
@@ -163,17 +159,21 @@ struct AdditiveGaussianNoise <: AdditiveNoiseStructure
     end
 end
 dim(w::AdditiveGaussianNoise) = size(w.w_cov, 1)
-decouplingmode(w::AdditiveGaussianNoise) = LinearTransformationRequired()
+decouplingmode(::AdditiveGaussianNoise) = LinearTransformationRequired()
 function decouple(dyn::AdditiveNoiseDynamics, w::AdditiveGaussianNoise)
+    # Compute the SVD of the covariance matrix
+    F = svd(w.w_cov)
+    T = F.U'
+    Tinv = F.U
+    transformation = LinearTransformation(T, Tinv)
 
-    # Compute the Cholesky decomposition of the covariance matrix
-    L = cholesky(w.w_cov).L
+    stddev = sqrt.(F.S)
+    w = AdditiveDiagonalGaussianNoise(stddev)
 
-    # Compute the transformation matrix
-    A = LazySets.LinearTransformation(L)
+    dyn = transform(dyn, transformation, w)
 
     # Transform the dynamics
-    return AffineAdditiveNoiseDynamics(dyn, A)
+    return T, dyn
 end
 
 """
@@ -195,7 +195,7 @@ struct AdditiveCentralUniformNoise <: AdditiveNoiseStructure
     end
 end
 dim(w::AdditiveCentralUniformNoise) = length(w.r)
-decouplingmode(w::AdditiveCentralUniformNoise) = DirectDecoupling()
+decouplingmode(::AdditiveCentralUniformNoise) = DirectDecoupling()
 
 function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveCentralUniformNoise)
     # Use the box approximation for the transition probability bounds, as 

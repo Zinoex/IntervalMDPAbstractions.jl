@@ -231,6 +231,7 @@ struct AbstractedGaussianProcess{TU<:AbstractedGaussianProcessRegion} <:
 end
 dimstate(dyn::AbstractedGaussianProcess) = outputdim(first(first(dyn.dynregions)))
 diminput(dyn::AbstractedGaussianProcess) = 1
+decouplingmode(::AbstractedGaussianProcess) = DirectDecoupling()
 
 """
     gp_bounds(dyn::AbstractedGaussianProcess, X::LazySet, input::Int)

@@ -35,6 +35,11 @@ Return the dimension of the reach and avoid regions of a regional property.
 """
 dim(prop::FiniteTimeRegionReachability) = LazySets.dim(reach(prop))
 
+function transform(prop::FiniteTimeRegionReachability, transformation::LinearTransformation)
+    reach_set = concretize(transformation.T * prop.reach_set)
+    return FiniteTimeRegionReachability(reach_set, prop.time_horizon)
+end
+
 """
     InfiniteTimeRegionReachability
 
@@ -49,6 +54,11 @@ IntervalMDP.isfinitetime(::InfiniteTimeRegionReachability) = false
 IntervalMDP.convergence_eps(prop::InfiniteTimeRegionReachability) = prop.convergence_eps
 reach(prop::InfiniteTimeRegionReachability) = prop.reach_set
 dim(prop::InfiniteTimeRegionReachability) = LazySets.dim(reach(prop))
+
+function transform(prop::InfiniteTimeRegionReachability, transformation::LinearTransformation)
+    reach_set = concretize(transformation.T * prop.reach_set)
+    return InfiniteTimeRegionReachability(reach_set, prop.convergence_eps)
+end
 
 ## Reach-avoid
 abstract type AbstractRegionReachAvoid <: Property end
@@ -77,6 +87,12 @@ Return the avoid region of a reach-avoid or safety property.
 avoid(prop::FiniteTimeRegionReachAvoid) = prop.avoid_set
 dim(prop::FiniteTimeRegionReachAvoid) = LazySets.dim(reach(prop))
 
+function transform(prop::FiniteTimeRegionReachAvoid, transformation::LinearTransformation)
+    reach_set = concretize(transformation.T * prop.reach_set)
+    avoid_set = concretize(transformation.T * prop.avoid_set)
+    return FiniteTimeRegionReachAvoid(reach_set, avoid_set, prop.time_horizon)
+end
+
 """
     InfiniteTimeRegionReachAvoid
 
@@ -94,6 +110,12 @@ IntervalMDP.convergence_eps(prop::InfiniteTimeRegionReachAvoid) = prop.convergen
 reach(prop::InfiniteTimeRegionReachAvoid) = prop.reach_set
 avoid(prop::InfiniteTimeRegionReachAvoid) = prop.avoid_set
 dim(prop::InfiniteTimeRegionReachAvoid) = LazySets.dim(reach(prop))
+
+function transform(prop::InfiniteTimeRegionReachAvoid, transformation::LinearTransformation)
+    reach_set = concretize(transformation.T * prop.reach_set)
+    avoid_set = concretize(transformation.T * prop.avoid_set)
+    return InfiniteTimeRegionReachAvoid(reach_set, avoid_set, prop.convergence_eps)
+end
 
 ## Safety
 abstract type AbstractRegionSafety <: Property end
@@ -113,6 +135,11 @@ IntervalMDP.time_horizon(prop::FiniteTimeRegionSafety) = prop.time_horizon
 avoid(prop::FiniteTimeRegionSafety) = prop.avoid_set
 dim(prop::FiniteTimeRegionSafety) = LazySets.dim(avoid(prop))
 
+function transform(prop::FiniteTimeRegionSafety, transformation::LinearTransformation)
+    avoid_set = concretize(transformation.T * prop.avoid_set)
+    return FiniteTimeRegionSafety(avoid_set, prop.time_horizon)
+end
+
 """
     InfiniteTimeRegionSafety
 
@@ -127,6 +154,11 @@ IntervalMDP.isfinitetime(::InfiniteTimeRegionSafety) = false
 IntervalMDP.convergence_eps(prop::InfiniteTimeRegionSafety) = prop.convergence_eps
 avoid(prop::InfiniteTimeRegionSafety) = prop.avoid_set
 dim(prop::InfiniteTimeRegionSafety) = LazySets.dim(avoid(prop))
+
+function transform(prop::InfiniteTimeRegionSafety, transformation::LinearTransformation)
+    avoid_set = concretize(transformation.T * prop.avoid_set)
+    return InfiniteTimeRegionSafety(avoid_set, prop.convergence_eps)
+end
 
 ## Problem
 
