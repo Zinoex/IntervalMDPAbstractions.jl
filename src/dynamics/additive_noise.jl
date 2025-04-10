@@ -45,6 +45,11 @@ function noise end
 #### Noise structures
 export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise, AdditiveCentralUniformNoise
 
+abstract type CanDecouple end
+struct DirectDecoupling <: CanDecouple end
+struct LinearTransformationRequired <: CanDecouple end
+struct CannotDecouple <: CanDecouple end
+
 """
     AdditiveNoiseStructure
 
@@ -71,7 +76,7 @@ end
 stddev(w::AdditiveDiagonalGaussianNoise) = w.w_stddev
 stddev(w::AdditiveDiagonalGaussianNoise, i) = w.w_stddev[i]
 dim(w::AdditiveDiagonalGaussianNoise) = length(w.w_stddev)
-candecouple(w::AdditiveDiagonalGaussianNoise) = true
+decouplingmode(w::AdditiveDiagonalGaussianNoise) = DirectDecoupling()
 
 function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussianNoise)
     # Use the box approximation for the transition probability bounds, as 
@@ -141,6 +146,25 @@ function gaussian_transition(v, l, h, σ)
 end
 
 """
+    AdditiveGaussianNoise
+
+Additive Gaussian noise structure with zero mean, i.e. ``w_k \\sim \\mathcal{N}(0, \\mathrm{diag}(\\sigma))``.
+Zero mean is without loss of generality, since the mean can be absorbed into the nominal dynamics.
+"""
+struct AdditiveGaussianNoise <: AdditiveNoiseStructure
+    w_cov::Matrix{Float64}
+
+    function AdditiveGaussianNoise(w_cov::Matrix{Float64})
+        if !isposdef(w_cov)
+            throw(ArgumentError("Covariance matrix must be positive definite"))
+        end
+        return new(w_cov)
+    end
+end
+dim(w::AdditiveGaussianNoise) = size(w.w_cov, 1)
+decouplingmode(w::AdditiveGaussianNoise) = LinearTransformationRequired()
+
+"""
     AdditiveCentralUniformNoise
 
 Additive diagonal uniform noise structure, i.e. ``w_k \\sim \\mathcal{U}(-r, r)``. 
@@ -159,7 +183,7 @@ struct AdditiveCentralUniformNoise <: AdditiveNoiseStructure
     end
 end
 dim(w::AdditiveCentralUniformNoise) = length(w.r)
-candecouple(w::AdditiveCentralUniformNoise) = true
+decouplingmode(w::AdditiveCentralUniformNoise) = DirectDecoupling()
 
 function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveCentralUniformNoise)
     # Use the box approximation for the transition probability bounds, as 
