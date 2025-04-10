@@ -84,12 +84,14 @@ function transition_prob(
     stateptr,
     target_model::AbstractOrthogonalIMDPTarget,
 )
-    if !(decouplingmode(noise(dyn)) isa DirectDecoupling)
+    if decouplingmode(noise(dyn)) isa CannotDecouple
         throw(
             ArgumentError(
-                "Cannot decouple noise dynamics with decoupling mode $(decouplingmode(noise(dyn))) for orthogonal IMDP target.",
+                "Cannot decouple noise dynamics with decoupling mode `CannotDecouple` for orthogonal IMDP target.",
             ),
         )
+    elseif decouplingmode(noise(dyn)) isa TransformationRequired
+        dyn = decouple(dyn, noise(dyn))
     end
     prepare_nominal(dyn, input_abstraction)
 

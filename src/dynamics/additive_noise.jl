@@ -46,8 +46,9 @@ function noise end
 export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise, AdditiveCentralUniformNoise
 
 abstract type CanDecouple end
+abstract type TransformationRequired <: CanDecouple end
 struct DirectDecoupling <: CanDecouple end
-struct LinearTransformationRequired <: CanDecouple end
+struct LinearTransformationRequired <: TransformationRequired end
 struct CannotDecouple <: CanDecouple end
 
 """
@@ -163,6 +164,17 @@ struct AdditiveGaussianNoise <: AdditiveNoiseStructure
 end
 dim(w::AdditiveGaussianNoise) = size(w.w_cov, 1)
 decouplingmode(w::AdditiveGaussianNoise) = LinearTransformationRequired()
+function decouple(dyn::AdditiveNoiseDynamics, w::AdditiveGaussianNoise)
+
+    # Compute the Cholesky decomposition of the covariance matrix
+    L = cholesky(w.w_cov).L
+
+    # Compute the transformation matrix
+    A = LazySets.LinearTransformation(L)
+
+    # Transform the dynamics
+    return AffineAdditiveNoiseDynamics(dyn, A)
+end
 
 """
     AdditiveCentralUniformNoise
