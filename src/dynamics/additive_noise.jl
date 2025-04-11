@@ -179,12 +179,12 @@ dim(w::AdditiveGaussianNoise) = size(w.w_cov, 1)
 decouplingmode(::AdditiveGaussianNoise) = LinearTransformationRequired()
 function decouple(w::AdditiveGaussianNoise)
     # Compute the SVD of the covariance matrix
-    F = svd(w.w_cov)
-    T = F.U'
-    Tinv = F.U
+    F = eigen(w.w_cov)
+    T = F.vectors'
+    Tinv = F.vectors
     transformation = LinearTransformation(T, Tinv)
 
-    stddev = sqrt.(F.S)
+    stddev = sqrt.(F.values)
     w = AdditiveDiagonalGaussianNoise(stddev)
 
     # Transform the noise
