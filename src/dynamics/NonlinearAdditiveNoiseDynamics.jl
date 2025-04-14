@@ -81,20 +81,18 @@ function nominal(
     # set_variables(Float64, "z"; order=order, numvars=dimstate(dyn) + diminput(dyn))
 
     z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i = 1:dimstate(dyn)+diminput(dyn)]
-    x, u = (z-z0)[1:dimstate(dyn)], z[dimstate(dyn)+1:end]
+    x, u = z[1:dimstate(dyn)], z[dimstate(dyn)+1:end]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
 
     # Extract the linear and constant terms + the remainder
-    C = [constant_term(y[i]) for i = 1:dimstate(dyn)]
+    C = [yi[0][1] for yi in y]
     Clower = inf.(C)
     Cupper = sup.(C)
 
-    AB = [
-        linear_polynomial(y[i])[1][j] for i = 1:dimstate(dyn),
-        j = 1:dimstate(dyn)+diminput(dyn)
-    ]
+    AB = transpose([yi[1][:] for yi in y])
+    AB = reduce(vcat, AB)
 
     A = AB[:, 1:dimstate(dyn)]
     Alower = inf.(A)
@@ -104,7 +102,7 @@ function nominal(
     Blower = inf.(B)
     Bupper = sup.(B)
 
-    D = [remainder(y[i]) for i = 1:dimstate(dyn)]
+    D = remainder.(y)
     Dlower = inf.(D)
     Dupper = sup.(D)
 
@@ -145,15 +143,16 @@ function nominal(
     y = dyn.f(x, u)
 
     # Extract the linear and constant terms + the remainder
-    C = [constant_term(y[i]) for i = 1:dimstate(dyn)]
+    C = [yi[0][1] for yi in y]
     Clower = inf.(C)
     Cupper = sup.(C)
 
-    A = [linear_polynomial(y[i])[1][j] for i = 1:dimstate(dyn), j = 1:dimstate(dyn)]
+    A = transpose([yi[1][:] for yi in y])
+    A = reduce(vcat, A)
     Alower = inf.(A)
     Aupper = sup.(A)
 
-    D = [remainder(y[i]) for i = 1:dimstate(dyn)]
+    D = remainder.(y)
     Dlower = inf.(D)
     Dupper = sup.(D)
 
