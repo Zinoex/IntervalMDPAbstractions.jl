@@ -33,7 +33,7 @@ diminput(sys::System) = diminput(dynamics(sys))
 
 decouplingmode(sys::System) = decouplingmode(dynamics(sys))
 function decouple(sys::System)
-    T, dyn = decouple(dynamics(sys))
-    initial = concretize(T * sys.initial)
-    return T, System(dyn, initial)
+    transformation, dyn = decouple(dynamics(sys))
+    initial = concretize(transformation.T * sys.initial)
+    return transformation, System(dyn, initial)
 end
