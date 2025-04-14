@@ -69,15 +69,13 @@ function (dyn::NonlinearDynamicsRegion)(
     Y1 =
         Alower * Translation(active_region, -x0) +
         Blower * Translation(U, -u0) +
-        Clower +
-        Dlower
+        Clower
     Y2 =
         Aupper * Translation(active_region, -x0) +
         Bupper * Translation(U, -u0) +
-        Cupper +
-        Dupper
+        Cupper
 
-    Yconv = ConvexHull(Y1, Y2)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
 
     return Yconv
 end
@@ -131,10 +129,10 @@ function (dyn::NonlinearDynamicsRegion)(
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alower * Translation(active_region, -x0) + Clower + Dlower
-    Y2 = Aupper * Translation(active_region, -x0) + Cupper + Dupper
+    Y1 = Alower * Translation(active_region, -x0) + Clower
+    Y2 = Aupper * Translation(active_region, -x0) + Cupper
 
-    Yconv = ConvexHull(Y1, Y2)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
 
     return Yconv
 end

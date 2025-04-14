@@ -71,10 +71,9 @@ function nominal(
     # Use the Taylor model to over-approximate the reachable set
     order = 1
 
-    x0 = center(X)
-    u0 = center(U)
-    z0 = [x0; u0]
-    dom = IntervalBox([low(X); low(U)], [high(X); high(U)])
+    Z = CartesianProduct(X, U)
+    z0 = center(Z)
+    dom = IntervalBox(low(Z), high(Z))
 
     # TaylorSeries.jl modifieds the global state - eww...
     # Therefore, we prepare the global state before entering the threaded section.
@@ -94,22 +93,17 @@ function nominal(
     AB = transpose([yi[1][:] for yi in y])
     AB = reduce(vcat, AB)
 
-    A = AB[:, 1:dimstate(dyn)]
-    Alower = inf.(A)
-    Aupper = sup.(A)
-
-    B = AB[:, dimstate(dyn)+1:end]
-    Blower = inf.(B)
-    Bupper = sup.(B)
+    ABlower = inf.(AB)
+    ABupper = sup.(AB)
 
     D = remainder.(y)
     Dlower = inf.(D)
     Dupper = sup.(D)
+    
+    Y1 = AffineMap(ABlower, Translation(Z, -z0), Clower)
+    Y2 = AffineMap(ABupper, Translation(Z, -z0), Cupper)
 
-    Y1 = Alower * Translation(X, -x0) + Blower * Translation(U, -u0) + Clower + Dlower
-    Y2 = Aupper * Translation(X, -x0) + Bupper * Translation(U, -u0) + Cupper + Dupper
-
-    Yconv = ConvexHull(Y1, Y2)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
 
     return Yconv
 end
@@ -156,10 +150,10 @@ function nominal(
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alower * Translation(X, -x0) + Clower + Dlower
-    Y2 = Aupper * Translation(X, -x0) + Cupper + Dupper
+    Y1 = AffineMap(Alower, Translation(X, -x0), Clower)
+    Y2 = AffineMap(Aupper, Translation(X, -x0), Cupper)
 
-    Yconv = ConvexHull(Y1, Y2)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
 
     return Yconv
 end
@@ -207,7 +201,11 @@ function transform(
     w::AdditiveNoiseStructure,  # Noise is already transformed
 )
     # Transform the dynamics
-    f = (z, u) -> transformation.T * dyn.f(transformation.Tinv * z, u)
+    function f(z, u) 
+        x = transformation.Tinv * z
+        y = dyn.f(x, u)
+        return transformation.T * y
+    end
 
     return NonlinearAdditiveNoiseDynamics(f, dimstate(dyn), diminput(dyn), w)
 end
