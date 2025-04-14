@@ -61,7 +61,13 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
-            # TODO: Test transform
+            T = [
+                1.0 1.0;
+                -1.0 0.0
+            ]
+            Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
+            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -78,7 +84,14 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
-            # TODO: Test transform
+            T = [
+                1.0 0.0;
+                -1.0 2.0
+            ]
+            Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
+            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
+            @test IntervalMDPAbstractions.avoid(Tprop) == concretize(T * avoid_region)
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -95,7 +108,13 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
-            # TODO: Test transform
+            T = [
+                0.0 2.0;
+                -1.0 -2.0
+            ]
+            Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
+            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            @test IntervalMDPAbstractions.avoid(Tprop) == concretize(T * avoid_region)
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -116,7 +135,13 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
-            # TODO: Test transform
+            T = [
+                1.0 1.0;
+                -1.0 0.0
+            ]
+            Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
+            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -133,7 +158,14 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
-            # TODO: Test transform
+            T = [
+                1.0 0.0;
+                -1.0 2.0
+            ]
+            Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
+            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
+            @test IntervalMDPAbstractions.avoid(Tprop) == concretize(T * avoid_region)
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -150,7 +182,13 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
-            # TODO: Test transform
+            T = [
+                0.0 2.0;
+                -1.0 -2.0
+            ]
+            Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
+            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            @test IntervalMDPAbstractions.avoid(Tprop) == concretize(T * avoid_region)
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
