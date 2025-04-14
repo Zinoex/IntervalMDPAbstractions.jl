@@ -39,3 +39,31 @@ U = [2.0]
 
 Y = nominal(dyn, X, U)
 @test Y ≈ [1.5, 3.0]
+
+# Test transform
+w = AdditiveGaussianNoise([
+    0.3 0.1;
+    0.1 0.2
+])
+dyn = AffineAdditiveNoiseDynamics(A, B, w)
+sys = System(dyn, initial_region)
+
+Tx, sys = IntervalMDPAbstractions.decouple(sys)
+
+@test Tx.T ≈ [
+    0.5257311121191336 -0.8506508083520399
+    -0.8506508083520399 -0.5257311121191336
+]
+
+@test initial(sys) == concretize(Tx.T * initial_region)
+
+@test dimstate(sys) == 2
+@test diminput(sys) == 1
+
+# Hyperrectangular regions
+Z = Hyperrectangle(low = [0.0, 0.0], high = [1.0, 1.0])
+X = Tx.Tinv * Z
+U = Hyperrectangle(low = [0.0], high = [1.0])
+
+Y = concretize(nominal(dynamics(sys), Z, U))
+@test isequivalent(Y, concretize(Tx.T * A * X + Tx.T * B * U))
