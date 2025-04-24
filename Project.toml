@@ -18,6 +18,7 @@ TaylorModels = "314ce334-5f6e-57ae-acf6-00b6e903104a"
 
 [compat]
 Polyhedra = "0.8.1"
+SpecialFunctions = "2"
 LazySets = "4"
 julia = "1.10"
 
