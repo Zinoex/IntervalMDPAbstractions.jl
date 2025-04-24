@@ -17,6 +17,7 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 TaylorModels = "314ce334-5f6e-57ae-acf6-00b6e903104a"
 
 [compat]
+IntervalArithmetic = "0.22"
 JuMP = "1"
 IrrationalConstants = "0.2"
 Polyhedra = "0.8.1"
