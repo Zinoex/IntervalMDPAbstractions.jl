@@ -92,7 +92,8 @@ end
 
     @test transformation isa IntervalMDPAbstractions.LinearTransformation
     @test transformation.T == transformation.Tinv'
-    @test transformation.Tinv ≈ [
+
+    Tinv_expected = [
         0.0   0.0                  0.0                  0.0  1.0  0.0                 0.0
         0.0   0.0                  0.0                  1.0  0.0  0.0                 0.0
         0.0   0.0                  0.6795063045187845   0.0  0.0  0.0                 0.7336696682562424
@@ -100,7 +101,13 @@ end
         0.0   -0.6883261814564766  0.0                  0.0  0.0  0.7254013150812078  0.0
         0.0   0.7254013150812078   0.0                  0.0  0.0  0.6883261814564765  0.0
         1.0   0.0                  0.0                  0.0  0.0  0.0                 0.0
-    ]  atol=1e-6
+    ]
+
+    # For each eigenvector
+    for i in axes(Tinv_expected, 1)
+        # Check collinearity with expected eigenvector
+        @test rank([transformation.Tinv[i, :] Tinv_expected[i, :]], atol=1e-6) == 1
+    end
 end
 
 @testset "centrally uniform" begin
