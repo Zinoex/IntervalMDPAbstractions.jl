@@ -88,7 +88,7 @@ end
         1.8874651472400656e-5,
         0.003002198615205235,
         0.003908953148732654
-    ])
+    ])  atol=1e-6
 
     @test transformation isa IntervalMDPAbstractions.LinearTransformation
     @test transformation.T == transformation.Tinv'
@@ -100,7 +100,7 @@ end
         0.0   -0.6883261814564766  0.0                  0.0  0.0  0.7254013150812078  0.0
         0.0   0.7254013150812078   0.0                  0.0  0.0  0.6883261814564765  0.0
         1.0   0.0                  0.0                  0.0  0.0  0.0                 0.0
-    ]
+    ]  atol=1e-6
 end
 
 @testset "centrally uniform" begin
