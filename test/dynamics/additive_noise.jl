@@ -103,10 +103,15 @@ end
         1.0   0.0                  0.0                  0.0  0.0  0.0                 0.0
     ]
 
+    function check_collinearity(v1, v2)
+        # Check if vectors are collinear
+        return rank([v1 v2], atol=1e-6) == 1
+    end
+
     # For each eigenvector
-    for i in axes(Tinv_expected, 1)
+    for j in axes(Tinv_expected, 2)
         # Check collinearity with expected eigenvector
-        @test rank([transformation.Tinv[i, :] Tinv_expected[i, :]], atol=1e-6) == 1
+        @test check_collinearity(transformation.Tinv[:, j], Tinv_expected[:, j])
     end
 end
 
