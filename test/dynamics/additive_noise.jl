@@ -93,26 +93,8 @@ end
     @test transformation isa IntervalMDPAbstractions.LinearTransformation
     @test transformation.T == transformation.Tinv'
 
-    Tinv_expected = [
-        0.0   0.0                  0.0                  0.0  1.0  0.0                 0.0
-        0.0   0.0                  0.0                  1.0  0.0  0.0                 0.0
-        0.0   0.0                  0.6795063045187845   0.0  0.0  0.0                 0.7336696682562424
-        0.0   0.0                  -0.7336696682562424  0.0  0.0  0.0                 0.6795063045187845
-        0.0   -0.6883261814564766  0.0                  0.0  0.0  0.7254013150812078  0.0
-        0.0   0.7254013150812078   0.0                  0.0  0.0  0.6883261814564765  0.0
-        1.0   0.0                  0.0                  0.0  0.0  0.0                 0.0
-    ]
-
-    function check_collinearity(v1, v2)
-        # Check if vectors are collinear
-        return rank([v1 v2], atol=1e-6) == 1
-    end
-
-    # For each eigenvector
-    for j in axes(Tinv_expected, 2)
-        # Check collinearity with expected eigenvector
-        @test check_collinearity(transformation.Tinv[:, j], Tinv_expected[:, j])
-    end
+    transformed_Σ = transformation.T * full_Σ * transformation.Tinv
+    @test transformed_Σ ≈ Diagonal(IntervalMDPAbstractions.stddev(decoupled_w) .^ 2) atol=1e-6
 end
 
 @testset "centrally uniform" begin
