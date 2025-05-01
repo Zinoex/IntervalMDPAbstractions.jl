@@ -136,13 +136,11 @@ dimstate(dyn::UncertainPWAAdditiveNoiseDynamics) = dyn.dimstate
 diminput(dyn::UncertainPWAAdditiveNoiseDynamics) = 1
 noise(dyn::UncertainPWAAdditiveNoiseDynamics) = dyn.w
 function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, X::LazySet, a::Integer)
-    # Subtract epsilon from set to avoid numerical issues
-    eps_ball = BallInf(zeros(LazySets.dim(X)), 1e-6)
-    Xquery = minkowski_difference(X, eps_ball)
+    reachable_set = EmptySet(dimstate(dyn))
 
     for dynregion in dyn.dynregions[a]
-        if issubset(Xquery, region(dynregion))
-            return overapproximate(dynregion, X)
+        if !iszeromeasure(region(dynregion), X)
+            reachable_set = ConvexHull(reachable_set, overapproximate(dynregion, X))
         end
     end
 
