@@ -189,5 +189,8 @@ Return the specification of an abstraction problem.
 """
 specification(prob::AbstractionProblem) = prob.specification
 
-transform(spec::Specification, transformation::LinearTransformation) =
-    transform(spec.spec, transformation)
+function transform(spec::Specification, transformation::LinearTransformation) 
+    prop = transform(system_property(spec), transformation)
+    spec = Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+    return spec
+end
