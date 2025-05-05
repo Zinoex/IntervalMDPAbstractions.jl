@@ -52,10 +52,14 @@ struct UncertainAffineRegion{T,VT<:AbstractVector{T},MT<:AbstractMatrix{T},S<:La
         new{T,VT,MT,S}(region, Alower, Clower, Aupper, Cupper)
     end
 end
-overapproximate(transformation::UncertainAffineRegion, input::LazySet) = ConvexHull(
-    transformation.Alower * input + transformation.Clower,
-    transformation.Aupper * input + transformation.Cupper,
+function overapproximate(transformation::UncertainAffineRegion, input::LazySet) 
+    overlapping_region = Intersection(region(transformation), input)
+
+    return ConvexHull(   
+        transformation.Alower * overlapping_region + transformation.Clower,
+        transformation.Aupper * overlapping_region + transformation.Cupper,
 )
+end
 region(transformation::UncertainAffineRegion) = transformation.region
 inputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 2)
 outputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 1)
@@ -65,10 +69,10 @@ function transform(dyn::UncertainAffineRegion, transformation::LinearTransformat
     region = concretize(transformation.T * dyn.region)
 
     # Transform the dynamics
-    Alower = transformation.A * dyn.Alower * transformation.Tinv
-    Clower = transformation.A * dyn.Clower
-    Aupper = transformation.A * dyn.Aupper * transformation.Tinv
-    Cupper = transformation.A * dyn.Cupper
+    Alower = transformation.T * dyn.Alower * transformation.Tinv
+    Clower = transformation.T * dyn.Clower
+    Aupper = transformation.T * dyn.Aupper * transformation.Tinv
+    Cupper = transformation.T * dyn.Cupper
 
     return UncertainAffineRegion(region, Alower, Clower, Aupper, Cupper)
 end
@@ -144,7 +148,7 @@ function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, X::LazySet, a::Integer)
         end
     end
 
-    throw(ArgumentError("The state is not in the domain of the dynamics"))
+    return reachable_set
 end
 function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, x::AbstractVector, a::Integer)
     for dynregion in dyn.dynregions[a]
@@ -164,12 +168,14 @@ function transform(
     w::AdditiveNoiseStructure,  # Noise is already transformed
 )
     # Transform the dynamics
-    dynregions = deepcopy(dyn.dynregions)
+    new_dynregions = Vector{UncertainAffineRegion}[]
     for i = 1:length(dyn.dynregions)
+        dynregions = UncertainAffineRegion[]
         for j = 1:length(dyn.dynregions[i])
-            dynregions[i][j] = transform(dyn.dynregions[i][j], transformation)
+            push!(dynregions, transform(dyn.dynregions[i][j], transformation))
         end
+        push!(new_dynregions, dynregions)
     end
 
-    return UncertainPWAAdditiveNoiseDynamics(dimstate(dyn), dynregions, w)
+    return UncertainPWAAdditiveNoiseDynamics(dimstate(dyn), new_dynregions, w)
 end
