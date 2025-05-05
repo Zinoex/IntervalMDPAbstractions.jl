@@ -77,29 +77,60 @@ w = AdditiveDiagonalGaussianNoise(w_stddev)
 dyn = UncertainPWAAdditiveNoiseDynamics(2, [upwa_action1, upwa_action2], w)
 
 @test noise(dyn) == w
-@test dimstate(sys) == 2
-@test diminput(sys) == 1
+@test dimstate(dyn) == 2
+@test diminput(dyn) == 1
 
 # Nominal dynamics
-X = Hyperrectangle(low = [0.0, -0.5], high = [0.5, 0.0])
-a = 2
+@testset "nominal_dynamics" begin
+    X = Hyperrectangle(low = [0.0, -0.5], high = [0.5, 0.0])
+    a = 2
 
-Y = concretize(nominal(dyn, X, a))
-Y_expected = concretize(
-    ConvexHull(
-        AffineMap([1.0 0.1; -0.2 1.1], X, [0.0, 0.5]),
-        AffineMap([1.0 0.1; 0.0 1.1], X, [0.0, 0.5]),
-    ),
-)
-@test isequivalent(Y, Y_expected)
+    Y = concretize(nominal(dyn, X, a))
+    Y_expected = concretize(
+        ConvexHull(
+            AffineMap([1.0 0.1; -0.2 1.1], X, [0.0, 0.5]),
+            AffineMap([1.0 0.1; 0.0 1.1], X, [0.0, 0.5]),
+        ),
+    )
+    @test isequivalent(Y, Y_expected)
+end
 
 # TODO: Test transform
+@testset "linear_transformation" begin
+    Tx = IntervalMDPAbstractions.LinearTransformation(
+        [
+            0.5 2.0; 
+            0.0 2.0
+        ],
+        [
+            1.0 0.8; 
+            0.0 0.6
+        ],
+    )
+
+    dyn_transformed = IntervalMDPAbstractions.transform(dyn, Tx, w)
+    X = Hyperrectangle(low = [-0.5, -0.5], high = [0.5, 0.0])
+    a = 2
+    Y = concretize(nominal(dyn_transformed, X, a))
+
+    region_1 = Zonotope{Float64, Vector{Float64}, Matrix{Float64}}([-0.625, -0.5], [0.125 0.5; 0.0 0.5])
+    region_2 = Zonotope{Float64, Vector{Float64}, Matrix{Float64}}([-0.375, -0.5], [0.125 0.5; 0.0 0.5])
+    Y_expected = concretize(
+        ConvexHull(
+            AffineMap(Tx.T * [1.0 0.1; -0.2 1.1] * Tx.Tinv, X, Tx.T * [0.0, 0.5]),
+            AffineMap(Tx.T * [1.0 0.1; 0.0 1.1] * Tx.Tinv, X, Tx.T * [0.0, 0.5]),
+        ),
+    )
+    @test isequivalent(Y, Y_expected)
+end
 
 # Vector states
-X = [-0.25, 0.25]
-a = 1
+@testset "vector_input" begin
+    X = [-0.25, 0.25]
+    a = 1
 
-Y = concretize(nominal(dyn, X, a))
-Y_expected =
-    VPolytope([[1.0 0.1; -0.3 1.1] * X + [0.0, 0.5], [1.0 0.1; 0.3 1.1] * X + [0.0, 0.5]])
-@test isequivalent(Y, Y_expected)
+    Y = concretize(nominal(dyn, X, a))
+    Y_expected =
+        VPolytope([[1.0 0.1; -0.3 1.1] * X + [0.0, 0.5], [1.0 0.1; 0.3 1.1] * X + [0.0, 0.5]])
+    @test isequivalent(Y, Y_expected)
+end
