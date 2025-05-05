@@ -7,3 +7,35 @@ iszeromeasure(X::Complement, Y::LazySet) = issubset(Y, X.X)
 iszeromeasure(X::EmptySet, Y::LazySet) = true
 iszeromeasure(X::LazySet, Y::EmptySet) = true
 iszeromeasure(X::EmptySet, Y::EmptySet) = true
+
+
+function iszeromeasure(X::AbstractPolyhedron, Y::AbstractPolyhedron)
+    if isdisjoint(X, Y)  # Short-circuit if there exists some set specific disjointness test.
+        return true
+    end
+
+    n = LazySets.dim(X)
+    if LazySets.dim(Y) != n
+        throw(ArgumentError("Dimension mismatch: $(LazySets.dim(X)) != $(LazySets.dim(Y))"))
+    end
+    
+    model = Model(HiGHS.Optimizer)
+    set_string_names_on_creation(model, false)
+    set_silent(model)
+
+    @variable(model, x[1:n])
+    @variable(model, x₀, upper_bound=1.0)
+
+    @objective(model, Max, 1.0 * x₀)
+
+    # Intuitively, if x₀ > 0 then the intersection is full-dimensional.
+    H, h = tosimplehrep(X)
+    @constraint(model, H * x .+ x₀ .≤ h)
+    H, h = tosimplehrep(Y)
+    @constraint(model, H * x .+ x₀ .≤ h)
+
+    optimize!(model)
+
+    iszeromeasure = objective_value(model) ≤ 0
+    return iszeromeasure
+end
