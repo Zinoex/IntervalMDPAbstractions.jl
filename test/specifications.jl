@@ -60,14 +60,19 @@ end
             prop = FiniteTimeRegionReachability(reach_region, horizon)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
+            
+            @test IntervalMDPAbstractions.dim(prop) == 2
 
             T = [
                 1.0 1.0;
                 -1.0 0.0
             ]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
-            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            Tspec = IntervalMDPAbstractions.transform(spec, Tx)
+            Tprop = system_property(Tspec)
             @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
+            @test satisfaction_mode(Tspec) == Pessimistic
+            @test strategy_mode(Tspec) == Maximize
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -83,15 +88,20 @@ end
             prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, horizon)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
+            
+            @test IntervalMDPAbstractions.dim(prop) == 2
 
             T = [
                 1.0 0.0;
                 -1.0 2.0
             ]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
-            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            Tspec = IntervalMDPAbstractions.transform(spec, Tx)
+            Tprop = system_property(Tspec)
             @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
             @test IntervalMDPAbstractions.avoid(Tprop) == concretize(T * avoid_region)
+            @test satisfaction_mode(Tspec) == Pessimistic
+            @test strategy_mode(Tspec) == Maximize
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -107,14 +117,19 @@ end
             prop = FiniteTimeRegionSafety(avoid_region, horizon)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
+            
+            @test IntervalMDPAbstractions.dim(prop) == 2
 
             T = [
                 0.0 2.0;
                 -1.0 -2.0
             ]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
-            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            Tspec = IntervalMDPAbstractions.transform(spec, Tx)
+            Tprop = system_property(Tspec)
             @test IntervalMDPAbstractions.avoid(Tprop) == concretize(T * avoid_region)
+            @test satisfaction_mode(Tspec) == Pessimistic
+            @test strategy_mode(Tspec) == Maximize
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -134,14 +149,19 @@ end
             prop = InfiniteTimeRegionReachability(reach_region, eps)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
+            
+            @test IntervalMDPAbstractions.dim(prop) == 2
 
             T = [
                 1.0 1.0;
                 -1.0 0.0
             ]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
-            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            Tspec = IntervalMDPAbstractions.transform(spec, Tx)
+            Tprop = system_property(Tspec)
             @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
+            @test satisfaction_mode(Tspec) == Pessimistic
+            @test strategy_mode(Tspec) == Maximize
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -158,14 +178,19 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
+            @test IntervalMDPAbstractions.dim(prop) == 2
+
             T = [
                 1.0 0.0;
                 -1.0 2.0
             ]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
-            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            Tspec = IntervalMDPAbstractions.transform(spec, Tx)
+            Tprop = system_property(Tspec)
             @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
             @test IntervalMDPAbstractions.avoid(Tprop) == concretize(T * avoid_region)
+            @test satisfaction_mode(Tspec) == Pessimistic
+            @test strategy_mode(Tspec) == Maximize
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
@@ -182,13 +207,18 @@ end
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
 
+            @test IntervalMDPAbstractions.dim(prop) == 2
+
             T = [
                 0.0 2.0;
                 -1.0 -2.0
             ]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
-            Tprop = IntervalMDPAbstractions.transform(prop, Tx)
+            Tspec = IntervalMDPAbstractions.transform(spec, Tx)
+            Tprop = system_property(Tspec)
             @test IntervalMDPAbstractions.avoid(Tprop) == concretize(T * avoid_region)
+            @test satisfaction_mode(Tspec) == Pessimistic
+            @test strategy_mode(Tspec) == Maximize
 
             prob = AbstractionProblem(sys, spec)
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
