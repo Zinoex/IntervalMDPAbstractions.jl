@@ -170,7 +170,7 @@ struct AdditiveGaussianNoise <: AdditiveNoiseStructure
 
     function AdditiveGaussianNoise(w_cov::Matrix{Float64})
         if eigmin(w_cov) < 0.0
-            throw(ArgumentError("Covariance matrix must be positive definite"))
+            throw(ArgumentError("Covariance matrix must be positive semi-definite"))
         end
         return new(w_cov)
     end
