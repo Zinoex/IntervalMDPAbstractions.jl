@@ -19,6 +19,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     # Specification
     @assert arch_comp_spec isa ArchCompStochasticModels.ControllerSynthesisSpecification
     arch_comp_prop = arch_comp_spec.underlying_spec
+    @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeSafetySpecification
 
     prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)
     spec = Specification(
@@ -29,7 +30,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
 
     abs_problem = AbstractionProblem(system, spec)
 
-    # Define abstraction parameters (boxx_approximation is going to be exact)
+    # Define abstraction parameters (box_approximation is going to be exact)
     # safe_set_refinement = box_approximation(Intersection(
     #     Hyperrectangle(;low=[19.5, 19.5, 30.0, 30.0], high=[20.5, 20.5, 36.0, 36.0]),
     #     arch_comp_prop.safe_set,
@@ -40,8 +41,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     state_abs = StateUniformGridSplit(safe_set_refinement, state_split)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound, and measure time using BenchmarkTools
-    # TODO: Switch to using BenchmarkTools
+    # Abstract and compute lower bound, then warmup and measure time.
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
@@ -68,8 +68,8 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     return maximum_lower_bound, maximum_error, total_time
 end
 
-function odimdp_bs_cs2_safety(state_split = (5, 5, 7, 7), input_split = (4,))
-    arch_comp_problem = ArchCompStochasticModels.cs1_bas_finite_time_safety()
+function odimdp_bs_cs2_safety(state_split = (10, 15, 8, 8, 8, 8, 8), input_split = (8,))
+    arch_comp_problem = ArchCompStochasticModels.cs2_bas_finite_time_safety()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
 
@@ -86,6 +86,7 @@ function odimdp_bs_cs2_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     # Specification
     @assert arch_comp_spec isa ArchCompStochasticModels.ControllerSynthesisSpecification
     arch_comp_prop = arch_comp_spec.underlying_spec
+    @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeSafetySpecification
 
     prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)
     spec = Specification(
@@ -96,17 +97,19 @@ function odimdp_bs_cs2_safety(state_split = (5, 5, 7, 7), input_split = (4,))
 
     abs_problem = AbstractionProblem(system, spec)
 
-    # Define abstraction parameters
-    safe_set_refinement = intersection(
-        arch_comp_prop.safe_set,
-        Hyperrectangle(;low=[19.0, 19.0, 30.0, 30.0], high=[21.0, 21.0, 36.0, 36.0]),
-    )
-    target_model = OrthogonalIMDPTarget()
+
+    # Define abstraction parameters (box_approximation is going to be exact)
+    # safe_set_refinement = box_approximation(Intersection(
+    #     Hyperrectangle(;low=[19.5, 19.0, 18.0, 18.0, 18.0, 18.0, 18.0], high=[20.5, 22.0, 22.0, 22.0, 22.0, 22.0, 22.0]),
+    #     arch_comp_prop.safe_set,
+    # ))
+    safe_set_refinement = Hyperrectangle(;low=[19.5, 19.0, 18.0, 18.0, 18.0, 18.0, 18.0], high=[20.5, 22.0, 22.0, 22.0, 22.0, 22.0, 22.0])
+    @assert safe_set_refinement ⊆ arch_comp_prop.safe_set
+    target_model = SparseOrthogonalIMDPTarget()
     state_abs = StateUniformGridSplit(safe_set_refinement, state_split)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound, and measure time using BenchmarkTools
-    # TODO: Switch to using BenchmarkTools
+    # Abstract and compute lower bound, then warmup and measure time.
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
@@ -125,10 +128,26 @@ function odimdp_bs_cs2_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     Vupper, k, res, = value_iteration(upper_bound_problem)
     vi_upper_time = @elapsed value_iteration(upper_bound_problem)
 
+    # Measure memory usage
+    mem_bytes = Base.summarysize(upper_bound_problem) + 2 * Base.summarysize(Vupper)
+    mem_mb = mem_bytes / 1024^2
+
+    # Terminal states
+    # The terminal states may not match between the upper and lower bound spec due to the non-alignment
+    # with the gridding. The important set of terminal states for the statistics are the lower bound
+    # terminal states.
+    tstates = terminal_states(system_property(lower_bound_spec))  
+    Vlower_nonterm = Vlower[Not(tstates)]
+    Vupper_nonterm = Vupper[Not(tstates)]
+    error_nonterm = Vupper_nonterm - Vlower_nonterm
+
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time + vi_upper_time
-    maximum_lower_bound = maximum(Vlower)
-    maximum_error = maximum(Vupper - Vlower)
 
-    return maximum_lower_bound, maximum_error, total_time
+    min_lb, max_lb, mean_lb = minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
+    lb = (min=min_lb, max=max_lb, mean=mean_lb)
+    min_error, max_error, mean_error = minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
+    error = (min=min_error, max=max_error, mean=mean_error)
+
+    return (lb=lb, error=error, mem=mem_mb, time=total_time)
 end
