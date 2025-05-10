@@ -1,6 +1,6 @@
 
 
-function odimdp_abs_faa_safety(state_split = (12, 20, 20), input_split = (3,))
+function odimdp_as_faa_safety(state_split = (12, 20, 20), input_split = (3,))
 
     # Load the problem
     arch_comp_problem =
@@ -38,7 +38,8 @@ function odimdp_abs_faa_safety(state_split = (12, 20, 20), input_split = (3,))
     state_abs = StateUniformGridSplit(arch_comp_prop.safe_set, state_split)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound - Warmup (and take values) then measure time
+    # Abstract and compute lower bound, and measure time using BenchmarkTools
+    # TODO: Switch to using BenchmarkTools
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
