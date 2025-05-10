@@ -29,16 +29,19 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
 
     abs_problem = AbstractionProblem(system, spec)
 
-    # Define abstraction parameters
-    safe_set_refinement = intersection(
-        arch_comp_prop.safe_set,
-        Hyperrectangle([19.0, 19.0, 30.0, 30.0], [21.0, 21.0, 36.0, 36.0]),
-    )
+    # Define abstraction parameters (boxx_approximation is going to be exact)
+    # safe_set_refinement = box_approximation(Intersection(
+    #     Hyperrectangle(;low=[19.5, 19.5, 30.0, 30.0], high=[20.5, 20.5, 36.0, 36.0]),
+    #     arch_comp_prop.safe_set,
+    # ))
+    safe_set_refinement = Hyperrectangle(;low=[19.5, 19.5, 30.0, 30.0], high=[20.5, 20.5, 36.0, 36.0])
+    @assert safe_set_refinement ⊆ arch_comp_prop.safe_set
     target_model = OrthogonalIMDPTarget()
     state_abs = StateUniformGridSplit(safe_set_refinement, state_split)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound - Warmup (and take values) then measure time
+    # Abstract and compute lower bound, and measure time using BenchmarkTools
+    # TODO: Switch to using BenchmarkTools
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
@@ -96,13 +99,14 @@ function odimdp_bs_cs2_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     # Define abstraction parameters
     safe_set_refinement = intersection(
         arch_comp_prop.safe_set,
-        Hyperrectangle([19.0, 19.0, 30.0, 30.0], [21.0, 21.0, 36.0, 36.0]),
+        Hyperrectangle(;low=[19.0, 19.0, 30.0, 30.0], high=[21.0, 21.0, 36.0, 36.0]),
     )
     target_model = OrthogonalIMDPTarget()
     state_abs = StateUniformGridSplit(safe_set_refinement, state_split)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound - Warmup (and take values) then measure time
+    # Abstract and compute lower bound, and measure time using BenchmarkTools
+    # TODO: Switch to using BenchmarkTools
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
