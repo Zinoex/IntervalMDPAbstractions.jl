@@ -18,7 +18,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
 
     # Specification
     @assert arch_comp_spec isa ArchCompStochasticModels.ControllerSynthesisSpecification
-    arch_comp_prop = arch_comp_spec.underlying_spec
+    arch_comp_prop = arch_comp_spec.underlying_prop
     @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeSafetySpecification
 
     prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)
@@ -85,7 +85,7 @@ function odimdp_bs_cs2_safety(state_split = (10, 15, 8, 8, 8, 8, 8), input_split
 
     # Specification
     @assert arch_comp_spec isa ArchCompStochasticModels.ControllerSynthesisSpecification
-    arch_comp_prop = arch_comp_spec.underlying_spec
+    arch_comp_prop = arch_comp_spec.underlying_prop
     @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeSafetySpecification
 
     prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)

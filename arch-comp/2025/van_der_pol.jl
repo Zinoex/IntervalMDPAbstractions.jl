@@ -19,7 +19,7 @@ function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,
 
     # Specification
     @assert arch_comp_spec isa ArchCompStochasticModels.ControllerSynthesisSpecification
-    arch_comp_prop = arch_comp_spec.underlying_spec
+    arch_comp_prop = arch_comp_spec.underlying_prop
     @assert arch_comp_prop isa ArchCompStochasticModels.InfiniteTimeReachAvoidSpecification
 
     # Encode avoid set as through the region of interest (transitioning to outside the region of interest

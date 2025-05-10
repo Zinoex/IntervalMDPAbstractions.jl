@@ -13,6 +13,7 @@ end
 include("automated_anaesthesia.jl")
 include("building_automation_system.jl")
 include("van_der_pol.jl")
+include("integration_chain.jl")
 
 function run_all_benchmarks()
 

@@ -28,6 +28,17 @@ function convert_specification(
 end
 
 function convert_specification(
+    spec::Specification{<:ExactTimeRegionReachability},
+    state_abstraction::StateUniformGridSplit,
+    target_model,
+)
+    reach, avoid = convert_property(spec, state_abstraction, target_model)
+    prop = ExactTimeReachAvoid(reach, avoid, time_horizon(system_property(spec)))
+
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+end
+
+function convert_specification(
     spec::Specification{<:FiniteTimeRegionReachAvoid},
     state_abstraction::StateUniformGridSplit,
     target_model,
@@ -45,6 +56,17 @@ function convert_specification(
 )
     reach, avoid = convert_property(spec, state_abstraction, target_model)
     prop = InfiniteTimeReachAvoid(reach, avoid, convergence_eps(system_property(spec)))
+
+    return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
+end
+
+function convert_specification(
+    spec::Specification{<:ExactTimeRegionReachAvoid},
+    state_abstraction::StateUniformGridSplit,
+    target_model,
+)
+    reach, avoid = convert_property(spec, state_abstraction, target_model)
+    prop = ExactTimeReachAvoid(reach, avoid, time_horizon(system_property(spec)))
 
     return Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
 end

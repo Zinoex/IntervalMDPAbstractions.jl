@@ -21,7 +21,7 @@ function odimdp_as_faa_safety(state_split = (12, 20, 20), input_split = (3,))
 
     # Specification
     @assert arch_comp_spec isa ArchCompStochasticModels.ControllerSynthesisSpecification
-    arch_comp_prop = arch_comp_spec.underlying_spec
+    arch_comp_prop = arch_comp_spec.underlying_prop
     @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeSafetySpecification
 
     prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)

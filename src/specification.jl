@@ -1,7 +1,7 @@
-export AbstractRegionReachability,
-    FiniteTimeRegionReachability, InfiniteTimeRegionReachability, reach, dim
-export AbstractRegionReachAvoid,
-    FiniteTimeRegionReachAvoid, InfiniteTimeRegionReachAvoid, avoid
+export AbstractRegionReachability, FiniteTimeRegionReachability, InfiniteTimeRegionReachability, 
+    ExactTimeRegionReachability, reach, dim
+export AbstractRegionReachAvoid, FiniteTimeRegionReachAvoid, InfiniteTimeRegionReachAvoid,
+    ExactTimeRegionReachAvoid, avoid
 export AbstractRegionSafety, FiniteTimeRegionSafety, InfiniteTimeRegionSafety
 export AbstractionProblem, system, specification
 
@@ -63,6 +63,29 @@ function transform(
     return InfiniteTimeRegionReachability(reach_set, prop.convergence_eps)
 end
 
+"""
+    ExactTimeRegionReachability
+
+A struct representing a exact-time reachability property.
+"""
+struct ExactTimeRegionReachability{S<:LazySet,T<:Integer} <: AbstractRegionReachability
+    reach_set::S
+    time_horizon::T
+end
+
+IntervalMDP.isfinitetime(::ExactTimeRegionReachability) = true
+IntervalMDP.time_horizon(prop::ExactTimeRegionReachability) = prop.time_horizon
+reach(prop::ExactTimeRegionReachability) = prop.reach_set
+dim(prop::ExactTimeRegionReachability) = LazySets.dim(reach(prop))
+
+function transform(
+    prop::ExactTimeRegionReachability,
+    transformation::LinearTransformation,
+)
+    reach_set = concretize(transformation.T * prop.reach_set)
+    return ExactTimeRegionReachability(reach_set, prop.convergence_eps)
+end
+
 ## Reach-avoid
 abstract type AbstractRegionReachAvoid <: Property end
 
@@ -118,6 +141,30 @@ function transform(prop::InfiniteTimeRegionReachAvoid, transformation::LinearTra
     reach_set = concretize(transformation.T * prop.reach_set)
     avoid_set = concretize(transformation.T * prop.avoid_set)
     return InfiniteTimeRegionReachAvoid(reach_set, avoid_set, prop.convergence_eps)
+end
+
+"""
+    ExactTimeRegionReachAvoid
+
+A struct representing a Exact-time reach-avoid property.
+"""
+struct ExactTimeRegionReachAvoid{S<:LazySet,R<:LazySet,T<:Integer} <:
+       AbstractRegionReachAvoid
+    reach_set::S
+    avoid_set::R
+    time_horizon::T
+end
+
+IntervalMDP.isfinitetime(::ExactTimeRegionReachAvoid) = true
+IntervalMDP.time_horizon(prop::ExactTimeRegionReachAvoid) = prop.time_horizon
+reach(prop::ExactTimeRegionReachAvoid) = prop.reach_set
+avoid(prop::ExactTimeRegionReachAvoid) = prop.avoid_set
+dim(prop::ExactTimeRegionReachAvoid) = LazySets.dim(reach(prop))
+
+function transform(prop::ExactTimeRegionReachAvoid, transformation::LinearTransformation)
+    reach_set = concretize(transformation.T * prop.reach_set)
+    avoid_set = concretize(transformation.T * prop.avoid_set)
+    return ExactTimeRegionReachAvoid(reach_set, avoid_set, prop.convergence_eps)
 end
 
 ## Safety
