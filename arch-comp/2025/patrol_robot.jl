@@ -1,6 +1,6 @@
 
 
-function odimdp_pr_it_r(state_split = (21, 21), input_split = (11, 11))
+function odimdp_rpr_it_r(state_split = (21, 21), input_split = (11, 11))
 
     # Load the problem
     arch_comp_problem =
@@ -83,7 +83,7 @@ function odimdp_pr_it_r(state_split = (21, 21), input_split = (11, 11))
 end
 
 
-function odimdp_pr_it_ra(state_split = (41, 41), input_split = (21, 21))
+function odimdp_rpr_it_ra(state_split = (41, 41), input_split = (21, 21))
 
     # Load the problem
     arch_comp_problem =
