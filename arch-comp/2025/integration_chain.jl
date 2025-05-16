@@ -60,6 +60,7 @@ function odimdp_ic_et_reach_avoid(n; state_split_per_dim = 20, input_split = (10
 
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time
+    time = (abstraction=abstraction_time, vi_lower=vi_lower_time, total=total_time)
 
     min_lb, max_lb, mean_lb = minimum(Vlower), maximum(Vlower), mean(Vlower)
     lb = (min=min_lb, max=max_lb, mean=mean_lb)
@@ -71,7 +72,7 @@ function odimdp_ic_et_reach_avoid(n; state_split_per_dim = 20, input_split = (10
         end
     end
 
-    return (lb=lb, volume=volume, mem=mem_mb, time=total_time)
+    return (lb=lb, volume=volume, mem=mem_mb, time=time)
 end
 
 function lebesguemeasure(X::Hyperrectangle)

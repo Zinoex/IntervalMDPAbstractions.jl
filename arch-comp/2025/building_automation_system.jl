@@ -60,12 +60,29 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     Vupper, k, res, = value_iteration(upper_bound_problem)
     vi_upper_time = @elapsed value_iteration(upper_bound_problem)
 
+    # Measure memory usage
+    mem_bytes = Base.summarysize(upper_bound_problem) + 2 * Base.summarysize(Vupper)
+    mem_mb = mem_bytes / 1024^2
+
+    # Terminal states
+    # The terminal states may not match between the upper and lower bound spec due to the non-alignment
+    # with the gridding. The important set of terminal states for the statistics are the lower bound
+    # terminal states.
+    tstates = terminal_states(system_property(lower_bound_spec))  
+    Vlower_nonterm = Vlower[Not(tstates)]
+    Vupper_nonterm = Vupper[Not(tstates)]
+    error_nonterm = Vupper_nonterm - Vlower_nonterm
+
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time + vi_upper_time
-    maximum_lower_bound = maximum(Vlower)
-    maximum_error = maximum(Vupper - Vlower)
+    time = (abstraction=abstraction_time, vi_lower=vi_lower_time, vi_upper=vi_upper_time, total=total_time)
 
-    return maximum_lower_bound, maximum_error, total_time
+    min_lb, max_lb, mean_lb = minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
+    lb = (min=min_lb, max=max_lb, mean=mean_lb)
+    min_error, max_error, mean_error = minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
+    error = (min=min_error, max=max_error, mean=mean_error)
+
+    return (lb=lb, error=error, mem=mem_mb, time=time)
 end
 
 function odimdp_bs_cs2_safety(state_split = (10, 15, 8, 8, 8, 8, 8), input_split = (8,))
@@ -143,11 +160,12 @@ function odimdp_bs_cs2_safety(state_split = (10, 15, 8, 8, 8, 8, 8), input_split
 
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time + vi_upper_time
+    time = (abstraction=abstraction_time, vi_lower=vi_lower_time, vi_upper=vi_upper_time, total=total_time)
 
     min_lb, max_lb, mean_lb = minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
     lb = (min=min_lb, max=max_lb, mean=mean_lb)
     min_error, max_error, mean_error = minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
     error = (min=min_error, max=max_error, mean=mean_error)
 
-    return (lb=lb, error=error, mem=mem_mb, time=total_time)
+    return (lb=lb, error=error, mem=mem_mb, time=time)
 end

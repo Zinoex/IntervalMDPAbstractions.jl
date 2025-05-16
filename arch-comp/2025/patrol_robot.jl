@@ -73,13 +73,14 @@ function odimdp_rpr_it_r(state_split = (21, 21), input_split = (11, 11))
 
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time + vi_upper_time
+    time = (abstraction=abstraction_time, vi_lower=vi_lower_time, vi_upper=vi_upper_time, total=total_time)
 
     min_lb, max_lb, mean_lb = minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
     lb = (min=min_lb, max=max_lb, mean=mean_lb)
     min_error, max_error, mean_error = minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
     error = (min=min_error, max=max_error, mean=mean_error)
 
-    return (lb=lb, error=error, mem=mem_mb, time=total_time)
+    return (lb=lb, error=error, mem=mem_mb, time=time)
 end
 
 
