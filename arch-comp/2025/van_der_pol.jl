@@ -39,7 +39,7 @@ function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,
     state_abs = StateUniformGridSplit(region_of_interest, state_split)
     input_abs = InputLinRange(Usub, input_split)
 
-    # Abstract and compute lower bound, then warmup and measure time.
+    # Abstract and compute bounds; warmup then measure time.
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)

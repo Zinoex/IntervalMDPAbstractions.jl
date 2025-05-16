@@ -89,13 +89,11 @@ function odimdp_av_ft_ra(state_split = (6, 6, 5, 5, 7, 5, 5), input_split = (5, 
     U = ArchCompStochasticModels.control_space(arch_comp_system)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound, then warmup and measure time.
-    odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
-    abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
+    # Abstract and compute bounds - warmup is neglible for a problem this big.
+    abstraction_time = @elapsed odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
 
-    policy, Vlower, k, res = control_synthesis(lower_bound_problem)
-    vi_lower_time = @elapsed value_iteration(lower_bound_problem)
+    vi_lower_time = @elapsed policy, Vlower, k, res = control_synthesis(lower_bound_problem)
 
     # Compute upper bound
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
@@ -105,8 +103,7 @@ function odimdp_av_ft_ra(state_split = (6, 6, 5, 5, 7, 5, 5), input_split = (5, 
         target_model,
     )
     upper_bound_problem = Problem(odimdp, upper_bound_spec, policy)
-    Vupper, k, res, = value_iteration(upper_bound_problem)
-    vi_upper_time = @elapsed value_iteration(upper_bound_problem)
+    vi_upper_time = @elapsed Vupper, k, res, = value_iteration(upper_bound_problem)
 
     # Measure memory usage
     mem_bytes = Base.summarysize(upper_bound_problem) + 2 * Base.summarysize(Vupper)

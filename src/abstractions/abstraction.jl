@@ -127,6 +127,7 @@ function abstraction(
     elseif decouplingmode(sys) isa LinearTransformationRequired
         T, sys = decouple(sys)
         spec = transform(spec, T)
+        state_abstraction = transform(state_abstraction, T)
     end
 
     # State pointer
@@ -300,6 +301,7 @@ function abstraction(
     elseif decouplingmode(sys) isa LinearTransformationRequired
         T, sys = decouple(sys)
         spec = transform(spec, T)
+        state_abstraction = transform(state_abstraction, T)
     end
 
     # State pointer
@@ -514,6 +516,7 @@ function abstraction(
     elseif decouplingmode(sys) isa LinearTransformationRequired
         T, sys = decouple(sys)
         spec = transform(spec, T)
+        state_abstraction = transform(state_abstraction, T)
     end
 
     # State pointer

@@ -41,7 +41,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     state_abs = StateUniformGridSplit(safe_set_refinement, state_split)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound, then warmup and measure time.
+    # Abstract and compute bounds; warmup then measure time.
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
@@ -85,7 +85,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     return (lb=lb, error=error, mem=mem_mb, time=time)
 end
 
-function odimdp_bs_cs2_safety(state_split = (10, 15, 8, 8, 8, 8, 8), input_split = (8,))
+function odimdp_bs_cs2_safety(state_split = (10, 15, 6, 6, 6, 6, 6), input_split = (4,))
     arch_comp_problem = ArchCompStochasticModels.cs2_bas_finite_time_safety()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
@@ -105,7 +105,11 @@ function odimdp_bs_cs2_safety(state_split = (10, 15, 8, 8, 8, 8, 8), input_split
     arch_comp_prop = arch_comp_spec.underlying_prop
     @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeSafetySpecification
 
-    prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)
+    avoid_set = Complement(arch_comp_prop.safe_set)
+    # Since the safe set is a hyperrectangle, then just encode safety
+    # via the region of interest.
+    avoid_set = EmptySet(LazySets.dim(avoid_set))
+    prop = FiniteTimeRegionSafety(avoid_set, arch_comp_prop.N)
     spec = Specification(
         prop,
         Pessimistic,
@@ -122,17 +126,16 @@ function odimdp_bs_cs2_safety(state_split = (10, 15, 8, 8, 8, 8, 8), input_split
     # ))
     safe_set_refinement = Hyperrectangle(;low=[19.5, 19.0, 18.0, 18.0, 18.0, 18.0, 18.0], high=[20.5, 22.0, 22.0, 22.0, 22.0, 22.0, 22.0])
     @assert safe_set_refinement ⊆ arch_comp_prop.safe_set
-    target_model = SparseOrthogonalIMDPTarget()
+    target_model = OrthogonalIMDPTarget()
     state_abs = StateUniformGridSplit(safe_set_refinement, state_split)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound, then warmup and measure time.
-    odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
-    abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
+    # Abstract and compute bounds - warmup is neglible for a problem this big.
+    abstraction_time = @elapsed odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
 
-    policy, Vlower, k, res = control_synthesis(lower_bound_problem)
-    vi_lower_time = @elapsed value_iteration(lower_bound_problem)
+    
+    vi_lower_time = @elapsed policy, Vlower, k, res = control_synthesis(lower_bound_problem)
 
     # Compute upper bound
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
@@ -142,8 +145,7 @@ function odimdp_bs_cs2_safety(state_split = (10, 15, 8, 8, 8, 8, 8), input_split
         target_model,
     )
     upper_bound_problem = Problem(odimdp, upper_bound_spec, policy)
-    Vupper, k, res, = value_iteration(upper_bound_problem)
-    vi_upper_time = @elapsed value_iteration(upper_bound_problem)
+    vi_upper_time = @elapsed Vupper, k, res, = value_iteration(upper_bound_problem)
 
     # Measure memory usage
     mem_bytes = Base.summarysize(upper_bound_problem) + 2 * Base.summarysize(Vupper)

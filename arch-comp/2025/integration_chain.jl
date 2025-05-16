@@ -43,7 +43,7 @@ function odimdp_ic_et_reach_avoid(n; state_split_per_dim = 20, input_split = (10
     state_abs = StateUniformGridSplit(Complement(arch_comp_prop.avoid_set), ntuple(_ -> state_split_per_dim, n))
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound, then warmup and measure time.
+    # Abstract and compute bounds; warmup then measure time.
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)

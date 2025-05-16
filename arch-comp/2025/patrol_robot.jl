@@ -39,7 +39,7 @@ function odimdp_rpr_it_r(state_split = (21, 21), input_split = (11, 11))
     state_abs = StateUniformGridSplit(X, state_split)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound, then warmup and measure time.
+    # Abstract and compute bounds; warmup then measure time.
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
@@ -123,7 +123,7 @@ function odimdp_rpr_it_ra(state_split = (41, 41), input_split = (21, 21))
     state_abs = StateUniformGridSplit(X, state_split)
     input_abs = InputLinRange(U, input_split)
 
-    # Abstract and compute lower bound, then warmup and measure time.
+    # Abstract and compute bounds; warmup then measure time.
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
