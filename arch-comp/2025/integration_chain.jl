@@ -48,8 +48,12 @@ function odimdp_ic_et_reach_avoid(n; state_split_per_dim = 20, input_split = (10
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
 
+    @info "Abstraction constructed"
+
     Vlower, _, _ = value_iteration(lower_bound_problem)
     vi_lower_time = @elapsed value_iteration(lower_bound_problem)
+
+    @info "Lower bound computed"
 
     # Measure memory usage
     mem_bytes = Base.summarysize(lower_bound_problem) + 2 * Base.summarysize(Vlower)
