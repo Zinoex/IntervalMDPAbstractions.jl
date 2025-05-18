@@ -39,7 +39,7 @@ function run_all_benchmarks()
     @info "Completed Reduced Patrol Robot Benchmark" res
 
     @info "Running Automated Vehicle Benchmark..."
-    res = odimdp_av_it_ra()
+    res = odimdp_av_ft_ra()
     @info "Completed Automated Vehicle Benchmark" res
 
     @info "Running Integration Chain Benchmark..."

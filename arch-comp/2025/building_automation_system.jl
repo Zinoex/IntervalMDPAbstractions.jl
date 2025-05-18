@@ -46,8 +46,12 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     abstraction_time = @elapsed abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
 
+    @info "Abstraction constructed"
+
     policy, Vlower, k, res = control_synthesis(lower_bound_problem)
     vi_lower_time = @elapsed value_iteration(lower_bound_problem)
+
+    @info "Lower bound computed"
 
     # Compute upper bound
     upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
@@ -59,6 +63,8 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     upper_bound_problem = Problem(odimdp, upper_bound_spec, policy)
     Vupper, k, res, = value_iteration(upper_bound_problem)
     vi_upper_time = @elapsed value_iteration(upper_bound_problem)
+
+    @info "Upper bound computed"
 
     # Measure memory usage
     mem_bytes = Base.summarysize(upper_bound_problem) + 2 * Base.summarysize(Vupper)
