@@ -103,8 +103,8 @@ function transition_prob(
         source_region = regions(state_abstraction)[Ilinear]
         for input in inputs(input_abstraction)
             # To decouple, we need to construct a hyperrectangle around the nominal one-step reachable region
-            nominal(dyn, source_region, input)
-            box_approximation(Yhat)
+            Yhat = nominal(dyn, source_region, input)
+            Y = box_approximation(Yhat)
 
             source_action_transition_prob(
                 dyn,
