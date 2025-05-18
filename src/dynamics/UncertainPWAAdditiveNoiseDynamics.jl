@@ -53,7 +53,7 @@ struct UncertainAffineRegion{T,VT<:AbstractVector{T},MT<:AbstractMatrix{T},S<:La
     end
 end
 function overapproximate(transformation::UncertainAffineRegion, input::LazySet) 
-    overlapping_region = Intersection(region(transformation), input)
+    overlapping_region = intersection(region(transformation), input)
 
     return ConvexHull(   
         transformation.Alower * overlapping_region + transformation.Clower,
@@ -144,7 +144,7 @@ function nominal(dyn::UncertainPWAAdditiveNoiseDynamics, X::LazySet, a::Integer)
 
     for dynregion in dyn.dynregions[a]
         if !iszeromeasure(region(dynregion), X)
-            reachable_set = ConvexHull(reachable_set, overapproximate(dynregion, X))
+            reachable_set = UnionSet(reachable_set, overapproximate(dynregion, X))
         end
     end
 

@@ -64,8 +64,8 @@ function source_action_transition_prob(
         pl, pu = transition_prob_bounds(Y, target_region, noise(dyn))
 
         if includetransition(target_model, pu)
-            prob_lower[tar_idx, srcact_idx] = pl
-            prob_upper[tar_idx, srcact_idx] = pu
+            @inbounds prob_lower[tar_idx, srcact_idx] = pl
+            @inbounds prob_upper[tar_idx, srcact_idx] = pu
         else  # Allow sparsifying via adding probability to the absorbing avoid state
             pl_outside = pl_outside + pl
             pu_outside = pu_outside + pu
@@ -73,8 +73,8 @@ function source_action_transition_prob(
     end
 
     # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-    prob_lower[end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
-    prob_upper[end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
+    @inbounds prob_lower[end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
+    @inbounds prob_upper[end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
 end
 
 function transition_prob(
@@ -103,8 +103,8 @@ function transition_prob(
         source_region = regions(state_abstraction)[Ilinear]
         for input in inputs(input_abstraction)
             # To decouple, we need to construct a hyperrectangle around the nominal one-step reachable region
-            Yhat = nominal(dyn, source_region, input)
-            Y = box_approximation(Yhat)
+            nominal(dyn, source_region, input)
+            box_approximation(Yhat)
 
             source_action_transition_prob(
                 dyn,
@@ -159,8 +159,8 @@ function source_action_transition_prob(
             pl, pu = axis_transition_prob_bounds(Y, target_region, w, axis)
 
             if includetransition(target_model, pu)
-                prob_lower[axis][tar_idx, srcact_idx] = pl
-                prob_upper[axis][tar_idx, srcact_idx] = pu
+                @inbounds prob_lower[axis][tar_idx, srcact_idx] = pl
+                @inbounds prob_upper[axis][tar_idx, srcact_idx] = pu
             else  # Allow sparsifying via adding probability to the absorbing avoid state
                 pl_outside = pl_outside + pl
                 pu_outside = pu_outside + pu
@@ -168,7 +168,7 @@ function source_action_transition_prob(
         end
 
         # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-        prob_lower[axis][end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
-        prob_upper[axis][end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
+        @inbounds prob_lower[axis][end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
+        @inbounds prob_upper[axis][end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
     end
 end

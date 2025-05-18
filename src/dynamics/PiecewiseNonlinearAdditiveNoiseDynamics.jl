@@ -25,9 +25,8 @@ function (dyn::NonlinearDynamicsRegion)(
     end
     active_region_box = box_approximation(active_region)
 
-    x0 = center(active_region_box)
-    u0 = center(U)
-    z0 = [x0; u0]
+    Z = CartesianProduct(active_region_box, U)
+    z0 = center(Z)
     dom = IntervalBox([low(active_region_box); low(U)], [high(active_region_box); high(U)])
 
     # TaylorSeries.jl modifieds the global state - eww...
@@ -39,41 +38,28 @@ function (dyn::NonlinearDynamicsRegion)(
         TaylorModelN(i, order, IntervalBox(z0), dom) for
         i = 1:LazySets.dim(X)+LazySets.dim(U)
     ]
-    x, u = (z-z0)[1:LazySets.dim(X)], z[LazySets.dim(X)+1:end]
+    x, u = z[1:LazySets.dim(X)], z[LazySets.dim(X)+1:end]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
 
     # Extract the linear and constant terms + the remainder
-    C = [constant_term(y[i]) for i = 1:LazySets.dim(X)]
+    C = [yi[0][1] for yi in y]
     Clower = inf.(C)
     Cupper = sup.(C)
 
-    AB = [
-        linear_polynomial(y[i])[1][j] for i = 1:LazySets.dim(X),
-        j = 1:LazySets.dim(X)+LazySets.dim(U)
-    ]
+    AB = transpose([yi[1][:] for yi in y])
+    AB = reduce(vcat, AB)
 
-    A = AB[:, 1:LazySets.dim(X)]
-    Alower = inf.(A)
-    Aupper = sup.(A)
+    ABlower = inf.(AB)
+    ABupper = sup.(AB)
 
-    B = AB[:, LazySets.dim(X)+1:end]
-    Blower = inf.(B)
-    Bupper = sup.(B)
-
-    D = [remainder(y[i]) for i = 1:LazySets.dim(X)]
+    D = remainder.(y)
     Dlower = inf.(D)
     Dupper = sup.(D)
-
-    Y1 =
-        Alower * Translation(active_region, -x0) +
-        Blower * Translation(U, -u0) +
-        Clower
-    Y2 =
-        Aupper * Translation(active_region, -x0) +
-        Bupper * Translation(U, -u0) +
-        Cupper
+    
+    Y1 = AffineMap(ABlower, Translation(Z, -z0), Clower)
+    Y2 = AffineMap(ABupper, Translation(Z, -z0), Cupper)
 
     Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
 
@@ -117,20 +103,21 @@ function (dyn::NonlinearDynamicsRegion)(
     y = dyn.f(x, u)
 
     # Extract the linear and constant terms + the remainder
-    C = [constant_term(y[i]) for i = 1:LazySets.dim(X)]
+    C = [yi[0][1] for yi in y]
     Clower = inf.(C)
     Cupper = sup.(C)
 
-    A = [linear_polynomial(y[i])[1][j] for i = 1:LazySets.dim(X), j = 1:LazySets.dim(X)]
+    A = transpose([yi[1][:] for yi in y])
+    A = reduce(vcat, A)
     Alower = inf.(A)
     Aupper = sup.(A)
 
-    D = [remainder(y[i]) for i = 1:LazySets.dim(X)]
+    D = remainder.(y)
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alower * Translation(active_region, -x0) + Clower
-    Y2 = Aupper * Translation(active_region, -x0) + Cupper
+    Y1 = AffineMap(Alower, Translation(active_region, -x0), Clower)
+    Y2 = AffineMap(Aupper, Translation(active_region, -x0), Cupper)
 
     Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
 
@@ -238,7 +225,7 @@ function nominal(
 
     for region in dyn.regions
         if !iszeromeasure(region.region, X)
-            reachable_set = ConvexHull(reachable_set, region(X, u))
+            reachable_set = UnionSet(reachable_set, region(X, u))
         end
     end
 
