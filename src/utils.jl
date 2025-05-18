@@ -8,8 +8,17 @@ iszeromeasure(X::EmptySet, Y::LazySet) = true
 iszeromeasure(X::LazySet, Y::EmptySet) = true
 iszeromeasure(X::EmptySet, Y::EmptySet) = true
 
+iszeromeasure(X::AbstractPolyhedron, Y::AbstractPolyhedron) = _iszeromeasure(Y, X)
 
-function iszeromeasure(X::AbstractPolyhedron, Y::AbstractPolyhedron)
+function iszeromeasure(X::LazySet, Y::LazySet)
+    if ispolyhedral(X) && ispolyhedral(Y)
+        return _iszeromeasure(X, Y)
+    end
+
+    error("iszeromeasure not implemented for $(typeof(X)) and $(typeof(Y))")
+end
+
+function _iszeromeasure(X::LazySet, Y::LazySet)
     if isdisjoint(X, Y)  # Short-circuit if there exists some set specific disjointness test.
         return true
     end
