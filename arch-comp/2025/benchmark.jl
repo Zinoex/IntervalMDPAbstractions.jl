@@ -34,9 +34,13 @@ function run_all_benchmarks()
     res = odimdp_vp_gauss_quantitative()
     @info "Completed controlled Gaussian Van der Pol Benchmark" res
 
-    @info "Running Reduced Patrol Robot Benchmark..."
+    @info "Running Reduced Patrol Robot Reachability Benchmark..."
+    res = odimdp_rpr_it_r()
+    @info "Completed Reduced Patrol Robot Reachability Benchmark" res
+
+    @info "Running Reduced Patrol Robot Reach-Avoid Benchmark..."
     res = odimdp_rpr_it_ra()
-    @info "Completed Reduced Patrol Robot Benchmark" res
+    @info "Completed Reduced Patrol Robot Reach-Avoid Benchmark" res
 
     @info "Running Automated Vehicle Benchmark..."
     res = odimdp_av_ft_ra()
