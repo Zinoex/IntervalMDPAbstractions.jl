@@ -48,7 +48,7 @@ function run_all_benchmarks()
 
     @info "Running Integration Chain Benchmark..."
     for n in 1:5
-        res = odimdp_ic_it_ra(i)
+        res = odimdp_ic_et_reach_avoid(i)
         @info "Integration Chain Benchmark" n res
     end
 end
