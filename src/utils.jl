@@ -12,25 +12,25 @@ iszeromeasure(X::AbstractPolyhedron, Y::AbstractPolyhedron) = _iszeromeasure(Y, 
 
 function iszeromeasure(C::CartesianProduct{N,<:LazySet,<:Universe}, Z::AbstractHyperrectangle) where {N}
     X = first(C)
-    Zp = project(Z, 1:dim(X))
+    Zp = LazySets.project(Z, 1:LazySets.dim(X))
     return iszeromeasure(X, Zp)
 end
 
 function iszeromeasure(Z::AbstractHyperrectangle, C::CartesianProduct{N,<:LazySet,<:Universe}) where {N}
     X = first(C)
-    Zp = project(Z, 1:dim(X))
+    Zp = LazySets.project(Z, 1:LazySets.dim(X))
     return iszeromeasure(X, Zp)
 end
 
 function iszeromeasure(C::CartesianProduct{N,<:Universe,<:LazySet}, Z::AbstractHyperrectangle) where {N}
     Y = second(C)
-    Zp = project(Z, (dim(first(C)) + 1):dim(C))
+    Zp = LazySets.project(Z, (LazySets.dim(first(C)) + 1):LazySets.dim(C))
     return iszeromeasure(Y, Zp)
 end
 
 function iszeromeasure(Z::AbstractHyperrectangle, C::CartesianProduct{N,<:Universe,<:LazySet}) where {N}
     Y = second(C)
-    Zp = project(Z, (dim(first(C)) + 1):dim(C))
+    Zp = LazySets.project(Z, (LazySets.dim(first(C)) + 1):LazySets.dim(C))
     return iszeromeasure(Y, Zp)
 end
 
