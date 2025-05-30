@@ -11,7 +11,7 @@ using IntervalMDPAbstractions, LazySets, LinearAlgebra
     @test IntervalMDPAbstractions.dim(w) == 2
     @test IntervalMDPAbstractions.stddev(w) == w_stddev
     @test IntervalMDPAbstractions.decouplingmode(w) isa
-          IntervalMDPAbstractions.DirectDecoupling
+          IntervalMDPAbstractions.IsDecoupled
 
     @testset "transition_prob_bounds" begin
         Y = Hyperrectangle(low = [0.0, 0.0], high = [1.0, 1.0])
@@ -107,8 +107,8 @@ end
     w = AdditiveCentralUniformNoise(r)
 
     @test IntervalMDPAbstractions.dim(w) == 2
-    @test IntervalMDPAbstractions.decouplingmode(w) isa
-          IntervalMDPAbstractions.DirectDecoupling
+    @test IntervalMDPAbstractions.decouplingmode(w) isa 
+          IntervalMDPAbstractions.IsDecoupled
 
     @testset "transition_prob_bounds" begin
         Y = Hyperrectangle(low = [0.0, 0.0], high = [1.0, 1.0])

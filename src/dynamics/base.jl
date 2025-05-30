@@ -24,7 +24,7 @@ function diminput end
 
 abstract type CanDecouple end
 abstract type TransformationRequired <: CanDecouple end
-struct DirectDecoupling <: CanDecouple end
+struct IsDecoupled <: CanDecouple end
 struct LinearTransformationRequired <: TransformationRequired end
 struct CannotDecouple <: CanDecouple end
 

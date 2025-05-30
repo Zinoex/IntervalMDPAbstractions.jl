@@ -122,14 +122,6 @@ function abstraction(
     sys = system(prob)
     spec = specification(prob)
 
-    if decouplingmode(sys) isa CannotDecouple
-        throw(ArgumentError("The system dynamics cannot be decoupled."))
-    elseif decouplingmode(sys) isa LinearTransformationRequired
-        T, sys = decouple(sys)
-        spec = transform(spec, T)
-        state_abstraction = transform(state_abstraction, T)
-    end
-
     # State pointer
     stateptr = Int32[
         [1]
@@ -295,14 +287,6 @@ function abstraction(
 )
     sys = system(prob)
     spec = specification(prob)
-
-    if decouplingmode(sys) isa CannotDecouple
-        throw(ArgumentError("The system dynamics cannot be decoupled."))
-    elseif decouplingmode(sys) isa LinearTransformationRequired
-        T, sys = decouple(sys)
-        spec = transform(spec, T)
-        state_abstraction = transform(state_abstraction, T)
-    end
 
     # State pointer
     stateptr = Int32[1]
@@ -510,14 +494,6 @@ function abstraction(
 )
     sys = system(prob)
     spec = specification(prob)
-
-    if decouplingmode(sys) isa CannotDecouple
-        throw(ArgumentError("The system dynamics cannot be decoupled."))
-    elseif decouplingmode(sys) isa LinearTransformationRequired
-        T, sys = decouple(sys)
-        spec = transform(spec, T)
-        state_abstraction = transform(state_abstraction, T)
-    end
 
     # State pointer
     stateptr = Int32[1]

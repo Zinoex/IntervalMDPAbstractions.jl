@@ -240,7 +240,42 @@ Return the specification of an abstraction problem.
 """
 specification(prob::AbstractionProblem) = prob.specification
 
-function transform(spec::Specification, transformation::LinearTransformation)
+"""
+    decouple
+
+Decoupled the noise in the system dynamics of an `AbstractionProblem` if possible,
+and transform the specification accordingly. 
+
+If the system dynamics cannot be decoupled, an error is thrown.
+
+Returns a tuple of the decoupled `AbstractionProblem` and the transformation used.
+"""
+function decouple(prob::AbstractionProblem)
+    sys = system(prob)
+    return _decouple(prob, decouplingmode(sys))
+end
+
+function _decouple(prob::AbstractionProblem, ::CannotDecouple)
+    throw(ArgumentError("The system dynamics cannot be decoupled."))
+end
+
+function _decouple(prob::AbstractionProblem, ::LinearTransformationRequired)
+    sys = system(prob)
+    T, sys = decouple(sys)
+    spec = specification(prob)
+
+    # Transform the specification
+    spec = transform(spec, T)
+
+    return AbstractionProblem(sys, spec), T
+end
+
+function _decouple(prob::AbstractionProblem, ::IsDecoupled)
+    # No transformation needed
+    return prob, LinearTransformation(I, I)
+end
+
+function transform(spec::Specification, transformation::LinearTransformation) 
     prop = transform(system_property(spec), transformation)
     spec = Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
     return spec

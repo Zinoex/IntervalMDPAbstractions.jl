@@ -79,7 +79,7 @@ end
 stddev(w::AdditiveDiagonalGaussianNoise) = w.w_stddev
 stddev(w::AdditiveDiagonalGaussianNoise, i) = w.w_stddev[i]
 dim(w::AdditiveDiagonalGaussianNoise) = length(w.w_stddev)
-decouplingmode(::AdditiveDiagonalGaussianNoise) = DirectDecoupling()
+decouplingmode(::AdditiveDiagonalGaussianNoise) = IsDecoupled()
 
 function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussianNoise)
     # Use the box approximation for the transition probability bounds, as 
@@ -211,7 +211,7 @@ struct AdditiveCentralUniformNoise <: AdditiveNoiseStructure
     end
 end
 dim(w::AdditiveCentralUniformNoise) = length(w.r)
-decouplingmode(::AdditiveCentralUniformNoise) = DirectDecoupling()
+decouplingmode(::AdditiveCentralUniformNoise) = IsDecoupled()
 
 function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveCentralUniformNoise)
     # Use the box approximation for the transition probability bounds, as 
