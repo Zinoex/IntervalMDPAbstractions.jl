@@ -71,19 +71,26 @@ function odimdp_as_faa_safety(state_split = (12, 20, 20), input_split = (3,))
     # The terminal states may not match between the upper and lower bound spec due to the non-alignment
     # with the gridding. The important set of terminal states for the statistics are the lower bound
     # terminal states.
-    tstates = terminal_states(system_property(lower_bound_spec))  
+    tstates = terminal_states(system_property(lower_bound_spec))
     Vlower_nonterm = Vlower[Not(tstates)]
     Vupper_nonterm = Vupper[Not(tstates)]
     error_nonterm = Vupper_nonterm - Vlower_nonterm
 
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time + vi_upper_time
-    time = (abstraction=abstraction_time, vi_lower=vi_lower_time, vi_upper=vi_upper_time, total=total_time)
+    time = (
+        abstraction = abstraction_time,
+        vi_lower = vi_lower_time,
+        vi_upper = vi_upper_time,
+        total = total_time,
+    )
 
-    min_lb, max_lb, mean_lb = minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
-    lb = (min=min_lb, max=max_lb, mean=mean_lb)
-    min_error, max_error, mean_error = minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
-    error = (min=min_error, max=max_error, mean=mean_error)
+    min_lb, max_lb, mean_lb =
+        minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
+    lb = (min = min_lb, max = max_lb, mean = mean_lb)
+    min_error, max_error, mean_error =
+        minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
+    error = (min = min_error, max = max_error, mean = mean_error)
 
-    return (lb=lb, error=error, mem=mem_mb, time=time)
+    return (lb = lb, error = error, mem = mem_mb, time = time)
 end

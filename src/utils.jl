@@ -10,27 +10,39 @@ iszeromeasure(X::EmptySet, Y::EmptySet) = true
 
 iszeromeasure(X::AbstractPolyhedron, Y::AbstractPolyhedron) = _iszeromeasure(Y, X)
 
-function iszeromeasure(C::CartesianProduct{N,<:LazySet,<:Universe}, Z::AbstractHyperrectangle) where {N}
+function iszeromeasure(
+    C::CartesianProduct{N,<:LazySet,<:Universe},
+    Z::AbstractHyperrectangle,
+) where {N}
     X = first(C)
     Zp = LazySets.project(Z, 1:LazySets.dim(X))
     return iszeromeasure(X, Zp)
 end
 
-function iszeromeasure(Z::AbstractHyperrectangle, C::CartesianProduct{N,<:LazySet,<:Universe}) where {N}
+function iszeromeasure(
+    Z::AbstractHyperrectangle,
+    C::CartesianProduct{N,<:LazySet,<:Universe},
+) where {N}
     X = first(C)
     Zp = LazySets.project(Z, 1:LazySets.dim(X))
     return iszeromeasure(X, Zp)
 end
 
-function iszeromeasure(C::CartesianProduct{N,<:Universe,<:LazySet}, Z::AbstractHyperrectangle) where {N}
+function iszeromeasure(
+    C::CartesianProduct{N,<:Universe,<:LazySet},
+    Z::AbstractHyperrectangle,
+) where {N}
     Y = second(C)
-    Zp = LazySets.project(Z, (LazySets.dim(first(C)) + 1):LazySets.dim(C))
+    Zp = LazySets.project(Z, (LazySets.dim(first(C))+1):LazySets.dim(C))
     return iszeromeasure(Y, Zp)
 end
 
-function iszeromeasure(Z::AbstractHyperrectangle, C::CartesianProduct{N,<:Universe,<:LazySet}) where {N}
+function iszeromeasure(
+    Z::AbstractHyperrectangle,
+    C::CartesianProduct{N,<:Universe,<:LazySet},
+) where {N}
     Y = second(C)
-    Zp = LazySets.project(Z, (LazySets.dim(first(C)) + 1):LazySets.dim(C))
+    Zp = LazySets.project(Z, (LazySets.dim(first(C))+1):LazySets.dim(C))
     return iszeromeasure(Y, Zp)
 end
 
@@ -51,7 +63,7 @@ function _iszeromeasure(X::LazySet, Y::LazySet)
     if LazySets.dim(Y) != n
         throw(ArgumentError("Dimension mismatch: $(LazySets.dim(X)) != $(LazySets.dim(Y))"))
     end
-    
+
     model = Model(HiGHS.Optimizer)
     set_string_names_on_creation(model, false)
     set_silent(model)

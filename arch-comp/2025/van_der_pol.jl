@@ -1,7 +1,8 @@
 
 
 function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,))
-    arch_comp_problem = ArchCompStochasticModels.controlled_gaussian_van_der_pol_quantitative()
+    arch_comp_problem =
+        ArchCompStochasticModels.controlled_gaussian_van_der_pol_quantitative()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
 
@@ -14,7 +15,12 @@ function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,
     Usub = Hyperrectangle(; low = [-1.0], high = [1.0])
 
     @assert Tx.mean isa Smooth2
-    additive_dynamics = NonlinearAdditiveNoiseDynamics(Tx.mean.func, IntervalMDPAbstractions.dim(noise), LazySets.dim(U), noise)
+    additive_dynamics = NonlinearAdditiveNoiseDynamics(
+        Tx.mean.func,
+        IntervalMDPAbstractions.dim(noise),
+        LazySets.dim(U),
+        noise,
+    )
     system = System(additive_dynamics)
 
     # Specification
@@ -24,7 +30,10 @@ function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,
 
     # Encode avoid set as through the region of interest (transitioning to outside the region of interest
     # is treated as transitioning to a failure/sink state)
-    prop = InfiniteTimeRegionReachability(arch_comp_prop.target_set, arch_comp_prop.convergence_threshold)
+    prop = InfiniteTimeRegionReachability(
+        arch_comp_prop.target_set,
+        arch_comp_prop.convergence_threshold,
+    )
     spec = Specification(
         prop,
         Pessimistic,
@@ -72,19 +81,26 @@ function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,
     # The terminal states may not match between the upper and lower bound spec due to the non-alignment
     # with the gridding. The important set of terminal states for the statistics are the lower bound
     # terminal states.
-    tstates = terminal_states(system_property(lower_bound_spec))  
+    tstates = terminal_states(system_property(lower_bound_spec))
     Vlower_nonterm = Vlower[Not(tstates)]
     Vupper_nonterm = Vupper[Not(tstates)]
     error_nonterm = Vupper_nonterm - Vlower_nonterm
 
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time + vi_upper_time
-    time = (abstraction=abstraction_time, vi_lower=vi_lower_time, vi_upper=vi_upper_time, total=total_time)
+    time = (
+        abstraction = abstraction_time,
+        vi_lower = vi_lower_time,
+        vi_upper = vi_upper_time,
+        total = total_time,
+    )
 
-    min_lb, max_lb, mean_lb = minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
-    lb = (min=min_lb, max=max_lb, mean=mean_lb)
-    min_error, max_error, mean_error = minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
-    error = (min=min_error, max=max_error, mean=mean_error)
+    min_lb, max_lb, mean_lb =
+        minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
+    lb = (min = min_lb, max = max_lb, mean = mean_lb)
+    min_error, max_error, mean_error =
+        minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
+    error = (min = min_error, max = max_error, mean = mean_error)
 
-    return (lb=lb, error=error, mem=mem_mb, time=time)
+    return (lb = lb, error = error, mem = mem_mb, time = time)
 end

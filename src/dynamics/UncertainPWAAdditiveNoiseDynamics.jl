@@ -52,13 +52,13 @@ struct UncertainAffineRegion{T,VT<:AbstractVector{T},MT<:AbstractMatrix{T},S<:La
         new{T,VT,MT,S}(region, Alower, Clower, Aupper, Cupper)
     end
 end
-function overapproximate(transformation::UncertainAffineRegion, input::LazySet) 
+function overapproximate(transformation::UncertainAffineRegion, input::LazySet)
     overlapping_region = intersection(region(transformation), input)
 
-    return ConvexHull(   
+    return ConvexHull(
         transformation.Alower * overlapping_region + transformation.Clower,
         transformation.Aupper * overlapping_region + transformation.Cupper,
-)
+    )
 end
 region(transformation::UncertainAffineRegion) = transformation.region
 inputdim(transformation::UncertainAffineRegion) = size(transformation.Alower, 2)

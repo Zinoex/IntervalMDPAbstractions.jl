@@ -1,7 +1,14 @@
-export AbstractRegionReachability, FiniteTimeRegionReachability, InfiniteTimeRegionReachability, 
-    ExactTimeRegionReachability, reach, dim
-export AbstractRegionReachAvoid, FiniteTimeRegionReachAvoid, InfiniteTimeRegionReachAvoid,
-    ExactTimeRegionReachAvoid, avoid
+export AbstractRegionReachability,
+    FiniteTimeRegionReachability,
+    InfiniteTimeRegionReachability,
+    ExactTimeRegionReachability,
+    reach,
+    dim
+export AbstractRegionReachAvoid,
+    FiniteTimeRegionReachAvoid,
+    InfiniteTimeRegionReachAvoid,
+    ExactTimeRegionReachAvoid,
+    avoid
 export AbstractRegionSafety, FiniteTimeRegionSafety, InfiniteTimeRegionSafety
 export AbstractionProblem, system, specification
 
@@ -78,10 +85,7 @@ IntervalMDP.time_horizon(prop::ExactTimeRegionReachability) = prop.time_horizon
 reach(prop::ExactTimeRegionReachability) = prop.reach_set
 dim(prop::ExactTimeRegionReachability) = LazySets.dim(reach(prop))
 
-function transform(
-    prop::ExactTimeRegionReachability,
-    transformation::LinearTransformation,
-)
+function transform(prop::ExactTimeRegionReachability, transformation::LinearTransformation)
     reach_set = concretize(transformation.T * prop.reach_set)
     return ExactTimeRegionReachability(reach_set, prop.convergence_eps)
 end
@@ -236,7 +240,7 @@ Return the specification of an abstraction problem.
 """
 specification(prob::AbstractionProblem) = prob.specification
 
-function transform(spec::Specification, transformation::LinearTransformation) 
+function transform(spec::Specification, transformation::LinearTransformation)
     prop = transform(system_property(spec), transformation)
     spec = Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
     return spec

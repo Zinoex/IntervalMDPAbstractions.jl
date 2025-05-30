@@ -40,7 +40,7 @@ function load_npy_dynamics(base_path, num_modes)
         Hyperrectangle(
             low = convert.(Float64, extent[:, 1]),
             high = convert.(Float64, extent[:, 2]),
-        ) for extent in eachslice(region_extents[1:end-1, :, :]; dims = 1)
+        ) for extent in eachslice(region_extents[1:(end-1), :, :]; dims = 1)
     ]
 
     dyn = Vector{

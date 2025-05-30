@@ -36,9 +36,9 @@ function (dyn::NonlinearDynamicsRegion)(
     order = 1
     z = [
         TaylorModelN(i, order, IntervalBox(z0), dom) for
-        i = 1:LazySets.dim(X)+LazySets.dim(U)
+        i = 1:(LazySets.dim(X)+LazySets.dim(U))
     ]
-    x, u = z[1:LazySets.dim(X)], z[LazySets.dim(X)+1:end]
+    x, u = z[1:LazySets.dim(X)], z[(LazySets.dim(X)+1):end]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
@@ -57,11 +57,11 @@ function (dyn::NonlinearDynamicsRegion)(
     D = remainder.(y)
     Dlower = inf.(D)
     Dupper = sup.(D)
-    
+
     Y1 = AffineMap(ABlower, Translation(Z, -z0), Clower)
     Y2 = AffineMap(ABupper, Translation(Z, -z0), Cupper)
 
-    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low = Dlower, high = Dupper)
 
     return Yconv
 end
@@ -119,7 +119,7 @@ function (dyn::NonlinearDynamicsRegion)(
     Y1 = AffineMap(Alower, Translation(active_region, -x0), Clower)
     Y2 = AffineMap(Aupper, Translation(active_region, -x0), Cupper)
 
-    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low = Dlower, high = Dupper)
 
     return Yconv
 end

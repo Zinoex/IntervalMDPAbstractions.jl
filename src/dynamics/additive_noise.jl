@@ -50,7 +50,8 @@ For additive dynamics ``x_{k+1} = f(x_k, u_k) + w_k``, return ``w_k`` as a struc
 function noise end
 
 #### Noise structures
-export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise, AdditiveGaussianNoise, AdditiveCentralUniformNoise
+export AdditiveNoiseStructure,
+    AdditiveDiagonalGaussianNoise, AdditiveGaussianNoise, AdditiveCentralUniformNoise
 
 """
     AdditiveNoiseStructure

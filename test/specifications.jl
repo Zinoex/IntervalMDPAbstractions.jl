@@ -60,7 +60,7 @@ end
             prop = FiniteTimeRegionReachability(reach_region, horizon)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
-            
+
             @test IntervalMDPAbstractions.dim(prop) == 2
 
             T = [
@@ -88,7 +88,7 @@ end
             prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, horizon)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
-            
+
             @test IntervalMDPAbstractions.dim(prop) == 2
 
             T = [
@@ -117,7 +117,7 @@ end
             prop = FiniteTimeRegionSafety(avoid_region, horizon)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
-            
+
             @test IntervalMDPAbstractions.dim(prop) == 2
 
             T = [
@@ -149,7 +149,7 @@ end
             prop = InfiniteTimeRegionReachability(reach_region, eps)
             spec = Specification(prop, Pessimistic, Maximize)
             prop = system_property(spec)
-            
+
             @test IntervalMDPAbstractions.dim(prop) == 2
 
             T = [

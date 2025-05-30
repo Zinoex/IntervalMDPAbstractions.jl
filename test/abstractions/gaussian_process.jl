@@ -119,5 +119,5 @@ input_abs = InputDiscrete([1, 2])
     V_direct, k, res = value_iteration(prob_direct)
     @test k == 10
 
-    @test all(V_decoupled[1:end-1, 1:end-1] .≥ reshape(V_direct[1:end-1], 2, 2))
+    @test all(V_decoupled[1:(end-1), 1:(end-1)] .≥ reshape(V_direct[1:(end-1)], 2, 2))
 end

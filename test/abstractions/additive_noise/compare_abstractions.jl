@@ -37,4 +37,4 @@ prob_decoupled = Problem(mdp_decoupled, spec_decoupled)
 
 V_decoupled, k, res = value_iteration(prob_decoupled)
 @test k == 10
-@test all(V_decoupled[1:end-1, 1:end-1] .≥ reshape(V_direct[1:end-1], 10, 10))
+@test all(V_decoupled[1:(end-1), 1:(end-1)] .≥ reshape(V_direct[1:(end-1)], 10, 10))

@@ -79,8 +79,10 @@ function nominal(
     # Therefore, we prepare the global state before entering the threaded section.
     # set_variables(Float64, "z"; order=order, numvars=dimstate(dyn) + diminput(dyn))
 
-    z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i = 1:dimstate(dyn)+diminput(dyn)]
-    x, u = z[1:dimstate(dyn)], z[dimstate(dyn)+1:end]
+    z = [
+        TaylorModelN(i, order, IntervalBox(z0), dom) for i = 1:(dimstate(dyn)+diminput(dyn))
+    ]
+    x, u = z[1:dimstate(dyn)], z[(dimstate(dyn)+1):end]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
@@ -99,11 +101,11 @@ function nominal(
     D = remainder.(y)
     Dlower = inf.(D)
     Dupper = sup.(D)
-    
+
     Y1 = AffineMap(ABlower, Translation(Z, -z0), Clower)
     Y2 = AffineMap(ABupper, Translation(Z, -z0), Cupper)
 
-    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low = Dlower, high = Dupper)
 
     return Yconv
 end
@@ -153,7 +155,7 @@ function nominal(
     Y1 = AffineMap(Alower, Translation(X, -x0), Clower)
     Y2 = AffineMap(Aupper, Translation(X, -x0), Cupper)
 
-    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(;low=Dlower, high=Dupper)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low = Dlower, high = Dupper)
 
     return Yconv
 end
@@ -201,7 +203,7 @@ function transform(
     w::AdditiveNoiseStructure,  # Noise is already transformed
 )
     # Transform the dynamics
-    function f(z, u) 
+    function f(z, u)
         x = transformation.Tinv * z
         y = dyn.f(x, u)
         return transformation.T * y

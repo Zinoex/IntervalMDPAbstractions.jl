@@ -50,6 +50,7 @@ statespace(state::StateUniformGridSplit) = state.state_space
 function transform(state::StateUniformGridSplit, transformation::LinearTransformation)
     new_state_space = transformation.T * state.state_space
     over_approximate = LazySets.box_approximation(new_state_space)
-    regions = LazySets.split(over_approximate, [axisregions for axisregions in state.splits])
+    regions =
+        LazySets.split(over_approximate, [axisregions for axisregions in state.splits])
     return StateUniformGridSplit(over_approximate, state.splits, regions)
 end

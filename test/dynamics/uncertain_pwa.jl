@@ -99,11 +99,11 @@ end
 @testset "linear_transformation" begin
     Tx = IntervalMDPAbstractions.LinearTransformation(
         [
-            0.5 2.0; 
+            0.5 2.0;
             0.0 2.0
         ],
         [
-            1.0 0.8; 
+            1.0 0.8;
             0.0 0.6
         ],
     )
@@ -113,8 +113,14 @@ end
     a = 2
     Y = concretize(nominal(dyn_transformed, X, a))
 
-    region_1 = Zonotope{Float64, Vector{Float64}, Matrix{Float64}}([-0.625, -0.5], [0.125 0.5; 0.0 0.5])
-    region_2 = Zonotope{Float64, Vector{Float64}, Matrix{Float64}}([-0.375, -0.5], [0.125 0.5; 0.0 0.5])
+    region_1 = Zonotope{Float64,Vector{Float64},Matrix{Float64}}(
+        [-0.625, -0.5],
+        [0.125 0.5; 0.0 0.5],
+    )
+    region_2 = Zonotope{Float64,Vector{Float64},Matrix{Float64}}(
+        [-0.375, -0.5],
+        [0.125 0.5; 0.0 0.5],
+    )
     Y_expected = concretize(
         ConvexHull(
             AffineMap(Tx.T * [1.0 0.1; -0.2 1.1] * Tx.Tinv, X, Tx.T * [0.0, 0.5]),
@@ -130,7 +136,9 @@ end
     a = 1
 
     Y = concretize(nominal(dyn, X, a))
-    Y_expected =
-        VPolytope([[1.0 0.1; -0.3 1.1] * X + [0.0, 0.5], [1.0 0.1; 0.3 1.1] * X + [0.0, 0.5]])
+    Y_expected = VPolytope([
+        [1.0 0.1; -0.3 1.1] * X + [0.0, 0.5],
+        [1.0 0.1; 0.3 1.1] * X + [0.0, 0.5],
+    ])
     @test isequivalent(Y, Y_expected)
 end

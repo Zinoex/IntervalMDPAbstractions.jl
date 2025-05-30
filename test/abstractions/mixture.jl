@@ -66,5 +66,5 @@ input_abs = InputDiscrete([Singleton([0.0])])
 
     V_direct, k, res = value_iteration(prob_direct)
     @test k == 10
-    @test all(V_mixture[1:end-1, 1:end-1] .≥ reshape(V_direct[1:end-1], state_split))
+    @test all(V_mixture[1:(end-1), 1:(end-1)] .≥ reshape(V_direct[1:(end-1)], state_split))
 end

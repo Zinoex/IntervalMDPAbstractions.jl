@@ -147,7 +147,7 @@ function main(n, time_horizon = 10)
     @time "value iteration" V, k, res = value_iteration(prob)
 
     # Remove the first state from each axis (the avoid state, whose value is always 0).
-    V = V[(1:d-1 for d in size(V))...]
+    V = V[(1:(d-1) for d in size(V))...]
 
     return V
 end
