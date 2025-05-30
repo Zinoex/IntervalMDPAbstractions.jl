@@ -70,7 +70,7 @@ function odimdp_av_ft_ra(state_split = (6, 6, 5, 5, 7, 5, 5), input_split = (5, 
     arch_comp_prop = arch_comp_spec.underlying_prop
     @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeReachAvoidSpecification
 
-    prop = InfiniteTimeRegionReachAvoid(arch_comp_prop.target_set, arch_comp_prop.avoid_set, arch_comp_prop.N)
+    prop = FiniteTimeRegionReachAvoid(arch_comp_prop.target_set, arch_comp_prop.avoid_set, arch_comp_prop.N)
     spec = Specification(
         prop,
         Pessimistic,
