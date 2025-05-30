@@ -40,7 +40,6 @@ function (dyn::NonlinearDynamicsRegion)(
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
-    display(y)
 
     # Extract the linear and constant terms + the remainder
     C = [yi[0][1] for yi in y]
@@ -99,7 +98,6 @@ function (dyn::NonlinearDynamicsRegion)(
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
-    display(y)
 
     # Extract the linear and constant terms + the remainder
     C = [yi[0][1] for yi in y]

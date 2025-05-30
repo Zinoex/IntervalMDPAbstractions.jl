@@ -24,12 +24,18 @@ if !@isdefined example_systems_included
         return sys, spec
     end
 
-    function modified_running_example_sys()
+    function modified_running_example_sys(;noise=:diagonal)
         A = 0.9I(2)
         B = 0.7I(2)
-        w_stddev = [1.0, 1.0]
+        if noise == :diagonal
+            w_stddev = [1.0, 1.0]
+            w = AdditiveDiagonalGaussianNoise(w_stddev)
+        else
+            cov = [1.0 0.5; 0.5 1.0]
+            w = AdditiveGaussianNoise(cov)
+        end
 
-        dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+        dyn = AffineAdditiveNoiseDynamics(A, B, w)
 
         initial_region = EmptySet(2)
 

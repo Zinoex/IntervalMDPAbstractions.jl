@@ -10,7 +10,7 @@ export AbstractRegionReachAvoid,
        ExactTimeRegionReachAvoid,
        avoid
 export AbstractRegionSafety, FiniteTimeRegionSafety, InfiniteTimeRegionSafety
-export AbstractionProblem, system, specification
+export AbstractionProblem, system, specification, decouple
 
 # Reachability
 abstract type AbstractRegionReachability <: Property end
