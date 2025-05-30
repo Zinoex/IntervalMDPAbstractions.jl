@@ -111,23 +111,41 @@ end
     dyn_transformed = IntervalMDPAbstractions.transform(dyn, Tx, w)
     X = Hyperrectangle(low = [-0.5, -0.5], high = [0.5, 0.0])
     a = 2
-    Y = concretize(nominal(dyn_transformed, X, a))
+    Y = nominal(dyn_transformed, X, a)
+    Y1 = concretize(Y.X)
+    Y2 = concretize(Y.Y)
 
-    region_1 = Zonotope{Float64,Vector{Float64},Matrix{Float64}}(
+    display(vertices_list(Y1))
+    display(vertices_list(Y2))
+
+    region_1 = Zonotope(
         [-0.625, -0.5],
         [0.125 0.5; 0.0 0.5],
     )
-    region_2 = Zonotope{Float64,Vector{Float64},Matrix{Float64}}(
+    Y1_expected = concretize(ConvexHull(
+        AffineMap(Tx.T * [1.0  0.1; -0.1  1.1] * Tx.Tinv, Intersection(region_1, X), Tx.T * [0.0, 0.5]),
+        AffineMap(Tx.T * [1.0 0.1; 0.0 1.1] * Tx.Tinv, Intersection(region_1, X), Tx.T * [0.0, 0.5]),
+    ))
+    region_2 = Zonotope(
         [-0.375, -0.5],
         [0.125 0.5; 0.0 0.5],
     )
-    Y_expected = concretize(
-        ConvexHull(
-            AffineMap(Tx.T * [1.0 0.1; -0.2 1.1] * Tx.Tinv, X, Tx.T * [0.0, 0.5]),
-            AffineMap(Tx.T * [1.0 0.1; 0.0 1.1] * Tx.Tinv, X, Tx.T * [0.0, 0.5]),
-        ),
-    )
-    @test isequivalent(Y, Y_expected)
+    Y2_expected = concretize(ConvexHull(
+        AffineMap(Tx.T * [1.0 0.1; -0.2 1.1] * Tx.Tinv, Intersection(region_2, X), Tx.T * [0.0, 0.5]),
+        AffineMap(Tx.T * [1.0 0.1; 0.0 1.1] * Tx.Tinv, Intersection(region_2, X), Tx.T * [0.0, 0.5]),
+    ))
+
+    display(vertices_list(Y1_expected))
+    display(vertices_list(Y2_expected))
+
+    Y1_equiv = isequivalent(Y1, Y1_expected)
+    if Y1_equiv
+        @test Y1_equiv
+        @test isequivalent(Y2, Y2_expected)
+    else    
+        @test isequivalent(Y2, Y1_expected)
+        @test isequivalent(Y1, Y2_expected)
+    end
 end
 
 # Vector states
