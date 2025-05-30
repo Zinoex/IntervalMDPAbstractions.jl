@@ -24,7 +24,7 @@ if !@isdefined example_systems_included
         return sys, spec
     end
 
-    function modified_running_example_sys(;noise=:diagonal)
+    function modified_running_example_sys(; noise=:diagonal)
         A = 0.9I(2)
         B = 0.7I(2)
         if noise == :diagonal

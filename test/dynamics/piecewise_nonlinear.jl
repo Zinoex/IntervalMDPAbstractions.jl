@@ -119,7 +119,6 @@ y = nominal(dyn, X, U)
 y_expected = g_piecewise(x, u)
 @test element(y) ≈ y_expected
 
-
 # Vector inputs under transformation
 Tx = IntervalMDPAbstractions.LinearTransformation(
     [0.5 2.0

@@ -29,7 +29,8 @@ struct LinearTransformationRequired <: TransformationRequired end
 struct CannotDecouple <: CanDecouple end
 
 abstract type Transformation end
-struct LinearTransformation{R, MR1 <: Union{AbstractMatrix{R}, UniformScaling{R}}, MR2 <: Union{AbstractMatrix{R}, UniformScaling{R}}} <:
+struct LinearTransformation{
+    R, MR1 <: Union{AbstractMatrix{R}, UniformScaling{R}}, MR2 <: Union{AbstractMatrix{R}, UniformScaling{R}}} <:
        Transformation
     T::MR1
     Tinv::MR2
