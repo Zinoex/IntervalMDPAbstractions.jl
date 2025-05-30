@@ -275,7 +275,7 @@ function _decouple(prob::AbstractionProblem, ::IsDecoupled)
     return prob, LinearTransformation(I, I)
 end
 
-function transform(spec::Specification, transformation::LinearTransformation) 
+function transform(spec::Specification, transformation::LinearTransformation)
     prop = transform(system_property(spec), transformation)
     spec = Specification(prop, satisfaction_mode(spec), strategy_mode(spec))
     return spec

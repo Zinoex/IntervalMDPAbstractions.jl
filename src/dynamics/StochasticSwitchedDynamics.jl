@@ -51,5 +51,5 @@ end
 dimstate(dyn::StochasticSwitchedDynamics) = dimstate(first(dyn.dynamics))
 diminput(dyn::StochasticSwitchedDynamics) = diminput(first(dyn.dynamics))
 decouplingmode(sys::StochasticSwitchedDynamics) =
-    all(decouplingmode(dyn) == IsDecoupled() for dyn in sys.dynamics) ?
-    IsDecoupled() : CannotDecouple()  # Might be overly conservative, but it works
+    all(decouplingmode(dyn) == IsDecoupled() for dyn in sys.dynamics) ? IsDecoupled() :
+    CannotDecouple()  # Might be overly conservative, but it works
