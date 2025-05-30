@@ -5,7 +5,7 @@ using SpecialFunctions: erf
 using IrrationalConstants: invsqrt2
 using TaylorModels: TaylorModelN, set_variables, constant_term, linear_polynomial, remainder
 using IntervalArithmetic: IntervalBox, inf, sup
-using Polyhedra, LazySets, IntervalMDP
+using Polyhedra, LazySets, IntervalMDP   #, CDDLib
 using HiGHS, JuMP
 
 function __init__()
@@ -14,6 +14,10 @@ function __init__()
     @eval @inline function LazySets.default_lp_solver_factory(::Type{<:AbstractFloat})
         return JuMP.optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
     end
+
+    # @eval @inline function LazySets.default_polyhedra_backend_nd(N::Type{<:Number})
+    #     return LazySets.default_cddlib_backend(N)
+    # end
 end
 
 include("utils.jl")

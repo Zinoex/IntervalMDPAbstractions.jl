@@ -29,6 +29,8 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     )
 
     abs_problem = AbstractionProblem(system, spec)
+    abs_problem, Tx = decouple(abs_problem)
+    @assert Tx isa LinearTransformation
 
     # Define abstraction parameters (box_approximation is going to be exact)
     # safe_set_refinement = box_approximation(Intersection(
@@ -37,6 +39,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     # ))
     safe_set_refinement = Hyperrectangle(;low=[19.5, 19.5, 30.0, 30.0], high=[20.5, 20.5, 36.0, 36.0])
     @assert safe_set_refinement ⊆ arch_comp_prop.safe_set
+    safe_set_refinement = box_approximation(Tx.T * safe_set_refinement)
     target_model = OrthogonalIMDPTarget()
     state_abs = StateUniformGridSplit(safe_set_refinement, state_split)
     input_abs = InputLinRange(U, input_split)
