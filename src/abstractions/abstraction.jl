@@ -136,7 +136,7 @@ function abstraction(
     # Initial states
     initial_states = Int32[]
     for (i, source_region) in enumerate(regions(state_abstraction))
-        if !isdisjoint(initial(sys), source_region)
+        if !iszeromeasure(initial(sys), source_region)
             push!(initial_states, i)
         end
     end
@@ -302,7 +302,7 @@ function abstraction(
     # Initial states
     initial_states = CartesianIndex{dimstate(sys)}[]
     for (I, source_region) in zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
-        if !isdisjoint(initial(sys), source_region)
+        if !iszeromeasure(initial(sys), source_region)
             push!(initial_states, I)
         end
     end
@@ -503,7 +503,7 @@ function abstraction(
     # Initial states
     initial_states = CartesianIndex{dimstate(sys)}[]
     for (I, source_region) in zip(CartesianIndices(splits(state_abstraction)), regions(state_abstraction))
-        if !isdisjoint(initial(sys), source_region)
+        if !iszeromeasure(initial(sys), source_region)
             push!(initial_states, I)
         end
     end
