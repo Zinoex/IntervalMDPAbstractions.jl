@@ -87,7 +87,7 @@ dim(prop::ExactTimeRegionReachability) = LazySets.dim(reach(prop))
 
 function transform(prop::ExactTimeRegionReachability, transformation::LinearTransformation)
     reach_set = concretize(transformation.T * prop.reach_set)
-    return ExactTimeRegionReachability(reach_set, prop.convergence_eps)
+    return ExactTimeRegionReachability(reach_set, prop.time_horizon)
 end
 
 ## Reach-avoid
@@ -168,7 +168,7 @@ dim(prop::ExactTimeRegionReachAvoid) = LazySets.dim(reach(prop))
 function transform(prop::ExactTimeRegionReachAvoid, transformation::LinearTransformation)
     reach_set = concretize(transformation.T * prop.reach_set)
     avoid_set = concretize(transformation.T * prop.avoid_set)
-    return ExactTimeRegionReachAvoid(reach_set, avoid_set, prop.convergence_eps)
+    return ExactTimeRegionReachAvoid(reach_set, avoid_set, prop.time_horizon)
 end
 
 ## Safety
