@@ -60,8 +60,6 @@ end
     @test pu ≈ 1.0
 end
 
-# TODO: Test transform
-
 @testset "non-diagonal gaussian" begin
     Bw = [0.0 0.0 1.93809268727258e-05 0.0 0.00194098374232017 0.0
           0.0 0.0 0.0 5.77690735355876e-07 0.0 0.00149272446097720

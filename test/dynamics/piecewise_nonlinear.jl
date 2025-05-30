@@ -109,8 +109,6 @@ else
     @test isequivalent(Y1, Y2_expected)
 end
 
-# TODO: Test transform
-
 # Vector inputs
 x = [0.5, 0.5]
 u = [0.0]
@@ -119,4 +117,24 @@ U = Singleton(u)
 
 y = nominal(dyn, X, U)
 y_expected = g_piecewise(x, u)
+@test element(y) ≈ y_expected
+
+
+# Vector inputs under transformation
+Tx = IntervalMDPAbstractions.LinearTransformation(
+    [0.5 2.0
+     0.0 2.0],
+    [1.0 0.8
+     0.0 0.6]
+)
+
+dyn_transformed = IntervalMDPAbstractions.transform(dyn, Tx, w)
+
+x = [0.5, 0.5]
+u = [0.0]
+X = Singleton(x)
+U = Singleton(u)
+
+y = nominal(dyn_transformed, X, U)
+y_expected = Tx.T * f_piecewise(Tx.Tinv * x, u)
 @test element(y) ≈ y_expected
