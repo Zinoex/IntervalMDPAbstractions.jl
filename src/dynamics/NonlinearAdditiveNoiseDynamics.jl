@@ -174,9 +174,9 @@ function nominal(
 end
 
 nominal(
-dyn::NonlinearAdditiveNoiseDynamics,
-x::AbstractVector{Float64},
-u::AbstractVector{Float64}
+    dyn::NonlinearAdditiveNoiseDynamics,
+    x::AbstractVector{Float64},
+    u::AbstractVector{Float64}
 ) = dyn.f(x, u)
 
 noise(dyn::NonlinearAdditiveNoiseDynamics) = dyn.w

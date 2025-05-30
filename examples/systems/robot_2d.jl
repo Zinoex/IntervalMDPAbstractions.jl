@@ -128,7 +128,8 @@ function robot_2d_direct(
 end
 
 function main()
-    @time "abstraction reach-avoid" mdp_reachavoid, spec_reachavoid, _=robot_2d_decoupled(;
+    @time "abstraction reach-avoid" mdp_reachavoid,
+    spec_reachavoid, _ = robot_2d_decoupled(;
         spec=:reachavoid,
         state_split=(40, 40),
         input_split=(21, 21)
@@ -138,14 +139,16 @@ function main()
     @time "value-iteration reach-avoid" V_reachavoid, k_reachavoid, res_reachavoid=value_iteration(prob_reachavoid)
     V_reachavoid = V_reachavoid[1:(d - 1), 1:(d - 1)]
 
-    @time "abstraction reachability" mdp_reachability, spec_reachability, _=robot_2d_decoupled(;
+    @time "abstraction reachability" mdp_reachability,
+    spec_reachability, _ = robot_2d_decoupled(;
         spec=:reachability,
         state_split=(20, 20),
         input_split=(11, 11)
     )
     prob_reachability = Problem(mdp_reachability, spec_reachability)
 
-    @time "value-iteration reachability" V_reachability, k_reachability, res_reachability=value_iteration(prob_reachability)
+    @time "value-iteration reachability" V_reachability, k_reachability,
+    res_reachability = value_iteration(prob_reachability)
     V_reachability = V_reachability[1:(d - 1), 1:(d - 1)]
 
     return V_reachavoid, V_reachability

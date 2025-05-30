@@ -81,8 +81,8 @@ end
     transformation, decoupled_w = IntervalMDPAbstractions.decouple(w)
     @test decoupled_w isa IntervalMDPAbstractions.AdditiveDiagonalGaussianNoise
     @test IntervalMDPAbstractions.dim(decoupled_w) == 7
-    @test IntervalMDPAbstractions.stddev(decoupled_w)≈
-    sqrt.([
+    @test IntervalMDPAbstractions.stddev(decoupled_w) ≈
+          sqrt.([
         0.0,
         1.7347234759768075e-18,
         3.469446951953614e-18,

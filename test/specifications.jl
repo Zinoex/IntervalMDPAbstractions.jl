@@ -9,7 +9,7 @@ function sys_2d_ra()
 
     dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
 
-    initial_region = EmptySet(2)
+    initial_region = Hyperrectangle(; low=[-10.0, -10.0], high=[-6.0, -8.0])
 
     sys = System(dyn, initial_region)
 
@@ -217,6 +217,63 @@ end
             @test convergence_eps(prop) == eps
         end
     end
+
+    @testset "exact time" begin
+        horizon = 10
+
+        @testset "reachability" begin
+            prop = ExactTimeRegionReachability(reach_region, horizon)
+            spec = Specification(prop, Pessimistic, Maximize)
+            prop = system_property(spec)
+
+            @test IntervalMDPAbstractions.dim(prop) == 2
+
+            T = [1.0 1.0
+                 -1.0 0.0]
+            Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
+            Tspec = IntervalMDPAbstractions.transform(spec, Tx)
+            Tprop = system_property(Tspec)
+            @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
+            @test satisfaction_mode(Tspec) == Pessimistic
+            @test strategy_mode(Tspec) == Maximize
+
+            prob = AbstractionProblem(sys, spec)
+            mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
+            abstract_prop = system_property(abstract_spec)
+
+            @test isfinitetime(prop) == isfinitetime(abstract_prop)
+            @test isfinitetime(prop) == true
+            @test time_horizon(prop) == time_horizon(abstract_prop)
+            @test time_horizon(prop) == horizon
+        end
+
+        @testset "reach-avoid" begin
+            prop = ExactTimeRegionReachAvoid(reach_region, avoid_region, horizon)
+            spec = Specification(prop, Pessimistic, Maximize)
+            prop = system_property(spec)
+
+            @test IntervalMDPAbstractions.dim(prop) == 2
+
+            T = [1.0 0.0
+                 -1.0 2.0]
+            Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
+            Tspec = IntervalMDPAbstractions.transform(spec, Tx)
+            Tprop = system_property(Tspec)
+            @test IntervalMDPAbstractions.reach(Tprop) == concretize(T * reach_region)
+            @test IntervalMDPAbstractions.avoid(Tprop) == concretize(T * avoid_region)
+            @test satisfaction_mode(Tspec) == Pessimistic
+            @test strategy_mode(Tspec) == Maximize
+
+            prob = AbstractionProblem(sys, spec)
+            mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
+            abstract_prop = system_property(abstract_spec)
+
+            @test isfinitetime(prop) == isfinitetime(abstract_prop)
+            @test isfinitetime(prop) == true
+            @test time_horizon(prop) == time_horizon(abstract_prop)
+            @test time_horizon(prop) == horizon
+        end
+    end
 end
 
 decoupled_avoid_outside = [
@@ -264,6 +321,7 @@ decoupled_avoid_outside = [
         target_model = IMDPTarget()
 
         mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
+        @test initial_states(mdp) == Int32[1, 2]
 
         abstract_prop = system_property(abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == [CartesianIndex(101)]
@@ -296,6 +354,7 @@ decoupled_avoid_outside = [
         target_model = OrthogonalIMDPTarget()
 
         mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
+        @test initial_states(mdp) == [CartesianIndex(1, 1), CartesianIndex(2, 1)]
 
         abstract_prop = system_property(abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == decoupled_avoid_outside

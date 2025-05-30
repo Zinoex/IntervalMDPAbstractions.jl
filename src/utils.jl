@@ -75,9 +75,9 @@ function _iszeromeasure(X::LazySet, Y::LazySet)
 
     # Intuitively, if x₀ > 0 then the intersection is full-dimensional.
     H, h = tosimplehrep(X)
-    @constraint(model, H * x .+ x₀.≤h)
+    @constraint(model, H * x .+ x₀ .≤ h)
     H, h = tosimplehrep(Y)
-    @constraint(model, H * x .+ x₀.≤h)
+    @constraint(model, H * x .+ x₀ .≤ h)
 
     optimize!(model)
 
