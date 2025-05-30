@@ -18,6 +18,8 @@ prepare_nominal
 noise
 AffineAdditiveNoiseDynamics
 NonlinearAdditiveNoiseDynamics
+PiecewiseNonlinearAdditiveNoiseDynamics
+NonlinearDynamicsRegion
 UncertainPWAAdditiveNoiseDynamics
 UncertainAffineRegion
 ```
@@ -26,6 +28,7 @@ UncertainAffineRegion
 ```@docs
 AdditiveNoiseStructure
 AdditiveDiagonalGaussianNoise
+AdditiveGaussianNoise
 AdditiveCentralUniformNoise
 ```
 
