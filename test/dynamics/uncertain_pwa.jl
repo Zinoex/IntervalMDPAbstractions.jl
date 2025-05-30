@@ -115,9 +115,6 @@ end
     Y1 = concretize(Y.X)
     Y2 = concretize(Y.Y)
 
-    display(vertices_list(Y1))
-    display(vertices_list(Y2))
-
     region_1 = Zonotope(
         [-0.625, -0.5],
         [0.125 0.5; 0.0 0.5],
@@ -134,9 +131,6 @@ end
         AffineMap(Tx.T * [1.0 0.1; -0.2 1.1] * Tx.Tinv, Intersection(region_2, X), Tx.T * [0.0, 0.5]),
         AffineMap(Tx.T * [1.0 0.1; 0.0 1.1] * Tx.Tinv, Intersection(region_2, X), Tx.T * [0.0, 0.5]),
     ))
-
-    display(vertices_list(Y1_expected))
-    display(vertices_list(Y2_expected))
 
     Y1_equiv = isequivalent(Y1, Y1_expected)
     if Y1_equiv
