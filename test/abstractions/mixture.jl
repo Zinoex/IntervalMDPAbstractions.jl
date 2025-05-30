@@ -2,50 +2,42 @@ using Revise, Test
 using LinearAlgebra, LazySets
 using IntervalMDP, IntervalMDPAbstractions
 
-
-A1 = [
-    0.1 0.9
-    0.8 0.2
-]
-B1 = [
-    0.0
-    0.0
-][:, :]
+A1 = [0.1 0.9
+      0.8 0.2]
+B1 = [0.0
+      0.0][:, :]
 w1_stddev = [0.3, 0.2]
-mode1 = AffineAdditiveNoiseDynamics(A1, B1, AdditiveDiagonalGaussianNoise(w1_stddev))
+w1 = AdditiveDiagonalGaussianNoise(w1_stddev)
+mode1 = AffineAdditiveNoiseDynamics(A1, B1, w1)
 
-A2 = [
-    0.8 0.2
-    0.1 0.9
-]
-B2 = [
-    0.0
-    0.0
-][:, :]
+A2 = [0.8 0.2
+      0.1 0.9]
+B2 = [0.0
+      0.0][:, :]
 w2_stddev = [0.2, 0.1]
-mode2 = AffineAdditiveNoiseDynamics(A2, B2, AdditiveDiagonalGaussianNoise(w2_stddev))
+w2 = AdditiveDiagonalGaussianNoise(w2_stddev)
+mode2 = AffineAdditiveNoiseDynamics(A2, B2, w2)
 
 dyn = StochasticSwitchedDynamics([mode1, mode2], [0.7, 0.3])
 initial_region = EmptySet(2)
 sys = System(dyn, initial_region)
 
 horizon = 10
-reach_region = Hyperrectangle(; low = [-1.0, -1.0], high = [0.0, 1.0])
-avoid_region = Hyperrectangle(; low = [1.0, 0.0], high = [2.0, 1.0])
+reach_region = Hyperrectangle(; low=[-1.0, -1.0], high=[0.0, 1.0])
+avoid_region = Hyperrectangle(; low=[1.0, 0.0], high=[2.0, 1.0])
 prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, horizon)
 spec = Specification(prop, Pessimistic, Maximize)
 
 prob = AbstractionProblem(sys, spec)
 
-X = Hyperrectangle(; low = [-2.0, -2.0], high = [2.0, 2.0])
+X = Hyperrectangle(; low=[-2.0, -2.0], high=[2.0, 2.0])
 state_split = (20, 20)
 state_abs = StateUniformGridSplit(X, state_split)
 
 input_abs = InputDiscrete([Singleton([0.0])])
 
 @testset "mixture vs direct" begin
-    mdp_mixture, abstract_spec_mixture =
-        abstraction(prob, state_abs, input_abs, MixtureIMDPTarget())
+    mdp_mixture, abstract_spec_mixture = abstraction(prob, state_abs, input_abs, MixtureIMDPTarget())
 
     @test num_states(mdp_mixture) == 21 * 21
     @test length(stateptr(mdp_mixture)) == 20 * 20 + 1  # 20 * 20 non-sink states
@@ -66,5 +58,24 @@ input_abs = InputDiscrete([Singleton([0.0])])
 
     V_direct, k, res = value_iteration(prob_direct)
     @test k == 10
-    @test all(V_mixture[1:end-1, 1:end-1] .≥ reshape(V_direct[1:end-1], state_split))
+    @test all(V_mixture[1:(end - 1), 1:(end - 1)] .≥ reshape(V_direct[1:(end - 1)], state_split))
+end
+
+@testset "cannot decouple" begin
+    cov2 = [0.2 0.1; 0.1 0.2]
+    w2 = AdditiveGaussianNoise(cov2)
+    mode2 = AffineAdditiveNoiseDynamics(A2, B2, w2)
+
+    dyn = StochasticSwitchedDynamics([mode1, mode2], [0.7, 0.3])
+    initial_region = EmptySet(2)
+    sys = System(dyn, initial_region)
+
+    horizon = 10
+    reach_region = Hyperrectangle(; low=[-1.0, -1.0], high=[0.0, 1.0])
+    avoid_region = Hyperrectangle(; low=[1.0, 0.0], high=[2.0, 1.0])
+    prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, horizon)
+    spec = Specification(prop, Pessimistic, Maximize)
+
+    prob = AbstractionProblem(sys, spec)
+    @test_throws ArgumentError decouple(prob)
 end

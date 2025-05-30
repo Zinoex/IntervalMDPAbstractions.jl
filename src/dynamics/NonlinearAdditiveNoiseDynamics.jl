@@ -42,7 +42,7 @@ dyn = NonlinearAdditiveNoiseDynamics(f, 2, 0, w)
 ```
 
 """
-struct NonlinearAdditiveNoiseDynamics{F<:Function,TW<:AdditiveNoiseStructure} <:
+struct NonlinearAdditiveNoiseDynamics{F <: Function, TW <: AdditiveNoiseStructure} <:
        AdditiveNoiseDynamics
     f::F
     nstate::Int
@@ -50,82 +50,76 @@ struct NonlinearAdditiveNoiseDynamics{F<:Function,TW<:AdditiveNoiseStructure} <:
     w::TW
 
     function NonlinearAdditiveNoiseDynamics(
-        f::F,
-        nstate,
-        ninput,
-        w::TW,
-    ) where {F<:Function,TW<:AdditiveNoiseStructure}
+            f::F,
+            nstate,
+            ninput,
+            w::TW
+    ) where {F <: Function, TW <: AdditiveNoiseStructure}
         if nstate != dim(w)
             throw(ArgumentError("The dimensionality of w must match the state dimension"))
         end
 
-        return new{F,TW}(f, nstate, ninput, w)
+        return new{F, TW}(f, nstate, ninput, w)
     end
 end
 
 function nominal(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    X::Hyperrectangle{Float64},
-    U::Hyperrectangle{Float64},
+        dyn::NonlinearAdditiveNoiseDynamics,
+        X::Hyperrectangle{Float64},
+        U::Hyperrectangle{Float64}
 )
     # Use the Taylor model to over-approximate the reachable set
     order = 1
 
-    x0 = center(X)
-    u0 = center(U)
-    z0 = [x0; u0]
-    dom = IntervalBox([low(X); low(U)], [high(X); high(U)])
+    Z = CartesianProduct(X, U)
+    z0 = center(Z)
+    dom = IntervalBox(low(Z), high(Z))
 
     # TaylorSeries.jl modifieds the global state - eww...
     # Therefore, we prepare the global state before entering the threaded section.
     # set_variables(Float64, "z"; order=order, numvars=dimstate(dyn) + diminput(dyn))
 
-    z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i = 1:dimstate(dyn)+diminput(dyn)]
-    x, u = (z-z0)[1:dimstate(dyn)], z[dimstate(dyn)+1:end]
+    z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i in 1:(dimstate(dyn) + diminput(dyn))]
+    x, u = z[1:dimstate(dyn)], z[(dimstate(dyn) + 1):end]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
 
     # Extract the linear and constant terms + the remainder
-    C = [constant_term(y[i]) for i = 1:dimstate(dyn)]
+    C = [yi[0][1] for yi in y]
     Clower = inf.(C)
     Cupper = sup.(C)
 
-    AB = [
-        linear_polynomial(y[i])[1][j] for i = 1:dimstate(dyn),
-        j = 1:dimstate(dyn)+diminput(dyn)
-    ]
+    AB = transpose([yi[1][:] for yi in y])
+    AB = reduce(vcat, AB)
 
-    A = AB[:, 1:dimstate(dyn)]
-    Alower = inf.(A)
-    Aupper = sup.(A)
+    ABlower = inf.(AB)
+    ABupper = sup.(AB)
 
-    B = AB[:, dimstate(dyn)+1:end]
-    Blower = inf.(B)
-    Bupper = sup.(B)
-
-    D = [remainder(y[i]) for i = 1:dimstate(dyn)]
+    D = remainder.(y)
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alower * Translation(X, -x0) + Blower * Translation(U, -u0) + Clower + Dlower
-    Y2 = Aupper * Translation(X, -x0) + Bupper * Translation(U, -u0) + Cupper + Dupper
+    Y1 = AffineMap(ABlower, Translation(Z, -z0), Clower)
+    Y2 = AffineMap(ABupper, Translation(Z, -z0), Cupper)
 
-    Yconv = ConvexHull(Y1, Y2)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low=Dlower, high=Dupper)
 
     return Yconv
 end
 
-nominal(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    X::Hyperrectangle{Float64},
-    U::Singleton{Float64},
-) = nominal(dyn, X, element(U))
+function nominal(
+        dyn::NonlinearAdditiveNoiseDynamics,
+        X::Hyperrectangle{Float64},
+        U::Singleton{Float64}
+)
+    nominal(dyn, X, element(U))
+end
 
 function nominal(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    X::Hyperrectangle{Float64},
-    u::AbstractVector{Float64},
+        dyn::NonlinearAdditiveNoiseDynamics,
+        X::Hyperrectangle{Float64},
+        u::AbstractVector{Float64}
 )
     # Use the Taylor model to over-approximate the reachable set
 
@@ -139,36 +133,37 @@ function nominal(
     # set_variables(Float64, "x"; order=10, numvars=dimstate(dyn))
 
     order = 1
-    x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i = 1:dimstate(dyn)]
+    x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i in 1:dimstate(dyn)]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
 
     # Extract the linear and constant terms + the remainder
-    C = [constant_term(y[i]) for i = 1:dimstate(dyn)]
+    C = [yi[0][1] for yi in y]
     Clower = inf.(C)
     Cupper = sup.(C)
 
-    A = [linear_polynomial(y[i])[1][j] for i = 1:dimstate(dyn), j = 1:dimstate(dyn)]
+    A = transpose([yi[1][:] for yi in y])
+    A = reduce(vcat, A)
     Alower = inf.(A)
     Aupper = sup.(A)
 
-    D = [remainder(y[i]) for i = 1:dimstate(dyn)]
+    D = remainder.(y)
     Dlower = inf.(D)
     Dupper = sup.(D)
 
-    Y1 = Alower * Translation(X, -x0) + Clower + Dlower
-    Y2 = Aupper * Translation(X, -x0) + Cupper + Dupper
+    Y1 = AffineMap(Alower, Translation(X, -x0), Clower)
+    Y2 = AffineMap(Aupper, Translation(X, -x0), Cupper)
 
-    Yconv = ConvexHull(Y1, Y2)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low=Dlower, high=Dupper)
 
     return Yconv
 end
 
 function nominal(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    X::Singleton{Float64},
-    U::Singleton{Float64},
+        dyn::NonlinearAdditiveNoiseDynamics,
+        X::Singleton{Float64},
+        U::Singleton{Float64}
 )
     x = element(X)
     u = element(U)
@@ -178,11 +173,10 @@ function nominal(
     return Singleton(y)
 end
 
-
 nominal(
     dyn::NonlinearAdditiveNoiseDynamics,
     x::AbstractVector{Float64},
-    u::AbstractVector{Float64},
+    u::AbstractVector{Float64}
 ) = dyn.f(x, u)
 
 noise(dyn::NonlinearAdditiveNoiseDynamics) = dyn.w
@@ -197,7 +191,22 @@ function prepare_nominal(dyn::NonlinearAdditiveNoiseDynamics, input_abstraction)
     end
 
     # Set the Taylor model variables
-    set_variables(Float64, "z"; order = 2, numvars = n)
+    set_variables(Float64, "z"; order=2, numvars=n)
 
     return nothing
+end
+
+function transform(
+        dyn::NonlinearAdditiveNoiseDynamics,
+        transformation::LinearTransformation,
+        w::AdditiveNoiseStructure  # Noise is already transformed
+)
+    # Transform the dynamics
+    function f(z, u)
+        x = transformation.Tinv * z
+        y = dyn.f(x, u)
+        return transformation.T * y
+    end
+
+    return NonlinearAdditiveNoiseDynamics(f, dimstate(dyn), diminput(dyn), w)
 end

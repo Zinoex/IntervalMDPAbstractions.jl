@@ -5,10 +5,10 @@ using IntervalMDP, IntervalMDPAbstractions
 include("example_systems.jl")
 
 @testset "1d dense vs sparse" begin
-    function simple_1d_decoupled(; sparse = false)
+    function simple_1d_decoupled(; sparse=false)
         sys, spec = simple_1d_sys()
 
-        X = Hyperrectangle(; low = [-2.5], high = [2.5])
+        X = Hyperrectangle(; low=[-2.5], high=[2.5])
         state_abs = StateUniformGridSplit(X, (10,))
         input_abs = InputDiscrete([Singleton([0.0])])
 
@@ -36,7 +36,7 @@ include("example_systems.jl")
     @test k == 10
 
     # Sparse
-    mdp_sparse, spec_sparse = simple_1d_decoupled(; sparse = true)
+    mdp_sparse, spec_sparse = simple_1d_decoupled(; sparse=true)
     @test num_states(mdp_sparse) == 11
     @test length(stateptr(mdp_sparse)) == 11  # 10 non-sink states
     @test stateptr(mdp_sparse)[end] == 11  # No control actions
@@ -57,13 +57,13 @@ include("example_systems.jl")
 end
 
 @testset "2d" begin
-    function modified_running_example_decoupled(; sparse = false, range_vs_grid = :grid)
+    function modified_running_example_decoupled(; sparse=false, range_vs_grid=:grid)
         sys, spec = modified_running_example_sys()
 
-        X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
+        X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
         state_abs = StateUniformGridSplit(X, (10, 10))
 
-        U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
+        U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
         if range_vs_grid == :range
             input_abs = InputLinRange(U, [3, 3])
         elseif range_vs_grid == :grid
@@ -97,7 +97,7 @@ end
         @test k == 10
 
         # Sparse, input grid
-        mdp_sparse, spec_sparse = modified_running_example_decoupled(; sparse = true)
+        mdp_sparse, spec_sparse = modified_running_example_decoupled(; sparse=true)
         @test num_states(mdp_sparse) == 121  # 11 * 11 total states
         @test length(stateptr(mdp_sparse)) == 10 * 10 + 1  # 10 * 10 non-sink states
         @test stateptr(mdp_sparse)[end] == 10 * 10 * 9 + 1  # 10 * 10 non-sink states, 9 actions
@@ -119,13 +119,13 @@ end
 
     @testset "dense grid vs range" begin
         # Dense, input grid
-        mdp_grid, spec_grid = modified_running_example_decoupled(; range_vs_grid = :grid)
+        mdp_grid, spec_grid = modified_running_example_decoupled(; range_vs_grid=:grid)
 
         prob_grid = Problem(mdp_grid, spec_grid)
         V_grid, k, res = value_iteration(prob_grid)
 
         # Dense, input range
-        mdp_range, spec_range = modified_running_example_decoupled(; range_vs_grid = :range)
+        mdp_range, spec_range = modified_running_example_decoupled(; range_vs_grid=:range)
         @test num_states(mdp_range) == 121  # 11 * 11 total states
         @test stateptr(mdp_range)[end] == 10 * 10 * 9 + 1  # 10 * 10 non-sink states, 9 actions
 

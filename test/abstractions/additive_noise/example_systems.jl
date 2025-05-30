@@ -4,7 +4,6 @@ if !@isdefined example_systems_included
     example_systems_included = true
 
     function simple_1d_sys()
-
         A = [0.95][:, :]
         B = [0.0][:, :]
         w_stddev = [0.05]
@@ -15,7 +14,7 @@ if !@isdefined example_systems_included
 
         sys = System(dyn, initial_region)
 
-        reach_region = Hyperrectangle(; low = [-0.5], high = [0.5])
+        reach_region = Hyperrectangle(; low=[-0.5], high=[0.5])
         avoid_region = EmptySet(1)
 
         time_horizon = 10
@@ -25,18 +24,24 @@ if !@isdefined example_systems_included
         return sys, spec
     end
 
-    function modified_running_example_sys()
+    function modified_running_example_sys(; noise=:diagonal)
         A = 0.9I(2)
         B = 0.7I(2)
-        w_stddev = [1.0, 1.0]
+        if noise == :diagonal
+            w_stddev = [1.0, 1.0]
+            w = AdditiveDiagonalGaussianNoise(w_stddev)
+        else
+            cov = [1.0 0.5; 0.5 1.0]
+            w = AdditiveGaussianNoise(cov)
+        end
 
-        dyn = AffineAdditiveNoiseDynamics(A, B, AdditiveDiagonalGaussianNoise(w_stddev))
+        dyn = AffineAdditiveNoiseDynamics(A, B, w)
 
         initial_region = EmptySet(2)
 
         sys = System(dyn, initial_region)
 
-        reach_region = Hyperrectangle(; low = [4.0, -6.0], high = [10.0, -2.0])
+        reach_region = Hyperrectangle(; low=[4.0, -6.0], high=[10.0, -2.0])
         avoid_region = EmptySet(2)
         time_horizon = 10
         prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, time_horizon)

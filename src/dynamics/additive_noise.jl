@@ -6,6 +6,13 @@ export AdditiveNoiseDynamics, nominal, prepare_nominal, noise
 Dynamics with additive noise, i.e. ``x_{k+1} = f(x_k, u_k) + w_k`` with some i.i.d. noise structure ``w_k``.
 """
 abstract type AdditiveNoiseDynamics <: DiscreteTimeStochasticDynamics end
+decouplingmode(dyn::AdditiveNoiseDynamics) = decouplingmode(noise(dyn))
+function decouple(dyn::AdditiveNoiseDynamics)
+    transformation, w = decouple(noise(dyn))
+
+    dyn = transform(dyn, transformation, w)
+    return transformation, dyn
+end
 
 """
     nominal
@@ -43,12 +50,8 @@ For additive dynamics ``x_{k+1} = f(x_k, u_k) + w_k``, return ``w_k`` as a struc
 function noise end
 
 #### Noise structures
-export AdditiveNoiseStructure, AdditiveDiagonalGaussianNoise, AdditiveCentralUniformNoise
-
-abstract type CanDecouple end
-struct DirectDecoupling <: CanDecouple end
-struct LinearTransformationRequired <: CanDecouple end
-struct CannotDecouple <: CanDecouple end
+export AdditiveNoiseStructure,
+       AdditiveDiagonalGaussianNoise, AdditiveGaussianNoise, AdditiveCentralUniformNoise
 
 """
     AdditiveNoiseStructure
@@ -76,7 +79,7 @@ end
 stddev(w::AdditiveDiagonalGaussianNoise) = w.w_stddev
 stddev(w::AdditiveDiagonalGaussianNoise, i) = w.w_stddev[i]
 dim(w::AdditiveDiagonalGaussianNoise) = length(w.w_stddev)
-decouplingmode(w::AdditiveDiagonalGaussianNoise) = DirectDecoupling()
+decouplingmode(::AdditiveDiagonalGaussianNoise) = IsDecoupled()
 
 function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussianNoise)
     # Use the box approximation for the transition probability bounds, as 
@@ -87,7 +90,7 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
     pl = 1.0
     pu = 1.0
 
-    for i = 1:LazySets.dim(Y)
+    for i in 1:LazySets.dim(Y)
         axis_pl, axis_pu = axis_transition_prob_bounds(Y, Z, w, i)
         pl *= axis_pl
         pu *= axis_pu
@@ -97,10 +100,10 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
 end
 
 function axis_transition_prob_bounds(
-    Y::Hyperrectangle,
-    Z::Hyperrectangle,
-    w::AdditiveDiagonalGaussianNoise,
-    axis::Int,
+        Y::Hyperrectangle,
+        Z::Hyperrectangle,
+        w::AdditiveDiagonalGaussianNoise,
+        axis::Int
 )
     z = LazySets.Interval(low(Z, axis), high(Z, axis))
 
@@ -108,10 +111,10 @@ function axis_transition_prob_bounds(
 end
 
 function axis_transition_prob_bounds(
-    Y::Hyperrectangle,
-    z::LazySets.Interval,
-    w::AdditiveDiagonalGaussianNoise,
-    axis::Int,
+        Y::Hyperrectangle,
+        z::LazySets.Interval,
+        w::AdditiveDiagonalGaussianNoise,
+        axis::Int
 )
     y = LazySets.Interval(low(Y, axis), high(Y, axis))
     σ = stddev(w, axis)
@@ -120,11 +123,23 @@ function axis_transition_prob_bounds(
 end
 
 function axis_transition_prob_bounds(
-    y::LazySets.Interval,
-    z::LazySets.Interval,
-    w::AdditiveDiagonalGaussianNoise,
-    σ::Real,
+        y::LazySets.Interval,
+        z::LazySets.Interval,
+        ::AdditiveDiagonalGaussianNoise,
+        σ::Real
 )
+    # Handle the special case where the standard deviation is zero (degenerate normal distribution)
+    if σ == 0.0
+        # y is the set of means, z is the destination set
+        if y ⊆ z  # any point in y is in z, so the transition is certain/deterministic
+            return 1.0, 1.0
+        elseif isdisjoint(y, z)  # no point in y is in z, so the transition is impossible
+            return 0.0, 0.0
+        else  # y and z overlap, so the transition is uncertain/non-deterministic
+            return 0.0, 1.0
+        end
+    end
+
     # Compute the transition probability bounds for each dimension
     cy, cz = center(y, 1), center(z, 1)
 
@@ -155,14 +170,27 @@ struct AdditiveGaussianNoise <: AdditiveNoiseStructure
     w_cov::Matrix{Float64}
 
     function AdditiveGaussianNoise(w_cov::Matrix{Float64})
-        if !isposdef(w_cov)
-            throw(ArgumentError("Covariance matrix must be positive definite"))
+        if eigmin(w_cov) < 0.0
+            throw(ArgumentError("Covariance matrix must be positive semi-definite"))
         end
         return new(w_cov)
     end
 end
 dim(w::AdditiveGaussianNoise) = size(w.w_cov, 1)
-decouplingmode(w::AdditiveGaussianNoise) = LinearTransformationRequired()
+decouplingmode(::AdditiveGaussianNoise) = LinearTransformationRequired()
+function decouple(w::AdditiveGaussianNoise)
+    # Compute the SVD of the covariance matrix
+    F = eigen(w.w_cov)
+    T = F.vectors'
+    Tinv = F.vectors
+    transformation = LinearTransformation(T, Tinv)
+
+    stddev = sqrt.(F.values)
+    w = AdditiveDiagonalGaussianNoise(stddev)
+
+    # Transform the noise
+    return transformation, w
+end
 
 """
     AdditiveCentralUniformNoise
@@ -183,7 +211,7 @@ struct AdditiveCentralUniformNoise <: AdditiveNoiseStructure
     end
 end
 dim(w::AdditiveCentralUniformNoise) = length(w.r)
-decouplingmode(w::AdditiveCentralUniformNoise) = DirectDecoupling()
+decouplingmode(::AdditiveCentralUniformNoise) = IsDecoupled()
 
 function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveCentralUniformNoise)
     # Use the box approximation for the transition probability bounds, as 
@@ -194,7 +222,7 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveCentralUniformN
     pl = 1.0
     pu = 1.0
 
-    for i = 1:LazySets.dim(Y)
+    for i in 1:LazySets.dim(Y)
         axis_pl, axis_pu = axis_transition_prob_bounds(Y, Z, w, i)
         pl *= axis_pl
         pu *= axis_pu
@@ -204,10 +232,10 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveCentralUniformN
 end
 
 function axis_transition_prob_bounds(
-    Y::Hyperrectangle,
-    Z::Hyperrectangle,
-    w::AdditiveCentralUniformNoise,
-    axis::Int,
+        Y::Hyperrectangle,
+        Z::Hyperrectangle,
+        w::AdditiveCentralUniformNoise,
+        axis::Int
 )
     z = LazySets.Interval(extrema(Z, axis)...)
 
@@ -215,10 +243,10 @@ function axis_transition_prob_bounds(
 end
 
 function axis_transition_prob_bounds(
-    Y::Hyperrectangle,
-    z::LazySets.Interval,
-    w::AdditiveCentralUniformNoise,
-    axis::Int,
+        Y::Hyperrectangle,
+        z::LazySets.Interval,
+        w::AdditiveCentralUniformNoise,
+        axis::Int
 )
     y = LazySets.Interval(extrema(Y, axis)...)
     r = w.r[axis]
@@ -227,10 +255,10 @@ function axis_transition_prob_bounds(
 end
 
 function axis_transition_prob_bounds(
-    y::LazySets.Interval,
-    z::LazySets.Interval,
-    w::AdditiveCentralUniformNoise,
-    r::Real,
+        y::LazySets.Interval,
+        z::LazySets.Interval,
+        w::AdditiveCentralUniformNoise,
+        r::Real
 )
     # Compute the transition probability bounds for each dimension
     cy, cz = center(y, 1), center(z, 1)

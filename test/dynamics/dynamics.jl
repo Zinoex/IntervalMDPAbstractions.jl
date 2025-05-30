@@ -6,7 +6,7 @@ test_files = [
     "uncertain_pwa.jl",
     "gaussian_process.jl",
     "stochastic_switched.jl",
-    "piecewise_nonlinear.jl",
+    "piecewise_nonlinear.jl"
 ]
 for f in test_files
     @testset "dynamics/$f" include(f)

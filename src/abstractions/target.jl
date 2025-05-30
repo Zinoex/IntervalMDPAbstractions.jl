@@ -9,7 +9,6 @@ Type hierarchy to represent the target abstraction model.
 """
 abstract type TargetAbstractionModel end
 
-
 ########
 # IMDP #
 ########
@@ -36,7 +35,6 @@ Base.@kwdef struct SparseIMDPTarget <: AbstractIMDPTarget
 end
 
 includetransition(target::SparseIMDPTarget, prob) = target.sparsity_threshold < prob
-
 
 ###################
 # Orthogonal IMDP #
@@ -68,9 +66,7 @@ Base.@kwdef struct SparseOrthogonalIMDPTarget <: AbstractOrthogonalIMDPTarget
     sparsity_threshold = 1e-9
 end
 
-includetransition(target::SparseOrthogonalIMDPTarget, prob) =
-    target.sparsity_threshold < prob
-
+includetransition(target::SparseOrthogonalIMDPTarget, prob) = target.sparsity_threshold < prob
 
 ###############################
 # Mixture of Orthogonal IMDPs #
@@ -102,5 +98,4 @@ Base.@kwdef struct SparseMixtureIMDPTarget <: AbstractMixtureIMDPTarget
     sparsity_threshold = 1e-9
 end
 
-mixture_target(target::SparseMixtureIMDPTarget) =
-    SparseOrthogonalIMDPTarget(target.sparsity_threshold)
+mixture_target(target::SparseMixtureIMDPTarget) = SparseOrthogonalIMDPTarget(target.sparsity_threshold)

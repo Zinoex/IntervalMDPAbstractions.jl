@@ -21,3 +21,17 @@ function dimstate end
 Return the dimension of the input space of the dynamics `dyn`.
 """
 function diminput end
+
+abstract type CanDecouple end
+abstract type TransformationRequired <: CanDecouple end
+struct IsDecoupled <: CanDecouple end
+struct LinearTransformationRequired <: TransformationRequired end
+struct CannotDecouple <: CanDecouple end
+
+abstract type Transformation end
+struct LinearTransformation{
+    R, MR1 <: Union{AbstractMatrix{R}, UniformScaling{R}}, MR2 <: Union{AbstractMatrix{R}, UniformScaling{R}}} <:
+       Transformation
+    T::MR1
+    Tinv::MR2
+end

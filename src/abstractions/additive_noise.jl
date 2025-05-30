@@ -1,11 +1,11 @@
 using SparseArrays
 
 function transition_prob(
-    dyn::AdditiveNoiseDynamics,
-    state_abstraction::StateUniformGridSplit,
-    input_abstraction::InputAbstraction,
-    stateptr,
-    target_model::AbstractIMDPTarget,
+        dyn::AdditiveNoiseDynamics,
+        state_abstraction::StateUniformGridSplit,
+        input_abstraction::InputAbstraction,
+        stateptr,
+        target_model::AbstractIMDPTarget
 )
     # The first state is absorbing, representing transitioning to outside the partitioned.
     nregions = numregions(state_abstraction)
@@ -18,8 +18,7 @@ function transition_prob(
     # Transition probabilities
     prepare_nominal(dyn, input_abstraction)
 
-    Threads.@threads for (i, source_region) in
-                         collect(enumerate(regions(state_abstraction)))
+    Threads.@threads for (i, source_region) in collect(enumerate(regions(state_abstraction)))
         for (j, input) in enumerate(inputs(input_abstraction))
             srcact_idx = (i - 1) * ninputs + j
             Y = nominal(dyn, source_region, input)
@@ -31,26 +30,26 @@ function transition_prob(
                 Y,
                 prob_lower,
                 prob_upper,
-                srcact_idx,
+                srcact_idx
             )
         end
     end
 
     prob_lower, prob_upper = postprocessprob(target_model, prob_lower, prob_upper)
 
-    prob = IntervalProbabilities(; lower = prob_lower, upper = prob_upper)
+    prob = IntervalProbabilities(; lower=prob_lower, upper=prob_upper)
 
     return prob
 end
 
 function source_action_transition_prob(
-    dyn::AdditiveNoiseDynamics,
-    state_abstraction::StateUniformGridSplit,
-    target_model::AbstractIMDPTarget,
-    Y::LazySet,
-    prob_lower,
-    prob_upper,
-    srcact_idx,
+        dyn::AdditiveNoiseDynamics,
+        state_abstraction::StateUniformGridSplit,
+        target_model::AbstractIMDPTarget,
+        Y::LazySet,
+        prob_lower,
+        prob_upper,
+        srcact_idx
 )
     X = statespace(state_abstraction)
     w = noise(dyn)
@@ -64,8 +63,8 @@ function source_action_transition_prob(
         pl, pu = transition_prob_bounds(Y, target_region, noise(dyn))
 
         if includetransition(target_model, pu)
-            prob_lower[tar_idx, srcact_idx] = pl
-            prob_upper[tar_idx, srcact_idx] = pu
+            @inbounds prob_lower[tar_idx, srcact_idx] = pl
+            @inbounds prob_upper[tar_idx, srcact_idx] = pu
         else  # Allow sparsifying via adding probability to the absorbing avoid state
             pl_outside = pl_outside + pl
             pu_outside = pu_outside + pu
@@ -73,24 +72,17 @@ function source_action_transition_prob(
     end
 
     # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-    prob_lower[end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
-    prob_upper[end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
+    @inbounds prob_lower[end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
+    @inbounds prob_upper[end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
 end
 
 function transition_prob(
-    dyn::AdditiveNoiseDynamics,
-    state_abstraction::StateUniformGridSplit,
-    input_abstraction::InputAbstraction,
-    stateptr,
-    target_model::AbstractOrthogonalIMDPTarget,
+        dyn::AdditiveNoiseDynamics,
+        state_abstraction::StateUniformGridSplit,
+        input_abstraction::InputAbstraction,
+        stateptr,
+        target_model::AbstractOrthogonalIMDPTarget
 )
-    if !(decouplingmode(noise(dyn)) isa DirectDecoupling)
-        throw(
-            ArgumentError(
-                "Cannot decouple noise dynamics with decoupling mode $(decouplingmode(noise(dyn))) for orthogonal IMDP target.",
-            ),
-        )
-    end
     prepare_nominal(dyn, input_abstraction)
 
     # The first state along each axis is absorbing, representing transitioning to outside the partitioned along that axis.
@@ -120,7 +112,7 @@ function transition_prob(
                 Y,
                 prob_lower,
                 prob_upper,
-                srcact_idx,
+                srcact_idx
             )
 
             srcact_idx += 1
@@ -131,23 +123,23 @@ function transition_prob(
 
     prob = OrthogonalIntervalProbabilities(
         Tuple(
-            IntervalProbabilities(; lower = pl, upper = pu) for
-            (pl, pu) in zip(prob_lower, prob_upper)
+            IntervalProbabilities(; lower=pl, upper=pu) for
+        (pl, pu) in zip(prob_lower, prob_upper)
         ),
-        Int32.(Tuple(splits(state_abstraction))),
+        Int32.(Tuple(splits(state_abstraction)))
     )
 
     return prob
 end
 
 function source_action_transition_prob(
-    dyn::AdditiveNoiseDynamics,
-    state_abstraction::StateUniformGridSplit,
-    target_model::AbstractOrthogonalIMDPTarget,
-    Y::Hyperrectangle,
-    prob_lower,
-    prob_upper,
-    srcact_idx,
+        dyn::AdditiveNoiseDynamics,
+        state_abstraction::StateUniformGridSplit,
+        target_model::AbstractOrthogonalIMDPTarget,
+        Y::Hyperrectangle,
+        prob_lower,
+        prob_upper,
+        srcact_idx
 )
     w = noise(dyn)
     X = statespace(state_abstraction)
@@ -166,8 +158,8 @@ function source_action_transition_prob(
             pl, pu = axis_transition_prob_bounds(Y, target_region, w, axis)
 
             if includetransition(target_model, pu)
-                prob_lower[axis][tar_idx, srcact_idx] = pl
-                prob_upper[axis][tar_idx, srcact_idx] = pu
+                @inbounds prob_lower[axis][tar_idx, srcact_idx] = pl
+                @inbounds prob_upper[axis][tar_idx, srcact_idx] = pu
             else  # Allow sparsifying via adding probability to the absorbing avoid state
                 pl_outside = pl_outside + pl
                 pu_outside = pu_outside + pu
@@ -175,7 +167,7 @@ function source_action_transition_prob(
         end
 
         # Use clamp to ensure that the probabilities are within [0, 1] (due to floating point errors).
-        prob_lower[axis][end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
-        prob_upper[axis][end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
+        @inbounds prob_lower[axis][end, srcact_idx] = clamp(pl_outside, 0.0, 1.0)
+        @inbounds prob_upper[axis][end, srcact_idx] = clamp(pu_outside, 0.0, 1.0)
     end
 end

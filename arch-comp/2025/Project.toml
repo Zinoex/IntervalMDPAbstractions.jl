@@ -1,8 +1,11 @@
 [deps]
 ArchCompStochasticModels = "64888ec4-9db0-4860-a6f8-fd142b085b09"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 IntervalMDP = "051c988a-e73c-45a4-90ec-875cac0402c7"
 IntervalMDPAbstractions = "6214ee8e-79dc-449b-ae00-4c9ff82a02a9"
+InvertedIndices = "41ab1584-1d38-5bbf-9106-f11c6c58b48f"
 LazySets = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
+PDMats = "90014a1f-27ba-587c-ab20-58faa44d9150"
 Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 
 [sources]

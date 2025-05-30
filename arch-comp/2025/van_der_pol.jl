@@ -1,8 +1,6 @@
 
-function odimdp_as_faa_safety(state_split=(12, 20, 20), input_split=(3,))
-
-    # Load the problem
-    arch_comp_problem = ArchCompStochasticModels.fully_automated_anaesthesia_finite_time_safety()
+function odimdp_vp_gauss_quantitative(state_split=(50, 50), input_split=(10,))
+    arch_comp_problem = ArchCompStochasticModels.controlled_gaussian_van_der_pol_quantitative()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
 
@@ -12,17 +10,28 @@ function odimdp_as_faa_safety(state_split=(12, 20, 20), input_split=(3,))
     noise = AdditiveDiagonalGaussianNoise(stddev)
 
     U = ArchCompStochasticModels.control_space(arch_comp_system)
+    Usub = Hyperrectangle(; low=[-1.0], high=[1.0])
 
-    @assert Tx.mean isa Linear2
-    additive_dynamics = AffineAdditiveNoiseDynamics(Tx.mean.A, Tx.mean.B, noise)
+    @assert Tx.mean isa Smooth2
+    additive_dynamics = NonlinearAdditiveNoiseDynamics(
+        Tx.mean.func,
+        IntervalMDPAbstractions.dim(noise),
+        LazySets.dim(U),
+        noise
+    )
     system = System(additive_dynamics)
 
     # Specification
     @assert arch_comp_spec isa ArchCompStochasticModels.ControllerSynthesisSpecification
     arch_comp_prop = arch_comp_spec.underlying_prop
-    @assert arch_comp_prop isa ArchCompStochasticModels.FiniteTimeSafetySpecification
+    @assert arch_comp_prop isa ArchCompStochasticModels.InfiniteTimeReachAvoidSpecification
 
-    prop = FiniteTimeRegionSafety(Complement(arch_comp_prop.safe_set), arch_comp_prop.N)
+    # Encode avoid set as through the region of interest (transitioning to outside the region of interest
+    # is treated as transitioning to a failure/sink state)
+    prop = InfiniteTimeRegionReachability(
+        arch_comp_prop.target_set,
+        arch_comp_prop.convergence_threshold
+    )
     spec = Specification(
         prop,
         Pessimistic,
@@ -32,9 +41,10 @@ function odimdp_as_faa_safety(state_split=(12, 20, 20), input_split=(3,))
     abs_problem = AbstractionProblem(system, spec)
 
     # Define abstraction parameters
+    region_of_interest = Complement(arch_comp_prop.avoid_set)
     target_model = OrthogonalIMDPTarget()
-    state_abs = StateUniformGridSplit(arch_comp_prop.safe_set, state_split)
-    input_abs = InputLinRange(U, input_split)
+    state_abs = StateUniformGridSplit(region_of_interest, state_split)
+    input_abs = InputLinRange(Usub, input_split)
 
     # Abstract and compute bounds; warmup then measure time.
     odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)

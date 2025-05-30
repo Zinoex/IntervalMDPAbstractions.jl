@@ -1,11 +1,11 @@
 using SparseArrays
 
 function transition_prob(
-    dyn::AbstractedGaussianProcess,
-    state_abstraction::StateUniformGridSplit,
-    input_abstraction::InputAbstraction,
-    stateptr,
-    target_model::AbstractIMDPTarget,
+        dyn::AbstractedGaussianProcess,
+        state_abstraction::StateUniformGridSplit,
+        input_abstraction::InputAbstraction,
+        stateptr,
+        target_model::AbstractIMDPTarget
 )
     # The first state is absorbing, representing transitioning to outside the partitioned.
     nregions = numregions(state_abstraction)
@@ -15,8 +15,7 @@ function transition_prob(
 
     # Sink state is implicitly endcoded
 
-    Threads.@threads for (i, source_region) in
-                         collect(enumerate(regions(state_abstraction)))
+    Threads.@threads for (i, source_region) in collect(enumerate(regions(state_abstraction)))
         for (j, input) in enumerate(inputs(input_abstraction))
             srcact_idx = (i - 1) * ninputs + j
             bounds = gp_bounds(dyn, source_region, input)
@@ -28,26 +27,26 @@ function transition_prob(
                 bounds,
                 prob_lower,
                 prob_upper,
-                srcact_idx,
+                srcact_idx
             )
         end
     end
 
     prob_lower, prob_upper = postprocessprob(target_model, prob_lower, prob_upper)
 
-    prob = IntervalProbabilities(; lower = prob_lower, upper = prob_upper)
+    prob = IntervalProbabilities(; lower=prob_lower, upper=prob_upper)
 
     return prob
 end
 
 function source_action_transition_prob(
-    dyn::AbstractedGaussianProcess,
-    state_abstraction::StateUniformGridSplit,
-    target_model::AbstractIMDPTarget,
-    gp_bounds::AbstractedGaussianProcessRegion,
-    prob_lower,
-    prob_upper,
-    srcact_idx,
+        dyn::AbstractedGaussianProcess,
+        state_abstraction::StateUniformGridSplit,
+        target_model::AbstractIMDPTarget,
+        gp_bounds::AbstractedGaussianProcessRegion,
+        prob_lower,
+        prob_upper,
+        srcact_idx
 )
     X = statespace(state_abstraction)
 
@@ -74,11 +73,11 @@ function source_action_transition_prob(
 end
 
 function transition_prob(
-    dyn::AbstractedGaussianProcess,
-    state_abstraction::StateUniformGridSplit,
-    input_abstraction::InputAbstraction,
-    stateptr,
-    target_model::AbstractOrthogonalIMDPTarget,
+        dyn::AbstractedGaussianProcess,
+        state_abstraction::StateUniformGridSplit,
+        input_abstraction::InputAbstraction,
+        stateptr,
+        target_model::AbstractOrthogonalIMDPTarget
 )
 
     # The first state along each axis is absorbing, representing transitioning to outside the partitioned along that axis.
@@ -106,7 +105,7 @@ function transition_prob(
                 bounds,
                 prob_lower,
                 prob_upper,
-                srcact_idx,
+                srcact_idx
             )
 
             srcact_idx += 1
@@ -117,23 +116,23 @@ function transition_prob(
 
     prob = OrthogonalIntervalProbabilities(
         Tuple(
-            IntervalProbabilities(; lower = pl, upper = pu) for
-            (pl, pu) in zip(prob_lower, prob_upper)
+            IntervalProbabilities(; lower=pl, upper=pu) for
+        (pl, pu) in zip(prob_lower, prob_upper)
         ),
-        Int32.(Tuple(splits(state_abstraction))),
+        Int32.(Tuple(splits(state_abstraction)))
     )
 
     return prob
 end
 
 function source_action_transition_prob(
-    dyn::AbstractedGaussianProcess,
-    state_abstraction::StateUniformGridSplit,
-    target_model::AbstractOrthogonalIMDPTarget,
-    gp_bounds::AbstractedGaussianProcessRegion,
-    prob_lower,
-    prob_upper,
-    srcact_idx,
+        dyn::AbstractedGaussianProcess,
+        state_abstraction::StateUniformGridSplit,
+        target_model::AbstractOrthogonalIMDPTarget,
+        gp_bounds::AbstractedGaussianProcessRegion,
+        prob_lower,
+        prob_upper,
+        srcact_idx
 )
     X = statespace(state_abstraction)
 

@@ -5,8 +5,10 @@ FiniteTimeRegionReachability
 InfiniteTimeRegionReachability
 FiniteTimeRegionReachAvoid
 InfiniteTimeRegionReachAvoid
+ExactTimeRegionReachAvoid
 FiniteTimeRegionSafety
 InfiniteTimeRegionSafety
+ExactTimeRegionReachability
 reach
 avoid
 dim
@@ -18,4 +20,5 @@ dim
 AbstractionProblem
 system
 specification
+decouple
 ```
