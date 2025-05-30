@@ -4,7 +4,6 @@ if !@isdefined example_systems_included
     example_systems_included = true
 
     function simple_1d_sys()
-
         A = [0.95][:, :]
         B = [0.0][:, :]
         w_stddev = [0.05]
@@ -15,7 +14,7 @@ if !@isdefined example_systems_included
 
         sys = System(dyn, initial_region)
 
-        reach_region = Hyperrectangle(; low = [-0.5], high = [0.5])
+        reach_region = Hyperrectangle(; low=[-0.5], high=[0.5])
         avoid_region = EmptySet(1)
 
         time_horizon = 10
@@ -36,7 +35,7 @@ if !@isdefined example_systems_included
 
         sys = System(dyn, initial_region)
 
-        reach_region = Hyperrectangle(; low = [4.0, -6.0], high = [10.0, -2.0])
+        reach_region = Hyperrectangle(; low=[4.0, -6.0], high=[10.0, -2.0])
         avoid_region = EmptySet(2)
         time_horizon = 10
         prop = FiniteTimeRegionReachAvoid(reach_region, avoid_region, time_horizon)

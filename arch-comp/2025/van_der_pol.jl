@@ -1,8 +1,6 @@
 
-
-function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,))
-    arch_comp_problem =
-        ArchCompStochasticModels.controlled_gaussian_van_der_pol_quantitative()
+function odimdp_vp_gauss_quantitative(state_split=(50, 50), input_split=(10,))
+    arch_comp_problem = ArchCompStochasticModels.controlled_gaussian_van_der_pol_quantitative()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
 
@@ -12,14 +10,14 @@ function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,
     noise = AdditiveDiagonalGaussianNoise(stddev)
 
     U = ArchCompStochasticModels.control_space(arch_comp_system)
-    Usub = Hyperrectangle(; low = [-1.0], high = [1.0])
+    Usub = Hyperrectangle(; low=[-1.0], high=[1.0])
 
     @assert Tx.mean isa Smooth2
     additive_dynamics = NonlinearAdditiveNoiseDynamics(
         Tx.mean.func,
         IntervalMDPAbstractions.dim(noise),
         LazySets.dim(U),
-        noise,
+        noise
     )
     system = System(additive_dynamics)
 
@@ -32,12 +30,12 @@ function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,
     # is treated as transitioning to a failure/sink state)
     prop = InfiniteTimeRegionReachability(
         arch_comp_prop.target_set,
-        arch_comp_prop.convergence_threshold,
+        arch_comp_prop.convergence_threshold
     )
     spec = Specification(
         prop,
         Pessimistic,
-        synthesismode2strategymode(arch_comp_spec.synthesis_mode),
+        synthesismode2strategymode(arch_comp_spec.synthesis_mode)
     )
 
     abs_problem = AbstractionProblem(system, spec)
@@ -65,7 +63,7 @@ function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,
     upper_bound_spec = IntervalMDPAbstractions.convert_specification(
         upper_bound_spec,
         state_abs,
-        target_model,
+        target_model
     )
     upper_bound_problem = Problem(odimdp, upper_bound_spec, policy)
     Vupper, k, res, = value_iteration(upper_bound_problem)
@@ -89,18 +87,16 @@ function odimdp_vp_gauss_quantitative(state_split = (50, 50), input_split = (10,
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time + vi_upper_time
     time = (
-        abstraction = abstraction_time,
-        vi_lower = vi_lower_time,
-        vi_upper = vi_upper_time,
-        total = total_time,
+        abstraction=abstraction_time,
+        vi_lower=vi_lower_time,
+        vi_upper=vi_upper_time,
+        total=total_time
     )
 
-    min_lb, max_lb, mean_lb =
-        minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
-    lb = (min = min_lb, max = max_lb, mean = mean_lb)
-    min_error, max_error, mean_error =
-        minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
-    error = (min = min_error, max = max_error, mean = mean_error)
+    min_lb, max_lb, mean_lb = minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
+    lb = (min=min_lb, max=max_lb, mean=mean_lb)
+    min_error, max_error, mean_error = minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
+    error = (min=min_error, max=max_error, mean=mean_error)
 
-    return (lb = lb, error = error, mem = mem_mb, time = time)
+    return (lb=lb, error=error, mem=mem_mb, time=time)
 end

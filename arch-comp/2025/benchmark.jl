@@ -47,7 +47,7 @@ function run_all_benchmarks()
     @info "Completed Automated Vehicle Benchmark" res
 
     @info "Running Integration Chain Benchmark..."
-    for n = 1:5
+    for n in 1:5
         res = odimdp_ic_et_reach_avoid(i)
         @info "Integration Chain Benchmark" n res
     end

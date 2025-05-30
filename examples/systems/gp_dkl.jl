@@ -7,9 +7,9 @@ function load_mode(base_path, mode, regions)
     mean = npzread(joinpath(base_path, "mean_data_$(mode)_0.npy"))
     stddev = npzread(joinpath(base_path, "sig_data_$(mode)_0.npy"))
 
-    dyn = Vector{AbstractedGaussianProcessRegion{Float64,Vector{Float64},eltype(regions)}}(
+    dyn = Vector{AbstractedGaussianProcessRegion{Float64, Vector{Float64}, eltype(regions)}}(
         undef,
-        length(regions),
+        length(regions)
     )
 
     for (i, region) in enumerate(regions)
@@ -26,7 +26,7 @@ function load_mode(base_path, mode, regions)
             convert.(Float64, mean[i, :, 1]),
             convert.(Float64, mean[i, :, 2]),
             stddev_lower,
-            stddev_upper,
+            stddev_upper
         )
     end
 
@@ -36,21 +36,19 @@ end
 function load_npy_dynamics(base_path, num_modes)
     region_extents = npzread(joinpath(base_path, "extents_0.npy"))
 
-    regions = [
-        Hyperrectangle(
-            low = convert.(Float64, extent[:, 1]),
-            high = convert.(Float64, extent[:, 2]),
-        ) for extent in eachslice(region_extents[1:(end-1), :, :]; dims = 1)
-    ]
+    regions = [Hyperrectangle(;
+                   low=convert.(Float64, extent[:, 1]),
+                   high=convert.(Float64, extent[:, 2])
+               ) for extent in eachslice(region_extents[1:(end - 1), :, :]; dims=1)]
 
     dyn = Vector{
-        Vector{AbstractedGaussianProcessRegion{Float64,Vector{Float64},eltype(regions)}},
+        Vector{AbstractedGaussianProcessRegion{Float64, Vector{Float64}, eltype(regions)}},
     }(
         undef,
-        num_modes,
+        num_modes
     )
 
-    for action = 1:num_modes
+    for action in 1:num_modes
         dyn[action] = load_mode(base_path, action, regions)
     end
 
@@ -71,18 +69,18 @@ function dubins_car_sys(time_horizon)
     initial = EmptySet(3)
     sys = System(dyn, initial)
 
-    reach = Hyperrectangle(low = [8.0, 0.0, -0.5], high = [10.0, 1.0, 0.5])
-    avoid = Hyperrectangle(low = [4.0, 0.0, -0.5], high = [6.0, 1.0, 0.5])
+    reach = Hyperrectangle(; low=[8.0, 0.0, -0.5], high=[10.0, 1.0, 0.5])
+    avoid = Hyperrectangle(; low=[4.0, 0.0, -0.5], high=[6.0, 1.0, 0.5])
     prop = FiniteTimeRegionReachAvoid(reach, avoid, time_horizon)
     spec = Specification(prop, Pessimistic, Maximize)
 
     return sys, spec
 end
 
-function dubins_car_decoupled(time_horizon = 10; sparse = false)
+function dubins_car_decoupled(time_horizon=10; sparse=false)
     sys, spec = dubins_car_sys(time_horizon)
 
-    X = Hyperrectangle(; low = [0.0, 0.0, -0.5], high = [10.0, 2.0, 0.5])
+    X = Hyperrectangle(; low=[0.0, 0.0, -0.5], high=[10.0, 2.0, 0.5])
     state_split = (80, 16, 20)
     state_abs = StateUniformGridSplit(X, state_split)
 
@@ -101,16 +99,16 @@ function dubins_car_decoupled(time_horizon = 10; sparse = false)
     upper_bound_spec = IntervalMDPAbstractions.convert_specification(
         upper_bound_spec,
         state_abs,
-        target_model,
+        target_model
     )
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function dubins_car_direct(time_horizon = 10; sparse = true)
+function dubins_car_direct(time_horizon=10; sparse=true)
     sys, spec = dubins_car_sys(time_horizon)
 
-    X = Hyperrectangle(; low = [0.0, 0.0, -0.5], high = [10.0, 2.0, 0.5])
+    X = Hyperrectangle(; low=[0.0, 0.0, -0.5], high=[10.0, 2.0, 0.5])
     state_split = (80, 16, 20)
     state_abs = StateUniformGridSplit(X, state_split)
 
@@ -129,7 +127,7 @@ function dubins_car_direct(time_horizon = 10; sparse = true)
     upper_bound_spec = IntervalMDPAbstractions.convert_specification(
         upper_bound_spec,
         state_abs,
-        target_model,
+        target_model
     )
 
     return mdp, abstract_spec, upper_bound_spec

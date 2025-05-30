@@ -28,10 +28,10 @@ dyn = AffineAdditiveNoiseDynamics(A, B, w)
 
 """
 struct AffineAdditiveNoiseDynamics{
-    TA<:AbstractMatrix{Float64},
-    TB<:AbstractMatrix{Float64},
-    TC<:AbstractVector{Float64},
-    TW<:AdditiveNoiseStructure,
+    TA <: AbstractMatrix{Float64},
+    TB <: AbstractMatrix{Float64},
+    TC <: AbstractVector{Float64},
+    TW <: AdditiveNoiseStructure
 } <: AdditiveNoiseDynamics
     A::TA
     B::TB
@@ -39,15 +39,15 @@ struct AffineAdditiveNoiseDynamics{
     w::TW
 
     function AffineAdditiveNoiseDynamics(
-        A::TA,
-        B::TB,
-        C::TC,
-        w::TW,
+            A::TA,
+            B::TB,
+            C::TC,
+            w::TW
     ) where {
-        TA<:AbstractMatrix{Float64},
-        TB<:AbstractMatrix{Float64},
-        TC<:AbstractVector{Float64},
-        TW<:AdditiveNoiseStructure,
+            TA <: AbstractMatrix{Float64},
+            TB <: AbstractMatrix{Float64},
+            TC <: AbstractVector{Float64},
+            TW <: AdditiveNoiseStructure
     }
         n = LinearAlgebra.checksquare(A)
 
@@ -65,35 +65,38 @@ struct AffineAdditiveNoiseDynamics{
             )
         end
 
-        return new{TA,TB,TC,TW}(A, B, C, w)
+        return new{TA, TB, TC, TW}(A, B, C, w)
     end
 end
 
 function AffineAdditiveNoiseDynamics(
-    A::AbstractMatrix{Float64},
-    B::AbstractMatrix{Float64},
-    w::AdditiveNoiseStructure,
+        A::AbstractMatrix{Float64},
+        B::AbstractMatrix{Float64},
+        w::AdditiveNoiseStructure
 )
     C = zeros(eltype(A), size(A, 1))
     return AffineAdditiveNoiseDynamics(A, B, C, w)
 end
 
-nominal(dyn::AffineAdditiveNoiseDynamics, X::LazySet{Float64}, U::LazySet{Float64}) =
+function nominal(dyn::AffineAdditiveNoiseDynamics, X::LazySet{Float64}, U::LazySet{Float64})
     dyn.A * X + dyn.B * U + Singleton(dyn.C)
-nominal(
-    dyn::AffineAdditiveNoiseDynamics,
-    X::AbstractVector{Float64},
-    U::AbstractVector{Float64},
-) = dyn.A * X + dyn.B * U + dyn.C
+end
+function nominal(
+        dyn::AffineAdditiveNoiseDynamics,
+        X::AbstractVector{Float64},
+        U::AbstractVector{Float64}
+)
+    dyn.A * X + dyn.B * U + dyn.C
+end
 noise(dyn::AffineAdditiveNoiseDynamics) = dyn.w
 dimstate(dyn::AffineAdditiveNoiseDynamics) = size(dyn.A, 1)
 diminput(dyn::AffineAdditiveNoiseDynamics) = size(dyn.B, 2)
 prepare_nominal(::AffineAdditiveNoiseDynamics, input_abstraction) = nothing
 
 function transform(
-    dyn::AffineAdditiveNoiseDynamics,
-    transformation::LinearTransformation,
-    w::AdditiveNoiseStructure,  # Noise is already transformed
+        dyn::AffineAdditiveNoiseDynamics,
+        transformation::LinearTransformation,
+        w::AdditiveNoiseStructure  # Noise is already transformed
 )
     # Transform the dynamics
     A = transformation.T * dyn.A * transformation.Tinv

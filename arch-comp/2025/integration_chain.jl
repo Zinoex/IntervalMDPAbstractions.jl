@@ -1,6 +1,5 @@
 
-
-function odimdp_ic_et_reach_avoid(n; state_split_per_dim = 20, input_split = (10,))
+function odimdp_ic_et_reach_avoid(n; state_split_per_dim=20, input_split=(10,))
 
     # Load the problem
     arch_comp_problem = ArchCompStochasticModels.integrator_chain_exact_time_reachavoid(n)
@@ -33,7 +32,7 @@ function odimdp_ic_et_reach_avoid(n; state_split_per_dim = 20, input_split = (10
     spec = Specification(
         prop,
         Pessimistic,
-        synthesismode2strategymode(arch_comp_spec.synthesis_mode),
+        synthesismode2strategymode(arch_comp_spec.synthesis_mode)
     )
 
     abs_problem = AbstractionProblem(system, spec)
@@ -42,7 +41,7 @@ function odimdp_ic_et_reach_avoid(n; state_split_per_dim = 20, input_split = (10
     target_model = SparseOrthogonalIMDPTarget(1e-4)
     state_abs = StateUniformGridSplit(
         Complement(arch_comp_prop.avoid_set),
-        ntuple(_ -> state_split_per_dim, n),
+        ntuple(_ -> state_split_per_dim, n)
     )
     input_abs = InputLinRange(U, input_split)
 
@@ -63,14 +62,14 @@ function odimdp_ic_et_reach_avoid(n; state_split_per_dim = 20, input_split = (10
     mem_mb = mem_bytes / 1024^2
 
     # Remove avoid states - not reach states(!)
-    Vlower = Vlower[(1:state_split_per_dim for _ = 1:n)...]
+    Vlower = Vlower[(1:state_split_per_dim for _ in 1:n)...]
 
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time
-    time = (abstraction = abstraction_time, vi_lower = vi_lower_time, total = total_time)
+    time = (abstraction=abstraction_time, vi_lower=vi_lower_time, total=total_time)
 
     min_lb, max_lb, mean_lb = minimum(Vlower), maximum(Vlower), mean(Vlower)
-    lb = (min = min_lb, max = max_lb, mean = mean_lb)
+    lb = (min=min_lb, max=max_lb, mean=mean_lb)
 
     volume = 0.0
     for (i, region) in enumerate(regions(state_abs))
@@ -79,7 +78,7 @@ function odimdp_ic_et_reach_avoid(n; state_split_per_dim = 20, input_split = (10
         end
     end
 
-    return (lb = lb, volume = volume, mem = mem_mb, time = time)
+    return (lb=lb, volume=volume, mem=mem_mb, time=time)
 end
 
 function lebesguemeasure(X::Hyperrectangle)

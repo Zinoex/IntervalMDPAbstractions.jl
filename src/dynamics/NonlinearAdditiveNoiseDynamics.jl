@@ -42,7 +42,7 @@ dyn = NonlinearAdditiveNoiseDynamics(f, 2, 0, w)
 ```
 
 """
-struct NonlinearAdditiveNoiseDynamics{F<:Function,TW<:AdditiveNoiseStructure} <:
+struct NonlinearAdditiveNoiseDynamics{F <: Function, TW <: AdditiveNoiseStructure} <:
        AdditiveNoiseDynamics
     f::F
     nstate::Int
@@ -50,23 +50,23 @@ struct NonlinearAdditiveNoiseDynamics{F<:Function,TW<:AdditiveNoiseStructure} <:
     w::TW
 
     function NonlinearAdditiveNoiseDynamics(
-        f::F,
-        nstate,
-        ninput,
-        w::TW,
-    ) where {F<:Function,TW<:AdditiveNoiseStructure}
+            f::F,
+            nstate,
+            ninput,
+            w::TW
+    ) where {F <: Function, TW <: AdditiveNoiseStructure}
         if nstate != dim(w)
             throw(ArgumentError("The dimensionality of w must match the state dimension"))
         end
 
-        return new{F,TW}(f, nstate, ninput, w)
+        return new{F, TW}(f, nstate, ninput, w)
     end
 end
 
 function nominal(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    X::Hyperrectangle{Float64},
-    U::Hyperrectangle{Float64},
+        dyn::NonlinearAdditiveNoiseDynamics,
+        X::Hyperrectangle{Float64},
+        U::Hyperrectangle{Float64}
 )
     # Use the Taylor model to over-approximate the reachable set
     order = 1
@@ -79,10 +79,8 @@ function nominal(
     # Therefore, we prepare the global state before entering the threaded section.
     # set_variables(Float64, "z"; order=order, numvars=dimstate(dyn) + diminput(dyn))
 
-    z = [
-        TaylorModelN(i, order, IntervalBox(z0), dom) for i = 1:(dimstate(dyn)+diminput(dyn))
-    ]
-    x, u = z[1:dimstate(dyn)], z[(dimstate(dyn)+1):end]
+    z = [TaylorModelN(i, order, IntervalBox(z0), dom) for i in 1:(dimstate(dyn) + diminput(dyn))]
+    x, u = z[1:dimstate(dyn)], z[(dimstate(dyn) + 1):end]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
@@ -105,21 +103,23 @@ function nominal(
     Y1 = AffineMap(ABlower, Translation(Z, -z0), Clower)
     Y2 = AffineMap(ABupper, Translation(Z, -z0), Cupper)
 
-    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low = Dlower, high = Dupper)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low=Dlower, high=Dupper)
 
     return Yconv
 end
 
-nominal(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    X::Hyperrectangle{Float64},
-    U::Singleton{Float64},
-) = nominal(dyn, X, element(U))
+function nominal(
+        dyn::NonlinearAdditiveNoiseDynamics,
+        X::Hyperrectangle{Float64},
+        U::Singleton{Float64}
+)
+    nominal(dyn, X, element(U))
+end
 
 function nominal(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    X::Hyperrectangle{Float64},
-    u::AbstractVector{Float64},
+        dyn::NonlinearAdditiveNoiseDynamics,
+        X::Hyperrectangle{Float64},
+        u::AbstractVector{Float64}
 )
     # Use the Taylor model to over-approximate the reachable set
 
@@ -133,7 +133,7 @@ function nominal(
     # set_variables(Float64, "x"; order=10, numvars=dimstate(dyn))
 
     order = 1
-    x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i = 1:dimstate(dyn)]
+    x = [TaylorModelN(i, order, IntervalBox(x0), dom) for i in 1:dimstate(dyn)]
 
     # Perform the Taylor expansion
     y = dyn.f(x, u)
@@ -155,15 +155,15 @@ function nominal(
     Y1 = AffineMap(Alower, Translation(X, -x0), Clower)
     Y2 = AffineMap(Aupper, Translation(X, -x0), Cupper)
 
-    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low = Dlower, high = Dupper)
+    Yconv = ConvexHull(Y1, Y2) + Hyperrectangle(; low=Dlower, high=Dupper)
 
     return Yconv
 end
 
 function nominal(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    X::Singleton{Float64},
-    U::Singleton{Float64},
+        dyn::NonlinearAdditiveNoiseDynamics,
+        X::Singleton{Float64},
+        U::Singleton{Float64}
 )
     x = element(X)
     u = element(U)
@@ -173,11 +173,10 @@ function nominal(
     return Singleton(y)
 end
 
-
 nominal(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    x::AbstractVector{Float64},
-    u::AbstractVector{Float64},
+dyn::NonlinearAdditiveNoiseDynamics,
+x::AbstractVector{Float64},
+u::AbstractVector{Float64}
 ) = dyn.f(x, u)
 
 noise(dyn::NonlinearAdditiveNoiseDynamics) = dyn.w
@@ -192,15 +191,15 @@ function prepare_nominal(dyn::NonlinearAdditiveNoiseDynamics, input_abstraction)
     end
 
     # Set the Taylor model variables
-    set_variables(Float64, "z"; order = 2, numvars = n)
+    set_variables(Float64, "z"; order=2, numvars=n)
 
     return nothing
 end
 
 function transform(
-    dyn::NonlinearAdditiveNoiseDynamics,
-    transformation::LinearTransformation,
-    w::AdditiveNoiseStructure,  # Noise is already transformed
+        dyn::NonlinearAdditiveNoiseDynamics,
+        transformation::LinearTransformation,
+        w::AdditiveNoiseStructure  # Noise is already transformed
 )
     # Transform the dynamics
     function f(z, u)

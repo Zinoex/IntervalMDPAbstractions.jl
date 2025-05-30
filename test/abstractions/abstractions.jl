@@ -1,5 +1,5 @@
 
-@testset verbose = true "abstractions/additive_noise" include(
+@testset verbose=true "abstractions/additive_noise" include(
     "additive_noise/additive_noise.jl",
 )
 @testset "abstractions/gaussian_process.jl" include("gaussian_process.jl")

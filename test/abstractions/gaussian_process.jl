@@ -6,69 +6,67 @@ using IntervalMDP, IntervalMDPAbstractions
 
 # Action 1
 gp_region1_action1 = AbstractedGaussianProcessRegion(
-    Hyperrectangle(low = [-0.5, -0.5], high = [0.0, 0.0]),
+    Hyperrectangle(; low=[-0.5, -0.5], high=[0.0, 0.0]),
     [-0.5, 0.5],
     [0.0, 0.6],
     [0.1, 0.3],
-    [0.2, 0.4],
+    [0.2, 0.4]
 )
 gp_region2_action1 = AbstractedGaussianProcessRegion(
-    Hyperrectangle(low = [0.0, -0.5], high = [0.5, 0.0]),
+    Hyperrectangle(; low=[0.0, -0.5], high=[0.5, 0.0]),
     [-0.5, 0.5],
     [0.0, 0.6],
     [0.1, 0.3],
-    [0.2, 0.4],
+    [0.2, 0.4]
 )
 gp_region3_action1 = AbstractedGaussianProcessRegion(
-    Hyperrectangle(low = [-0.5, 0.0], high = [0.0, 0.5]),
+    Hyperrectangle(; low=[-0.5, 0.0], high=[0.0, 0.5]),
     [-0.5, 0.5],
     [0.0, 0.6],
     [0.1, 0.3],
-    [0.2, 0.4],
+    [0.2, 0.4]
 )
 gp_region4_action1 = AbstractedGaussianProcessRegion(
-    Hyperrectangle(low = [0.0, 0.0], high = [0.5, 0.5]),
+    Hyperrectangle(; low=[0.0, 0.0], high=[0.5, 0.5]),
     [-0.5, 0.5],
     [0.0, 0.6],
     [0.1, 0.3],
-    [0.2, 0.4],
+    [0.2, 0.4]
 )
 
-gp_action1 =
-    [gp_region1_action1, gp_region2_action1, gp_region3_action1, gp_region4_action1]
+gp_action1 = [gp_region1_action1, gp_region2_action1, gp_region3_action1, gp_region4_action1]
 
 # Action 2
 gp_region1_action2 = AbstractedGaussianProcessRegion(
-    Hyperrectangle(low = [-0.5, -0.5], high = [0.0, 0.0]),
+    Hyperrectangle(; low=[-0.5, -0.5], high=[0.0, 0.0]),
     [-0.5, 0.5],
     [0.0, 0.6],
     [0.1, 0.3],
-    [0.2, 0.4],
+    [0.2, 0.4]
 )
 gp_region2_action2 = AbstractedGaussianProcessRegion(
-    Hyperrectangle(low = [0.0, -0.5], high = [0.5, 0.0]),
+    Hyperrectangle(; low=[0.0, -0.5], high=[0.5, 0.0]),
     [-0.5, 0.5],
     [0.0, 0.6],
     [0.1, 0.3],
-    [0.2, 0.4],
+    [0.2, 0.4]
 )
 gp_region3_action2 = AbstractedGaussianProcessRegion(
-    Hyperrectangle(low = [-0.5, 0.0], high = [0.0, 0.5]),
+    Hyperrectangle(; low=[-0.5, 0.0], high=[0.0, 0.5]),
     [-0.5, 0.5],
     [0.0, 0.6],
     [0.1, 0.3],
-    [0.2, 0.4],
+    [0.2, 0.4]
 )
 gp_region4_action2 = AbstractedGaussianProcessRegion(
-    Hyperrectangle(low = [0.0, 0.0], high = [0.5, 0.5]),
+    Hyperrectangle(; low=[0.0, 0.0], high=[0.5, 0.5]),
     [-0.5, 0.5],
     [0.0, 0.6],
     [0.1, 0.3],
-    [0.2, 0.4],
+    [0.2, 0.4]
 )
 
-gp_action2 =
-    [gp_region1_action2, gp_region2_action2, gp_region3_action2, gp_region4_action2]
+gp_action2 = [gp_region1_action2, gp_region2_action2, gp_region3_action2, gp_region4_action2]
 
 # Noise
 w_variance = [0.2, 0.2]
@@ -76,7 +74,7 @@ w_stddev = sqrt.(w_variance)
 w = AdditiveDiagonalGaussianNoise(w_stddev)
 
 dyn = AbstractedGaussianProcess([gp_action1, gp_action2])
-initial_region = Hyperrectangle(low = [-0.1, -0.1], high = [0.1, 0.1])
+initial_region = Hyperrectangle(; low=[-0.1, -0.1], high=[0.1, 0.1])
 sys = System(dyn, initial_region)
 
 horizon = 10
@@ -86,16 +84,14 @@ spec = Specification(prop, Pessimistic, Maximize)
 
 prob = AbstractionProblem(sys, spec)
 
-X = Hyperrectangle(; low = [-0.5, -0.5], high = [0.5, 0.5])
+X = Hyperrectangle(; low=[-0.5, -0.5], high=[0.5, 0.5])
 state_abs = StateUniformGridSplit(X, (2, 2))
 input_abs = InputDiscrete([1, 2])
-
 
 @testset "direct vs decoupled" begin
     # Decoupled
     target_model = OrthogonalIMDPTarget()
-    mdp_decoupled, abstract_spec_decoupled =
-        abstraction(prob, state_abs, input_abs, target_model)
+    mdp_decoupled, abstract_spec_decoupled = abstraction(prob, state_abs, input_abs, target_model)
 
     @test num_states(mdp_decoupled) == 3 * 3
     @test length(stateptr(mdp_decoupled)) == 5  # 4 non-sink states
@@ -119,5 +115,5 @@ input_abs = InputDiscrete([1, 2])
     V_direct, k, res = value_iteration(prob_direct)
     @test k == 10
 
-    @test all(V_decoupled[1:(end-1), 1:(end-1)] .≥ reshape(V_direct[1:(end-1)], 2, 2))
+    @test all(V_decoupled[1:(end - 1), 1:(end - 1)] .≥ reshape(V_direct[1:(end - 1)], 2, 2))
 end

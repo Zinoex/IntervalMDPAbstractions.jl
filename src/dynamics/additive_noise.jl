@@ -51,7 +51,7 @@ function noise end
 
 #### Noise structures
 export AdditiveNoiseStructure,
-    AdditiveDiagonalGaussianNoise, AdditiveGaussianNoise, AdditiveCentralUniformNoise
+       AdditiveDiagonalGaussianNoise, AdditiveGaussianNoise, AdditiveCentralUniformNoise
 
 """
     AdditiveNoiseStructure
@@ -90,7 +90,7 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
     pl = 1.0
     pu = 1.0
 
-    for i = 1:LazySets.dim(Y)
+    for i in 1:LazySets.dim(Y)
         axis_pl, axis_pu = axis_transition_prob_bounds(Y, Z, w, i)
         pl *= axis_pl
         pu *= axis_pu
@@ -100,10 +100,10 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveDiagonalGaussia
 end
 
 function axis_transition_prob_bounds(
-    Y::Hyperrectangle,
-    Z::Hyperrectangle,
-    w::AdditiveDiagonalGaussianNoise,
-    axis::Int,
+        Y::Hyperrectangle,
+        Z::Hyperrectangle,
+        w::AdditiveDiagonalGaussianNoise,
+        axis::Int
 )
     z = LazySets.Interval(low(Z, axis), high(Z, axis))
 
@@ -111,10 +111,10 @@ function axis_transition_prob_bounds(
 end
 
 function axis_transition_prob_bounds(
-    Y::Hyperrectangle,
-    z::LazySets.Interval,
-    w::AdditiveDiagonalGaussianNoise,
-    axis::Int,
+        Y::Hyperrectangle,
+        z::LazySets.Interval,
+        w::AdditiveDiagonalGaussianNoise,
+        axis::Int
 )
     y = LazySets.Interval(low(Y, axis), high(Y, axis))
     σ = stddev(w, axis)
@@ -123,10 +123,10 @@ function axis_transition_prob_bounds(
 end
 
 function axis_transition_prob_bounds(
-    y::LazySets.Interval,
-    z::LazySets.Interval,
-    ::AdditiveDiagonalGaussianNoise,
-    σ::Real,
+        y::LazySets.Interval,
+        z::LazySets.Interval,
+        ::AdditiveDiagonalGaussianNoise,
+        σ::Real
 )
     # Handle the special case where the standard deviation is zero (degenerate normal distribution)
     if σ == 0.0
@@ -222,7 +222,7 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveCentralUniformN
     pl = 1.0
     pu = 1.0
 
-    for i = 1:LazySets.dim(Y)
+    for i in 1:LazySets.dim(Y)
         axis_pl, axis_pu = axis_transition_prob_bounds(Y, Z, w, i)
         pl *= axis_pl
         pu *= axis_pu
@@ -232,10 +232,10 @@ function transition_prob_bounds(Y, Z::Hyperrectangle, w::AdditiveCentralUniformN
 end
 
 function axis_transition_prob_bounds(
-    Y::Hyperrectangle,
-    Z::Hyperrectangle,
-    w::AdditiveCentralUniformNoise,
-    axis::Int,
+        Y::Hyperrectangle,
+        Z::Hyperrectangle,
+        w::AdditiveCentralUniformNoise,
+        axis::Int
 )
     z = LazySets.Interval(extrema(Z, axis)...)
 
@@ -243,10 +243,10 @@ function axis_transition_prob_bounds(
 end
 
 function axis_transition_prob_bounds(
-    Y::Hyperrectangle,
-    z::LazySets.Interval,
-    w::AdditiveCentralUniformNoise,
-    axis::Int,
+        Y::Hyperrectangle,
+        z::LazySets.Interval,
+        w::AdditiveCentralUniformNoise,
+        axis::Int
 )
     y = LazySets.Interval(extrema(Y, axis)...)
     r = w.r[axis]
@@ -255,10 +255,10 @@ function axis_transition_prob_bounds(
 end
 
 function axis_transition_prob_bounds(
-    y::LazySets.Interval,
-    z::LazySets.Interval,
-    w::AdditiveCentralUniformNoise,
-    r::Real,
+        y::LazySets.Interval,
+        z::LazySets.Interval,
+        w::AdditiveCentralUniformNoise,
+        r::Real
 )
     # Compute the transition probability bounds for each dimension
     cy, cz = center(y, 1), center(z, 1)

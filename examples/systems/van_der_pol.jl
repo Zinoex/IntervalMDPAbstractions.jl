@@ -1,11 +1,10 @@
 using LinearAlgebra, LazySets, Plots
 using IntervalMDP, IntervalMDPAbstractions
 
-
-function van_der_pol_sys(time_horizon; sampling_time = 0.1)
+function van_der_pol_sys(time_horizon; sampling_time=0.1)
     f(x, u) = [
         x[1] + x[2] * sampling_time,
-        x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * sampling_time + u[1],
+        x[2] + (-x[1] + (1 - x[1])^2 * x[2]) * sampling_time + u[1]
     ]
 
     w_variance = [0.2, 0.2]
@@ -16,7 +15,7 @@ function van_der_pol_sys(time_horizon; sampling_time = 0.1)
     initial_region = EmptySet(2)
     sys = System(dyn, initial_region)
 
-    reach_region = Hyperrectangle(; low = [-1.4, -2.9], high = [-0.7, -2.0])
+    reach_region = Hyperrectangle(; low=[-1.4, -2.9], high=[-0.7, -2.0])
     prop = FiniteTimeRegionReachability(reach_region, time_horizon)
     spec = Specification(prop, Pessimistic, Maximize)
 
@@ -24,17 +23,17 @@ function van_der_pol_sys(time_horizon; sampling_time = 0.1)
 end
 
 function van_der_pol_decoupled(
-    time_horizon = 10;
-    sparse = false,
-    state_split = (50, 50),
-    input_split = 10,
+        time_horizon=10;
+        sparse=false,
+        state_split=(50, 50),
+        input_split=10
 )
     sys, spec = van_der_pol_sys(time_horizon)
 
-    X = Hyperrectangle(; low = [-4.0, -4.0], high = [4.0, 4.0])
+    X = Hyperrectangle(; low=[-4.0, -4.0], high=[4.0, 4.0])
     state_abs = StateUniformGridSplit(X, state_split)
 
-    U = Hyperrectangle(; low = [-1.0], high = [1.0])
+    U = Hyperrectangle(; low=[-1.0], high=[1.0])
     input_abs = InputLinRange(U, input_split)
 
     if sparse
@@ -50,19 +49,19 @@ function van_der_pol_decoupled(
     upper_bound_spec = IntervalMDPAbstractions.convert_specification(
         upper_bound_spec,
         state_abs,
-        target_model,
+        target_model
     )
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function van_der_pol_direct(time_horizon = 10; state_split = (50, 50), input_split = 10)
+function van_der_pol_direct(time_horizon=10; state_split=(50, 50), input_split=10)
     sys, spec = van_der_pol_sys(time_horizon)
 
-    X = Hyperrectangle(; low = [-4.0, -4.0], high = [4.0, 4.0])
+    X = Hyperrectangle(; low=[-4.0, -4.0], high=[4.0, 4.0])
     state_abs = StateUniformGridSplit(X, state_split)
 
-    U = Hyperrectangle(; low = [-1.0], high = [1.0])
+    U = Hyperrectangle(; low=[-1.0], high=[1.0])
     input_abs = InputLinRange(U, input_split)
 
     target_model = SparseIMDPTarget()
@@ -74,7 +73,7 @@ function van_der_pol_direct(time_horizon = 10; state_split = (50, 50), input_spl
     upper_bound_spec = IntervalMDPAbstractions.convert_specification(
         upper_bound_spec,
         state_abs,
-        target_model,
+        target_model
     )
 
     return mdp, abstract_spec, upper_bound_spec
@@ -83,10 +82,10 @@ end
 function van_der_pol_plot_nominal()
     sys, spec = van_der_pol_sys(1)
 
-    X = Hyperrectangle(low = [-4.0, -4.0], high = [4.0, 4.0])
+    X = Hyperrectangle(; low=[-4.0, -4.0], high=[4.0, 4.0])
     state_abs = StateUniformGridSplit(X, (50, 50))
 
-    U = Hyperrectangle(low = [-1.0], high = [1.0])
+    U = Hyperrectangle(; low=[-1.0], high=[1.0])
     input_abs = InputLinRange(U, 10)
 
     R = IntervalMDPAbstractions.regions(state_abs)[837]
@@ -97,31 +96,30 @@ function van_der_pol_plot_nominal()
     xs = sample(R, 100)
     ys = [nominal(dynamics(sys), x, element(u)) for x in xs]
 
-    p = plot(R, color = :blue, label = "X")
+    p = plot(R; color=:blue, label="X")
     scatter!(
         p,
-        Plots.unzip(Tuple.(xs)),
-        color = :blue,
-        label = "Xhat",
-        markershape = :xcross,
+        Plots.unzip(Tuple.(xs));
+        color=:blue,
+        label="Xhat",
+        markershape=:xcross
     )
-    plot!(p, Y, color = :red, label = "Y")
+    plot!(p, Y; color=:red, label="Y")
     scatter!(
         p,
-        Plots.unzip(Tuple.(ys)),
-        color = :red,
-        label = "Yhat",
-        markershape = :xcross,
+        Plots.unzip(Tuple.(ys));
+        color=:red,
+        label="Yhat",
+        markershape=:xcross
     )
 
     display(p)
 end
 
 function main()
-    @time "abstraction" mdp, spec, upper_bound_spec =
-        van_der_pol_decoupled(; state_split = (100, 100), input_split = 3)
+    @time "abstraction" mdp, spec, upper_bound_spec=van_der_pol_decoupled(; state_split=(100, 100), input_split=3)
     prob = Problem(mdp, spec)
 
-    @time "value iteration" V, k, res = value_iteration(prob)
-    return V[1:(d-1), 1:(d-1)]
+    @time "value iteration" V, k, res=value_iteration(prob)
+    return V[1:(d - 1), 1:(d - 1)]
 end

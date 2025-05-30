@@ -1,0 +1,7 @@
+# See https://github.com/domluna/JuliaFormatter.jl
+
+style = "sciml"
+margin = 120
+indent_submodule = true
+separate_kwargs_with_semicolon = true
+whitespace_in_kwargs = false

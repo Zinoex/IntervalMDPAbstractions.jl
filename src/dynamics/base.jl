@@ -29,7 +29,7 @@ struct LinearTransformationRequired <: TransformationRequired end
 struct CannotDecouple <: CanDecouple end
 
 abstract type Transformation end
-struct LinearTransformation{R,MR1<:AbstractMatrix{R},MR2<:AbstractMatrix{R}} <:
+struct LinearTransformation{R, MR1 <: AbstractMatrix{R}, MR2 <: AbstractMatrix{R}} <:
        Transformation
     T::MR1
     Tinv::MR2

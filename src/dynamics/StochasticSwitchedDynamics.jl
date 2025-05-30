@@ -12,8 +12,8 @@ struct StochasticSwitchedDynamics <: DiscreteTimeStochasticDynamics
     weights::Vector{Float64}
 
     function StochasticSwitchedDynamics(
-        dynamics::Vector{<:DiscreteTimeStochasticDynamics},
-        weights::Vector{Float64},
+            dynamics::Vector{<:DiscreteTimeStochasticDynamics},
+            weights::Vector{Float64}
     )
         dstate = dimstate(first(dynamics))
         dinput = diminput(first(dynamics))
@@ -22,16 +22,16 @@ struct StochasticSwitchedDynamics <: DiscreteTimeStochasticDynamics
             if dimstate(dyn) != dstate
                 throw(
                     DimensionMismatch(
-                        "The dimension of the state space must be the same for all dynamics",
-                    ),
+                    "The dimension of the state space must be the same for all dynamics",
+                ),
                 )
             end
 
             if diminput(dyn) != dinput
                 throw(
                     DimensionMismatch(
-                        "The dimension of the input space must be the same for all dynamics",
-                    ),
+                    "The dimension of the input space must be the same for all dynamics",
+                ),
                 )
             end
         end
@@ -50,6 +50,7 @@ end
 
 dimstate(dyn::StochasticSwitchedDynamics) = dimstate(first(dyn.dynamics))
 diminput(dyn::StochasticSwitchedDynamics) = diminput(first(dyn.dynamics))
-decouplingmode(sys::StochasticSwitchedDynamics) =
+function decouplingmode(sys::StochasticSwitchedDynamics)
     all(decouplingmode(dyn) == IsDecoupled() for dyn in sys.dynamics) ? IsDecoupled() :
     CannotDecouple()  # Might be overly conservative, but it works
+end  # Might be overly conservative, but it works

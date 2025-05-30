@@ -1,5 +1,5 @@
 using MAT, MAT.MAT_v4, MAT.MAT_v5, MAT.MAT_HDF5
-const MatlabFile = Union{MAT_v4.Matlabv4File,MAT_v5.Matlabv5File,MAT_HDF5.MatlabHDF5File}
+const MatlabFile = Union{MAT_v4.Matlabv4File, MAT_v5.Matlabv5File, MAT_HDF5.MatlabHDF5File}
 
 using HDF5
 
@@ -18,18 +18,16 @@ function load_dynamics(partitions::MatlabFile)
 
     n = size(state_partitions, 1)
 
-    mode1 = [
-        UncertainAffineRegion(
-            Hyperrectangle(
-                low = state_partitions[ii, 1, :],
-                high = state_partitions[ii, 2, :],
-            ),
-            convert(Matrix{Float64}, transpose(M_lower[ii, :, :])),
-            b_lower[ii, :],
-            convert(Matrix{Float64}, transpose(M_upper[ii, :, :])),
-            b_upper[ii, :],
-        ) for ii = 1:n
-    ]
+    mode1 = [UncertainAffineRegion(
+                 Hyperrectangle(;
+                     low=state_partitions[ii, 1, :],
+                     high=state_partitions[ii, 2, :]
+                 ),
+                 convert(Matrix{Float64}, transpose(M_lower[ii, :, :])),
+                 b_lower[ii, :],
+                 convert(Matrix{Float64}, transpose(M_upper[ii, :, :])),
+                 b_upper[ii, :]
+             ) for ii in 1:n]
 
     modes = [mode1]
 
@@ -37,8 +35,7 @@ function load_dynamics(partitions::MatlabFile)
 end
 
 function load_system(system_name::String, number_hypercubes::Int)
-    filename =
-        joinpath(@__DIR__, "nndm_data/$(system_name)_partition_data_$number_hypercubes.mat")
+    filename = joinpath(@__DIR__, "nndm_data/$(system_name)_partition_data_$number_hypercubes.mat")
     file = matopen(filename)
 
     dynamics = load_dynamics(file)
@@ -62,12 +59,12 @@ function cartpole_sys()
     return sys
 end
 
-function cartpole_decoupled(; sparse = false)
+function cartpole_decoupled(; sparse=false)
     sys = cartpole_sys()
 
     X = Hyperrectangle(;
-        low = [-1.0, -0.5, deg2rad(-12.0), -0.5],
-        high = [1.0, 0.5, deg2rad(12.0), 0.5],
+        low=[-1.0, -0.5, deg2rad(-12.0), -0.5],
+        high=[1.0, 0.5, deg2rad(12.0), 0.5]
     )
     state_split = (10, 4, 24, 4)
     state_abs = StateUniformGridSplit(X, state_split)
@@ -85,12 +82,12 @@ function cartpole_decoupled(; sparse = false)
     return mdp, reach, avoid
 end
 
-function cartpole_direct(; sparse = false)
+function cartpole_direct(; sparse=false)
     sys = cartpole_sys()
 
     X = Hyperrectangle(;
-        low = [-1.0, -0.5, deg2rad(-12.0), -0.5],
-        high = [1.0, 0.5, deg2rad(12.0), 0.5],
+        low=[-1.0, -0.5, deg2rad(-12.0), -0.5],
+        high=[1.0, 0.5, deg2rad(12.0), 0.5]
     )
     state_split = (10, 4, 24, 4)
     state_abs = StateUniformGridSplit(X, state_split)
@@ -122,12 +119,12 @@ function husky4d_sys()
     return sys
 end
 
-function husky4d_sys_decoupled(; sparse = false)
+function husky4d_sys_decoupled(; sparse=false)
     sys = husky4d_sys()
 
     X = Hyperrectangle(;
-        low = [-0.5, -1.0, deg2rad(-15.0), -0.5],
-        high = [2.0, 1.0, deg2rad(15.0), 0.5],
+        low=[-0.5, -1.0, deg2rad(-15.0), -0.5],
+        high=[2.0, 1.0, deg2rad(15.0), 0.5]
     )
     state_split = (10, 8, 15, 4)
     state_abs = StateUniformGridSplit(X, state_split)
@@ -145,12 +142,12 @@ function husky4d_sys_decoupled(; sparse = false)
     return mdp, reach, avoid
 end
 
-function husky4d_sys_direct(; sparse = false)
+function husky4d_sys_direct(; sparse=false)
     sys = husky4d_sys()
 
     X = Hyperrectangle(;
-        low = [-0.5, -1.0, deg2rad(-15.0), -0.5],
-        high = [2.0, 1.0, deg2rad(15.0), 0.5],
+        low=[-0.5, -1.0, deg2rad(-15.0), -0.5],
+        high=[2.0, 1.0, deg2rad(15.0), 0.5]
     )
     state_split = (10, 8, 15, 4)
     state_abs = StateUniformGridSplit(X, state_split)
@@ -182,12 +179,12 @@ function husky5d_sys()
     return sys
 end
 
-function husky5d_sys_decoupled(; sparse = false)
+function husky5d_sys_decoupled(; sparse=false)
     sys = husky5d_sys()
 
     X = Hyperrectangle(;
-        low = [-0.5, -0.5, deg2rad(-10.0), -0.5, -0.5],
-        high = [1.9, 0.3, deg2rad(8.0), 0.5, 0.5],
+        low=[-0.5, -0.5, deg2rad(-10.0), -0.5, -0.5],
+        high=[1.9, 0.3, deg2rad(8.0), 0.5, 0.5]
     )
     state_split = (6, 2, 9, 4, 4)
     state_abs = StateUniformGridSplit(X, state_split)
@@ -205,12 +202,12 @@ function husky5d_sys_decoupled(; sparse = false)
     return mdp, reach, avoid
 end
 
-function husky5d_sys_direct(; sparse = false)
+function husky5d_sys_direct(; sparse=false)
     sys = husky5d_sys()
 
     X = Hyperrectangle(;
-        low = [-0.5, -0.5, deg2rad(-10.0), -0.5, -0.5],
-        high = [1.9, 0.3, deg2rad(8.0), 0.5, 0.5],
+        low=[-0.5, -0.5, deg2rad(-10.0), -0.5, -0.5],
+        high=[1.9, 0.3, deg2rad(8.0), 0.5, 0.5]
     )
     state_split = (6, 2, 9, 4, 4)
     state_abs = StateUniformGridSplit(X, state_split)
@@ -232,10 +229,8 @@ function load_dynamics(file::HDF5.File)
     region_lower = read(file, "region_lower")
     region_upper = read(file, "region_upper")
 
-    regions = [
-        Hyperrectangle(low = convert.(Float64, lower), high = convert.(Float64, upper))
-        for (lower, upper) in zip(eachcol(region_lower), eachcol(region_upper))
-    ]
+    regions = [Hyperrectangle(; low=convert.(Float64, lower), high=convert.(Float64, upper))
+               for (lower, upper) in zip(eachcol(region_lower), eachcol(region_upper))]
 
     Alower = read(file, "Alower")
     Clower = read(file, "blower")
@@ -244,19 +239,19 @@ function load_dynamics(file::HDF5.File)
 
     dyn = Vector{
         Vector{
-            UncertainAffineRegion{Float64,Vector{Float64},Matrix{Float64},eltype(regions)},
-        },
+        UncertainAffineRegion{Float64, Vector{Float64}, Matrix{Float64}, eltype(regions)},
+    },
     }(
         undef,
-        size(Alower, 3),
+        size(Alower, 3)
     )
 
-    for action = 1:size(Alower, 3)
+    for action in 1:size(Alower, 3)
         dyn[action] = Vector{
-            UncertainAffineRegion{Float64,Vector{Float64},Matrix{Float64},eltype(regions)},
+            UncertainAffineRegion{Float64, Vector{Float64}, Matrix{Float64}, eltype(regions)},
         }(
             undef,
-            length(regions),
+            length(regions)
         )
 
         for (i, region) in enumerate(regions)
@@ -265,7 +260,7 @@ function load_dynamics(file::HDF5.File)
                 convert.(Float64, transpose(Alower[:, :, action, i])),
                 convert.(Float64, Clower[:, action, i]),
                 convert.(Float64, transpose(Aupper[:, :, action, i])),
-                convert.(Float64, Cupper[:, action, i]),
+                convert.(Float64, Cupper[:, action, i])
             )
         end
     end
@@ -299,12 +294,12 @@ function action_cartpole_sys(time_horizon)
     return sys, spec
 end
 
-function action_cartpole_decoupled(time_horizon = 10; sparse = false)
+function action_cartpole_decoupled(time_horizon=10; sparse=false)
     sys, spec = action_cartpole_sys(time_horizon)
 
     X = Hyperrectangle(;
-        low = [-1.0, -1.0, deg2rad(-12.0), -1.0],
-        high = [1.0, 1.0, deg2rad(12.0), 1.0],
+        low=[-1.0, -1.0, deg2rad(-12.0), -1.0],
+        high=[1.0, 1.0, deg2rad(12.0), 1.0]
     )
     state_split = (20, 20, 24, 20)
     state_abs = StateUniformGridSplit(X, state_split)
@@ -324,18 +319,18 @@ function action_cartpole_decoupled(time_horizon = 10; sparse = false)
     upper_bound_spec = IntervalMDPAbstractions.convert_specification(
         upper_bound_spec,
         state_abs,
-        target_model,
+        target_model
     )
 
     return mdp, abstract_spec, upper_bound_spec
 end
 
-function action_cartpole_direct(time_horizon = 10; sparse = false)
+function action_cartpole_direct(time_horizon=10; sparse=false)
     sys, spec = action_cartpole_sys(time_horizon)
 
     X = Hyperrectangle(;
-        low = [-1.0, -1.0, deg2rad(-12.0), -1.0],
-        high = [1.0, 1.0, deg2rad(12.0), 1.0],
+        low=[-1.0, -1.0, deg2rad(-12.0), -1.0],
+        high=[1.0, 1.0, deg2rad(12.0), 1.0]
     )
     state_split = (20, 20, 24, 20)
     state_abs = StateUniformGridSplit(X, state_split)
@@ -355,7 +350,7 @@ function action_cartpole_direct(time_horizon = 10; sparse = false)
     upper_bound_spec = IntervalMDPAbstractions.convert_specification(
         upper_bound_spec,
         state_abs,
-        target_model,
+        target_model
     )
 
     return mdp, abstract_spec, upper_bound_spec

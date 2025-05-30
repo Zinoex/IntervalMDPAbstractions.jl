@@ -1,6 +1,5 @@
 
-
-function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
+function odimdp_bs_cs1_safety(state_split=(5, 5, 7, 7), input_split=(4,))
     arch_comp_problem = ArchCompStochasticModels.cs1_bas_finite_time_safety()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
@@ -25,7 +24,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     spec = Specification(
         prop,
         Pessimistic,
-        synthesismode2strategymode(arch_comp_spec.synthesis_mode),
+        synthesismode2strategymode(arch_comp_spec.synthesis_mode)
     )
 
     abs_problem = AbstractionProblem(system, spec)
@@ -37,8 +36,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     #     Hyperrectangle(;low=[19.5, 19.5, 30.0, 30.0], high=[20.5, 20.5, 36.0, 36.0]),
     #     arch_comp_prop.safe_set,
     # ))
-    safe_set_refinement =
-        Hyperrectangle(; low = [19.5, 19.5, 30.0, 30.0], high = [20.5, 20.5, 36.0, 36.0])
+    safe_set_refinement = Hyperrectangle(; low=[19.5, 19.5, 30.0, 30.0], high=[20.5, 20.5, 36.0, 36.0])
     @assert safe_set_refinement ⊆ arch_comp_prop.safe_set
     safe_set_refinement = box_approximation(Tx.T * safe_set_refinement)
     target_model = OrthogonalIMDPTarget()
@@ -62,7 +60,7 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     upper_bound_spec = IntervalMDPAbstractions.convert_specification(
         upper_bound_spec,
         state_abs,
-        target_model,
+        target_model
     )
     upper_bound_problem = Problem(odimdp, upper_bound_spec, policy)
     Vupper, k, res, = value_iteration(upper_bound_problem)
@@ -86,23 +84,21 @@ function odimdp_bs_cs1_safety(state_split = (5, 5, 7, 7), input_split = (4,))
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time + vi_upper_time
     time = (
-        abstraction = abstraction_time,
-        vi_lower = vi_lower_time,
-        vi_upper = vi_upper_time,
-        total = total_time,
+        abstraction=abstraction_time,
+        vi_lower=vi_lower_time,
+        vi_upper=vi_upper_time,
+        total=total_time
     )
 
-    min_lb, max_lb, mean_lb =
-        minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
-    lb = (min = min_lb, max = max_lb, mean = mean_lb)
-    min_error, max_error, mean_error =
-        minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
-    error = (min = min_error, max = max_error, mean = mean_error)
+    min_lb, max_lb, mean_lb = minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
+    lb = (min=min_lb, max=max_lb, mean=mean_lb)
+    min_error, max_error, mean_error = minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
+    error = (min=min_error, max=max_error, mean=mean_error)
 
-    return (lb = lb, error = error, mem = mem_mb, time = time)
+    return (lb=lb, error=error, mem=mem_mb, time=time)
 end
 
-function odimdp_bs_cs2_safety(state_split = (5, 6, 6, 6, 6, 6, 6), input_split = (4,))
+function odimdp_bs_cs2_safety(state_split=(5, 6, 6, 6, 6, 6, 6), input_split=(4,))
     arch_comp_problem = ArchCompStochasticModels.cs2_bas_finite_time_safety()
     arch_comp_system = arch_comp_problem.system
     arch_comp_spec = arch_comp_problem.specification
@@ -130,11 +126,10 @@ function odimdp_bs_cs2_safety(state_split = (5, 6, 6, 6, 6, 6, 6), input_split =
     spec = Specification(
         prop,
         Pessimistic,
-        synthesismode2strategymode(arch_comp_spec.synthesis_mode),
+        synthesismode2strategymode(arch_comp_spec.synthesis_mode)
     )
 
     abs_problem = AbstractionProblem(system, spec)
-
 
     # Define abstraction parameters (box_approximation is going to be exact)
     # safe_set_refinement = box_approximation(Intersection(
@@ -142,8 +137,8 @@ function odimdp_bs_cs2_safety(state_split = (5, 6, 6, 6, 6, 6, 6), input_split =
     #     arch_comp_prop.safe_set,
     # ))
     safe_set_refinement = Hyperrectangle(;
-        low = [19.5, 19.0, 18.0, 18.0, 18.0, 18.0, 18.0],
-        high = [20.5, 22.0, 22.0, 22.0, 22.0, 22.0, 22.0],
+        low=[19.5, 19.0, 18.0, 18.0, 18.0, 18.0, 18.0],
+        high=[20.5, 22.0, 22.0, 22.0, 22.0, 22.0, 22.0]
     )
     @assert safe_set_refinement ⊆ arch_comp_prop.safe_set
     target_model = OrthogonalIMDPTarget()
@@ -151,8 +146,7 @@ function odimdp_bs_cs2_safety(state_split = (5, 6, 6, 6, 6, 6, 6), input_split =
     input_abs = InputLinRange(U, input_split)
 
     # Abstract and compute bounds - warmup is neglible for a problem this big.
-    abstraction_time = @elapsed odimdp, lower_bound_spec =
-        abstraction(abs_problem, state_abs, input_abs, target_model)
+    abstraction_time = @elapsed odimdp, lower_bound_spec = abstraction(abs_problem, state_abs, input_abs, target_model)
     lower_bound_problem = Problem(odimdp, lower_bound_spec)
 
     @info "Abstraction constructed"
@@ -166,7 +160,7 @@ function odimdp_bs_cs2_safety(state_split = (5, 6, 6, 6, 6, 6, 6), input_split =
     upper_bound_spec = IntervalMDPAbstractions.convert_specification(
         upper_bound_spec,
         state_abs,
-        target_model,
+        target_model
     )
     upper_bound_problem = Problem(odimdp, upper_bound_spec, policy)
     vi_upper_time = @elapsed Vupper, k, res, = value_iteration(upper_bound_problem)
@@ -189,18 +183,16 @@ function odimdp_bs_cs2_safety(state_split = (5, 6, 6, 6, 6, 6, 6), input_split =
     # Compute necessary statistics
     total_time = abstraction_time + vi_lower_time + vi_upper_time
     time = (
-        abstraction = abstraction_time,
-        vi_lower = vi_lower_time,
-        vi_upper = vi_upper_time,
-        total = total_time,
+        abstraction=abstraction_time,
+        vi_lower=vi_lower_time,
+        vi_upper=vi_upper_time,
+        total=total_time
     )
 
-    min_lb, max_lb, mean_lb =
-        minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
-    lb = (min = min_lb, max = max_lb, mean = mean_lb)
-    min_error, max_error, mean_error =
-        minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
-    error = (min = min_error, max = max_error, mean = mean_error)
+    min_lb, max_lb, mean_lb = minimum(Vlower_nonterm), maximum(Vlower_nonterm), mean(Vlower_nonterm)
+    lb = (min=min_lb, max=max_lb, mean=mean_lb)
+    min_error, max_error, mean_error = minimum(error_nonterm), maximum(error_nonterm), mean(error_nonterm)
+    error = (min=min_error, max=max_error, mean=mean_error)
 
-    return (lb = lb, error = error, mem = mem_mb, time = time)
+    return (lb=lb, error=error, mem=mem_mb, time=time)
 end

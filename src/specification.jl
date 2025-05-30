@@ -1,14 +1,14 @@
 export AbstractRegionReachability,
-    FiniteTimeRegionReachability,
-    InfiniteTimeRegionReachability,
-    ExactTimeRegionReachability,
-    reach,
-    dim
+       FiniteTimeRegionReachability,
+       InfiniteTimeRegionReachability,
+       ExactTimeRegionReachability,
+       reach,
+       dim
 export AbstractRegionReachAvoid,
-    FiniteTimeRegionReachAvoid,
-    InfiniteTimeRegionReachAvoid,
-    ExactTimeRegionReachAvoid,
-    avoid
+       FiniteTimeRegionReachAvoid,
+       InfiniteTimeRegionReachAvoid,
+       ExactTimeRegionReachAvoid,
+       avoid
 export AbstractRegionSafety, FiniteTimeRegionSafety, InfiniteTimeRegionSafety
 export AbstractionProblem, system, specification
 
@@ -20,7 +20,7 @@ abstract type AbstractRegionReachability <: Property end
 
 A struct representing a finite-time reachability property.
 """
-struct FiniteTimeRegionReachability{S<:LazySet,T<:Integer} <: AbstractRegionReachability
+struct FiniteTimeRegionReachability{S <: LazySet, T <: Integer} <: AbstractRegionReachability
     reach_set::S
     time_horizon::T
 end
@@ -52,7 +52,7 @@ end
 
 A struct representing a infinite-time reachability property.
 """
-struct InfiniteTimeRegionReachability{S<:LazySet,T<:Real} <: AbstractRegionReachability
+struct InfiniteTimeRegionReachability{S <: LazySet, T <: Real} <: AbstractRegionReachability
     reach_set::S
     convergence_eps::T
 end
@@ -63,8 +63,8 @@ reach(prop::InfiniteTimeRegionReachability) = prop.reach_set
 dim(prop::InfiniteTimeRegionReachability) = LazySets.dim(reach(prop))
 
 function transform(
-    prop::InfiniteTimeRegionReachability,
-    transformation::LinearTransformation,
+        prop::InfiniteTimeRegionReachability,
+        transformation::LinearTransformation
 )
     reach_set = concretize(transformation.T * prop.reach_set)
     return InfiniteTimeRegionReachability(reach_set, prop.convergence_eps)
@@ -75,7 +75,7 @@ end
 
 A struct representing a exact-time reachability property.
 """
-struct ExactTimeRegionReachability{S<:LazySet,T<:Integer} <: AbstractRegionReachability
+struct ExactTimeRegionReachability{S <: LazySet, T <: Integer} <: AbstractRegionReachability
     reach_set::S
     time_horizon::T
 end
@@ -98,7 +98,7 @@ abstract type AbstractRegionReachAvoid <: Property end
 
 A struct representing a finite-time reach-avoid property.
 """
-struct FiniteTimeRegionReachAvoid{S<:LazySet,R<:LazySet,T<:Integer} <:
+struct FiniteTimeRegionReachAvoid{S <: LazySet, R <: LazySet, T <: Integer} <:
        AbstractRegionReachAvoid
     reach_set::S
     avoid_set::R
@@ -128,7 +128,7 @@ end
 
 A struct representing a infinite-time reach-avoid property.
 """
-struct InfiniteTimeRegionReachAvoid{S<:LazySet,R<:LazySet,T<:Real} <:
+struct InfiniteTimeRegionReachAvoid{S <: LazySet, R <: LazySet, T <: Real} <:
        AbstractRegionReachAvoid
     reach_set::S
     avoid_set::R
@@ -152,7 +152,7 @@ end
 
 A struct representing a Exact-time reach-avoid property.
 """
-struct ExactTimeRegionReachAvoid{S<:LazySet,R<:LazySet,T<:Integer} <:
+struct ExactTimeRegionReachAvoid{S <: LazySet, R <: LazySet, T <: Integer} <:
        AbstractRegionReachAvoid
     reach_set::S
     avoid_set::R
@@ -179,7 +179,7 @@ abstract type AbstractRegionSafety <: Property end
 
 A struct representing a finite-time safety property.
 """
-struct FiniteTimeRegionSafety{S<:LazySet,T<:Integer} <: AbstractRegionSafety
+struct FiniteTimeRegionSafety{S <: LazySet, T <: Integer} <: AbstractRegionSafety
     avoid_set::S
     time_horizon::T
 end
@@ -199,7 +199,7 @@ end
 
 A struct representing a infinite-time safety property.
 """
-struct InfiniteTimeRegionSafety{S<:LazySet,T<:Real} <: AbstractRegionSafety
+struct InfiniteTimeRegionSafety{S <: LazySet, T <: Real} <: AbstractRegionSafety
     avoid_set::S
     convergence_eps::T
 end
@@ -221,7 +221,7 @@ end
 
 A struct of a system and a specification to be used in the abstraction process.
 """
-struct AbstractionProblem{S<:System,P<:Specification}
+struct AbstractionProblem{S <: System, P <: Specification}
     system::S
     specification::P
 end

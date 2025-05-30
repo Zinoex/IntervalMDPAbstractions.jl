@@ -5,12 +5,12 @@ export System, dynamics, initial
 
 A struct representing a system with dynamics and an initial set.
 """
-struct System{D<:DiscreteTimeStochasticDynamics,I<:LazySet}
+struct System{D <: DiscreteTimeStochasticDynamics, I <: LazySet}
     dynamics::D
     initial::I
 end
 
-function System(dynamics::D) where {D<:DiscreteTimeStochasticDynamics}
+function System(dynamics::D) where {D <: DiscreteTimeStochasticDynamics}
     return System(dynamics, EmptySet(dimstate(dynamics)))
 end
 

@@ -1,11 +1,11 @@
 using SparseArrays
 
 function transition_prob(
-    dyn::AdditiveNoiseDynamics,
-    state_abstraction::StateUniformGridSplit,
-    input_abstraction::InputAbstraction,
-    stateptr,
-    target_model::AbstractIMDPTarget,
+        dyn::AdditiveNoiseDynamics,
+        state_abstraction::StateUniformGridSplit,
+        input_abstraction::InputAbstraction,
+        stateptr,
+        target_model::AbstractIMDPTarget
 )
     # The first state is absorbing, representing transitioning to outside the partitioned.
     nregions = numregions(state_abstraction)
@@ -18,8 +18,7 @@ function transition_prob(
     # Transition probabilities
     prepare_nominal(dyn, input_abstraction)
 
-    Threads.@threads for (i, source_region) in
-                         collect(enumerate(regions(state_abstraction)))
+    Threads.@threads for (i, source_region) in collect(enumerate(regions(state_abstraction)))
         for (j, input) in enumerate(inputs(input_abstraction))
             srcact_idx = (i - 1) * ninputs + j
             Y = nominal(dyn, source_region, input)
@@ -31,26 +30,26 @@ function transition_prob(
                 Y,
                 prob_lower,
                 prob_upper,
-                srcact_idx,
+                srcact_idx
             )
         end
     end
 
     prob_lower, prob_upper = postprocessprob(target_model, prob_lower, prob_upper)
 
-    prob = IntervalProbabilities(; lower = prob_lower, upper = prob_upper)
+    prob = IntervalProbabilities(; lower=prob_lower, upper=prob_upper)
 
     return prob
 end
 
 function source_action_transition_prob(
-    dyn::AdditiveNoiseDynamics,
-    state_abstraction::StateUniformGridSplit,
-    target_model::AbstractIMDPTarget,
-    Y::LazySet,
-    prob_lower,
-    prob_upper,
-    srcact_idx,
+        dyn::AdditiveNoiseDynamics,
+        state_abstraction::StateUniformGridSplit,
+        target_model::AbstractIMDPTarget,
+        Y::LazySet,
+        prob_lower,
+        prob_upper,
+        srcact_idx
 )
     X = statespace(state_abstraction)
     w = noise(dyn)
@@ -78,11 +77,11 @@ function source_action_transition_prob(
 end
 
 function transition_prob(
-    dyn::AdditiveNoiseDynamics,
-    state_abstraction::StateUniformGridSplit,
-    input_abstraction::InputAbstraction,
-    stateptr,
-    target_model::AbstractOrthogonalIMDPTarget,
+        dyn::AdditiveNoiseDynamics,
+        state_abstraction::StateUniformGridSplit,
+        input_abstraction::InputAbstraction,
+        stateptr,
+        target_model::AbstractOrthogonalIMDPTarget
 )
     prepare_nominal(dyn, input_abstraction)
 
@@ -113,7 +112,7 @@ function transition_prob(
                 Y,
                 prob_lower,
                 prob_upper,
-                srcact_idx,
+                srcact_idx
             )
 
             srcact_idx += 1
@@ -124,23 +123,23 @@ function transition_prob(
 
     prob = OrthogonalIntervalProbabilities(
         Tuple(
-            IntervalProbabilities(; lower = pl, upper = pu) for
-            (pl, pu) in zip(prob_lower, prob_upper)
+            IntervalProbabilities(; lower=pl, upper=pu) for
+        (pl, pu) in zip(prob_lower, prob_upper)
         ),
-        Int32.(Tuple(splits(state_abstraction))),
+        Int32.(Tuple(splits(state_abstraction)))
     )
 
     return prob
 end
 
 function source_action_transition_prob(
-    dyn::AdditiveNoiseDynamics,
-    state_abstraction::StateUniformGridSplit,
-    target_model::AbstractOrthogonalIMDPTarget,
-    Y::Hyperrectangle,
-    prob_lower,
-    prob_upper,
-    srcact_idx,
+        dyn::AdditiveNoiseDynamics,
+        state_abstraction::StateUniformGridSplit,
+        target_model::AbstractOrthogonalIMDPTarget,
+        Y::Hyperrectangle,
+        prob_lower,
+        prob_upper,
+        srcact_idx
 )
     w = noise(dyn)
     X = statespace(state_abstraction)

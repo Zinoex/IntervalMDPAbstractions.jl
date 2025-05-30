@@ -13,8 +13,8 @@ function sys_2d_ra()
 
     sys = System(dyn, initial_region)
 
-    reach_region = Hyperrectangle(; low = [5.0, -6.0], high = [10.0, -2.0])
-    avoid_region = Hyperrectangle(; low = [5.0, 2.0], high = [10.0, 6.0])
+    reach_region = Hyperrectangle(; low=[5.0, -6.0], high=[10.0, -2.0])
+    avoid_region = Hyperrectangle(; low=[5.0, 2.0], high=[10.0, 6.0])
 
     return sys, reach_region, avoid_region
 end
@@ -22,10 +22,10 @@ end
 @testset "preserve modes" begin
     sys, reach_region, avoid_region = sys_2d_ra()
 
-    X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
+    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, (10, 10))
 
-    U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
+    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputGridSplit(U, [3, 3])
 
     target_model = IMDPTarget()
@@ -41,14 +41,13 @@ end
     @test strategy_mode(spec) == strategy_mode(abstract_spec)
 end
 
-
 @testset "preserve termination criteria" begin
     sys, reach_region, avoid_region = sys_2d_ra()
 
-    X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
+    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, (10, 10))
 
-    U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
+    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputGridSplit(U, [3, 3])
 
     target_model = IMDPTarget()
@@ -63,10 +62,8 @@ end
 
             @test IntervalMDPAbstractions.dim(prop) == 2
 
-            T = [
-                1.0 1.0;
-                -1.0 0.0
-            ]
+            T = [1.0 1.0
+                 -1.0 0.0]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
             Tspec = IntervalMDPAbstractions.transform(spec, Tx)
             Tprop = system_property(Tspec)
@@ -91,10 +88,8 @@ end
 
             @test IntervalMDPAbstractions.dim(prop) == 2
 
-            T = [
-                1.0 0.0;
-                -1.0 2.0
-            ]
+            T = [1.0 0.0
+                 -1.0 2.0]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
             Tspec = IntervalMDPAbstractions.transform(spec, Tx)
             Tprop = system_property(Tspec)
@@ -120,10 +115,8 @@ end
 
             @test IntervalMDPAbstractions.dim(prop) == 2
 
-            T = [
-                0.0 2.0;
-                -1.0 -2.0
-            ]
+            T = [0.0 2.0
+                 -1.0 -2.0]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
             Tspec = IntervalMDPAbstractions.transform(spec, Tx)
             Tprop = system_property(Tspec)
@@ -152,10 +145,8 @@ end
 
             @test IntervalMDPAbstractions.dim(prop) == 2
 
-            T = [
-                1.0 1.0;
-                -1.0 0.0
-            ]
+            T = [1.0 1.0
+                 -1.0 0.0]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
             Tspec = IntervalMDPAbstractions.transform(spec, Tx)
             Tprop = system_property(Tspec)
@@ -180,10 +171,8 @@ end
 
             @test IntervalMDPAbstractions.dim(prop) == 2
 
-            T = [
-                1.0 0.0;
-                -1.0 2.0
-            ]
+            T = [1.0 0.0
+                 -1.0 2.0]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
             Tspec = IntervalMDPAbstractions.transform(spec, Tx)
             Tprop = system_property(Tspec)
@@ -209,10 +198,8 @@ end
 
             @test IntervalMDPAbstractions.dim(prop) == 2
 
-            T = [
-                0.0 2.0;
-                -1.0 -2.0
-            ]
+            T = [0.0 2.0
+                 -1.0 -2.0]
             Tx = IntervalMDPAbstractions.LinearTransformation(T, inv(T))
             Tspec = IntervalMDPAbstractions.transform(spec, Tx)
             Tprop = system_property(Tspec)
@@ -253,16 +240,16 @@ decoupled_avoid_outside = [
     CartesianIndex(8, 11),
     CartesianIndex(9, 11),
     CartesianIndex(10, 11),
-    CartesianIndex(11, 11),
+    CartesianIndex(11, 11)
 ]
 
 @testset "reachability" begin
     sys, reach_region, avoid_region = sys_2d_ra()
 
-    X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
+    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, (10, 10))
 
-    U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
+    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputGridSplit(U, [3, 3])
 
     horizon = 10
@@ -282,27 +269,26 @@ decoupled_avoid_outside = [
         @test IntervalMDP.avoid(abstract_prop) == [CartesianIndex(101)]
         @test all(
             IntervalMDP.reach(abstract_prop) .== [
-                CartesianIndex(29),
-                CartesianIndex(30),
-                CartesianIndex(39),
-                CartesianIndex(40),
-            ],
+            CartesianIndex(29),
+            CartesianIndex(30),
+            CartesianIndex(39),
+            CartesianIndex(40)
+        ],
         )
 
-        mdp, inverted_abstract_spec =
-            abstraction(inverted_prob, state_abs, input_abs, target_model)
+        mdp, inverted_abstract_spec = abstraction(inverted_prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(inverted_abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == [CartesianIndex(101)]
         @test all(
             IntervalMDP.reach(abstract_prop) .== [
-                CartesianIndex(28),
-                CartesianIndex(29),
-                CartesianIndex(30),
-                CartesianIndex(38),
-                CartesianIndex(39),
-                CartesianIndex(40),
-            ],
+            CartesianIndex(28),
+            CartesianIndex(29),
+            CartesianIndex(30),
+            CartesianIndex(38),
+            CartesianIndex(39),
+            CartesianIndex(40)
+        ],
         )
     end
 
@@ -315,27 +301,26 @@ decoupled_avoid_outside = [
         @test IntervalMDP.avoid(abstract_prop) == decoupled_avoid_outside
         @test all(
             IntervalMDP.reach(abstract_prop) .== [
-                CartesianIndex(9, 3),
-                CartesianIndex(10, 3),
-                CartesianIndex(9, 4),
-                CartesianIndex(10, 4),
-            ],
+            CartesianIndex(9, 3),
+            CartesianIndex(10, 3),
+            CartesianIndex(9, 4),
+            CartesianIndex(10, 4)
+        ],
         )
 
-        mdp, inverted_abstract_spec =
-            abstraction(inverted_prob, state_abs, input_abs, target_model)
+        mdp, inverted_abstract_spec = abstraction(inverted_prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(inverted_abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == decoupled_avoid_outside
         @test all(
             IntervalMDP.reach(abstract_prop) .== [
-                CartesianIndex(8, 3),
-                CartesianIndex(9, 3),
-                CartesianIndex(10, 3),
-                CartesianIndex(8, 4),
-                CartesianIndex(9, 4),
-                CartesianIndex(10, 4),
-            ],
+            CartesianIndex(8, 3),
+            CartesianIndex(9, 3),
+            CartesianIndex(10, 3),
+            CartesianIndex(8, 4),
+            CartesianIndex(9, 4),
+            CartesianIndex(10, 4)
+        ],
         )
     end
 end
@@ -343,10 +328,10 @@ end
 @testset "reach-avoid" begin
     sys, reach_region, avoid_region = sys_2d_ra()
 
-    X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
+    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, (10, 10))
 
-    U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
+    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputGridSplit(U, [3, 3])
 
     horizon = 10
@@ -370,19 +355,18 @@ end
             CartesianIndex(70),
             CartesianIndex(78),
             CartesianIndex(79),
-            CartesianIndex(80),
+            CartesianIndex(80)
         ]
         @test all(
             IntervalMDP.reach(abstract_prop) .== [
-                CartesianIndex(29),
-                CartesianIndex(30),
-                CartesianIndex(39),
-                CartesianIndex(40),
-            ],
+            CartesianIndex(29),
+            CartesianIndex(30),
+            CartesianIndex(39),
+            CartesianIndex(40)
+        ],
         )
 
-        mdp, inverted_abstract_spec =
-            abstraction(inverted_prob, state_abs, input_abs, target_model)
+        mdp, inverted_abstract_spec = abstraction(inverted_prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(inverted_abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == [
@@ -390,17 +374,17 @@ end
             CartesianIndex(69),
             CartesianIndex(70),
             CartesianIndex(79),
-            CartesianIndex(80),
+            CartesianIndex(80)
         ]
         @test all(
             IntervalMDP.reach(abstract_prop) .== [
-                CartesianIndex(28),
-                CartesianIndex(29),
-                CartesianIndex(30),
-                CartesianIndex(38),
-                CartesianIndex(39),
-                CartesianIndex(40),
-            ],
+            CartesianIndex(28),
+            CartesianIndex(29),
+            CartesianIndex(30),
+            CartesianIndex(38),
+            CartesianIndex(39),
+            CartesianIndex(40)
+        ],
         )
     end
 
@@ -410,48 +394,43 @@ end
         mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(abstract_spec)
-        @test IntervalMDP.avoid(abstract_prop) == [
-            decoupled_avoid_outside
-            [
-                CartesianIndex(8, 7),
-                CartesianIndex(9, 7),
-                CartesianIndex(10, 7),
-                CartesianIndex(8, 8),
-                CartesianIndex(9, 8),
-                CartesianIndex(10, 8),
-            ]
-        ]
+        @test IntervalMDP.avoid(abstract_prop) == [decoupled_avoid_outside
+               [
+                   CartesianIndex(8, 7),
+                   CartesianIndex(9, 7),
+                   CartesianIndex(10, 7),
+                   CartesianIndex(8, 8),
+                   CartesianIndex(9, 8),
+                   CartesianIndex(10, 8)
+               ]]
         @test all(
             IntervalMDP.reach(abstract_prop) .== [
-                CartesianIndex(9, 3),
-                CartesianIndex(10, 3),
-                CartesianIndex(9, 4),
-                CartesianIndex(10, 4),
-            ],
+            CartesianIndex(9, 3),
+            CartesianIndex(10, 3),
+            CartesianIndex(9, 4),
+            CartesianIndex(10, 4)
+        ],
         )
 
-        mdp, inverted_abstract_spec =
-            abstraction(inverted_prob, state_abs, input_abs, target_model)
+        mdp, inverted_abstract_spec = abstraction(inverted_prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(inverted_abstract_spec)
-        @test IntervalMDP.avoid(abstract_prop) == [
-            decoupled_avoid_outside
-            [
-                CartesianIndex(9, 7),
-                CartesianIndex(10, 7),
-                CartesianIndex(9, 8),
-                CartesianIndex(10, 8),
-            ]
-        ]
+        @test IntervalMDP.avoid(abstract_prop) == [decoupled_avoid_outside
+               [
+                   CartesianIndex(9, 7),
+                   CartesianIndex(10, 7),
+                   CartesianIndex(9, 8),
+                   CartesianIndex(10, 8)
+               ]]
         @test all(
             IntervalMDP.reach(abstract_prop) .== [
-                CartesianIndex(8, 3),
-                CartesianIndex(9, 3),
-                CartesianIndex(10, 3),
-                CartesianIndex(8, 4),
-                CartesianIndex(9, 4),
-                CartesianIndex(10, 4),
-            ],
+            CartesianIndex(8, 3),
+            CartesianIndex(9, 3),
+            CartesianIndex(10, 3),
+            CartesianIndex(8, 4),
+            CartesianIndex(9, 4),
+            CartesianIndex(10, 4)
+        ],
         )
     end
 end
@@ -459,10 +438,10 @@ end
 @testset "safety" begin
     sys, reach_region, avoid_region = sys_2d_ra()
 
-    X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
+    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, (10, 10))
 
-    U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
+    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputGridSplit(U, [3, 3])
 
     horizon = 10
@@ -486,11 +465,10 @@ end
             CartesianIndex(70),
             CartesianIndex(78),
             CartesianIndex(79),
-            CartesianIndex(80),
+            CartesianIndex(80)
         ]
 
-        mdp, inverted_abstract_spec =
-            abstraction(inverted_prob, state_abs, input_abs, target_model)
+        mdp, inverted_abstract_spec = abstraction(inverted_prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(inverted_abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == [
@@ -498,7 +476,7 @@ end
             CartesianIndex(69),
             CartesianIndex(70),
             CartesianIndex(79),
-            CartesianIndex(80),
+            CartesianIndex(80)
         ]
     end
 
@@ -508,31 +486,26 @@ end
         mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(abstract_spec)
-        @test IntervalMDP.avoid(abstract_prop) == [
-            decoupled_avoid_outside
-            [
-                CartesianIndex(8, 7),
-                CartesianIndex(9, 7),
-                CartesianIndex(10, 7),
-                CartesianIndex(8, 8),
-                CartesianIndex(9, 8),
-                CartesianIndex(10, 8),
-            ]
-        ]
+        @test IntervalMDP.avoid(abstract_prop) == [decoupled_avoid_outside
+               [
+                   CartesianIndex(8, 7),
+                   CartesianIndex(9, 7),
+                   CartesianIndex(10, 7),
+                   CartesianIndex(8, 8),
+                   CartesianIndex(9, 8),
+                   CartesianIndex(10, 8)
+               ]]
 
-        mdp, inverted_abstract_spec =
-            abstraction(inverted_prob, state_abs, input_abs, target_model)
+        mdp, inverted_abstract_spec = abstraction(inverted_prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(inverted_abstract_spec)
-        @test IntervalMDP.avoid(abstract_prop) == [
-            decoupled_avoid_outside
-            [
-                CartesianIndex(9, 7),
-                CartesianIndex(10, 7),
-                CartesianIndex(9, 8),
-                CartesianIndex(10, 8),
-            ]
-        ]
+        @test IntervalMDP.avoid(abstract_prop) == [decoupled_avoid_outside
+               [
+                   CartesianIndex(9, 7),
+                   CartesianIndex(10, 7),
+                   CartesianIndex(9, 8),
+                   CartesianIndex(10, 8)
+               ]]
     end
 end
 
@@ -540,10 +513,10 @@ end
     sys, reach_region, avoid_region = sys_2d_ra()
 
     # Region of interest
-    X = Hyperrectangle(; low = [-10.0, -10.0], high = [10.0, 10.0])
+    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
     state_abs = StateUniformGridSplit(X, (10, 10))
 
-    U = Hyperrectangle(; low = [-1.0, -1.0], high = [1.0, 1.0])
+    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
     input_abs = InputGridSplit(U, [3, 3])
 
     horizon = 10
@@ -563,8 +536,7 @@ end
         abstract_prop = system_property(abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == [CartesianIndex(101)]
 
-        mdp, inverted_abstract_spec =
-            abstraction(inverted_prob, state_abs, input_abs, target_model)
+        mdp, inverted_abstract_spec = abstraction(inverted_prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(inverted_abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == [CartesianIndex(101)]
@@ -578,8 +550,7 @@ end
         abstract_prop = system_property(abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == decoupled_avoid_outside
 
-        mdp, inverted_abstract_spec =
-            abstraction(inverted_prob, state_abs, input_abs, target_model)
+        mdp, inverted_abstract_spec = abstraction(inverted_prob, state_abs, input_abs, target_model)
 
         abstract_prop = system_property(inverted_abstract_spec)
         @test IntervalMDP.avoid(abstract_prop) == decoupled_avoid_outside
