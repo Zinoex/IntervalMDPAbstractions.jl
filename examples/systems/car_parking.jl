@@ -1,4 +1,4 @@
-using LinearAlgebra, LazySets
+using Revise, LinearAlgebra, LazySets
 using IntervalMDP, IntervalMDPAbstractions
 
 function car_parking_sys(time_horizon)
@@ -139,6 +139,48 @@ function car_parking_direct_theorem1(
     return mdp, abstract_spec, upper_bound_spec
 end
 
+function car_parking_direct_theorem2(
+        time_horizon=10;
+        sparse=false,
+        range_vs_grid=:grid,
+        state_split=(20, 20),
+        input_split=(3, 3)
+)
+    sys, spec = car_parking_sys(time_horizon)
+
+    X = Hyperrectangle(; low=[-10.0, -10.0], high=[10.0, 10.0])
+    state_abs = StateUniformGridSplit(X, state_split)
+
+    U = Hyperrectangle(; low=[-1.0, -1.0], high=[1.0, 1.0])
+    if range_vs_grid == :range
+        input_abs = InputLinRange(U, input_split)
+    elseif range_vs_grid == :grid
+        input_abs = InputGridSplit(U, input_split)
+    else
+        throw(ArgumentError("Invalid range_vs_grid argument"))
+    end
+
+    if sparse
+        target_model = SparseIMDPTarget()
+    else
+        target_model = IMDPTarget()
+    end
+
+    prob = AbstractionProblem(sys, spec)
+    C = I
+    epsilon = 1.5
+    mdp, abstract_spec = theorem2_abstraction(prob, state_abs, input_abs, target_model, C, epsilon)
+
+    upper_bound_spec = Specification(system_property(spec), !satisfaction_mode(spec))
+    upper_bound_spec = IntervalMDPAbstractions.convert_specification(
+        upper_bound_spec,
+        state_abs,
+        target_model
+    )
+
+    return mdp, abstract_spec, upper_bound_spec
+end
+
 function main()
     # Direct
     @time "abstraction direct" mdp_direct, spec_direct, _ = car_parking_direct()
@@ -154,6 +196,13 @@ function main()
     @time "value iteration direct theorem 1" V_direct_theorem1, k_direct_theorem1, res_direct_theorem1 = value_iteration(prob_direct)
     V_direct_theorem1 = reshape(V_direct_theorem1[1:(end - 1)], 20, 20)
 
+    # Direct Theorem 2
+    @time "abstraction direct theorem 2" mdp_direct, spec_direct, _ = car_parking_direct_theorem2()
+    prob_direct = Problem(mdp_direct, spec_direct)
+
+    @time "value iteration direct theorem 2" V_direct_theorem2, k_direct_theorem1, res_direct_theorem1 = value_iteration(prob_direct)
+    V_direct_theorem2 = reshape(V_direct_theorem2[1:(end - 1)], 20, 20)
+
     # Decoupled
     @time "abstraction decoupled" mdp_decoupled, spec_decoupled, _ = car_parking_decoupled()
     prob_decoupled = Problem(mdp_decoupled, spec_decoupled)
@@ -163,6 +212,7 @@ function main()
 
     V_diff = V_decoupled - V_direct
     V_diff2 = V_direct - V_direct_theorem1
+    V_diff3 = V_direct - V_direct_theorem2
 
-    return V_diff, V_diff2, V_decoupled, V_direct, V_direct_theorem1
+    return V_diff, V_diff2, V_diff3, V_decoupled, V_direct, V_direct_theorem1, V_direct_theorem2
 end
