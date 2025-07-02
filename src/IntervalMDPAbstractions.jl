@@ -6,7 +6,7 @@ using IrrationalConstants: invsqrt2
 using TaylorModels: TaylorModelN, set_variables, constant_term, linear_polynomial, remainder
 using IntervalArithmetic: IntervalBox, inf, sup
 using Polyhedra, LazySets, IntervalMDP
-using HiGHS, JuMP
+using HiGHS, Ipopt, Alpine, JuMP
 
 function __init__()
     # WARN: This is generally not recommended, but it is necessary to multi-thread the abstraction,
