@@ -3,6 +3,9 @@ export theorem2_abstraction
 
 abstract type SimulationRelation end
 
+#############
+# Theorem 1 #
+#############
 struct Theorem1SimulationRelation{
     S <: System{<:AffineAdditiveNoiseDynamics},
     M <: IntervalMarkovDecisionProcess,
@@ -205,6 +208,26 @@ function epsilon_from_diff_space(C, G, p=2)
     return epsilon
 end
 
+#############
+# Theorem 2 #
+#############
+struct Theorem2SimulationRelation{
+    S <: System{<:AffineAdditiveNoiseDynamics},
+    M <: IntervalMarkovDecisionProcess,
+    F <: Function,
+    H <: Function,
+    G <: LazySet,
+    D <: LazySet
+} <: SimulationRelation
+    concrete_model::S
+    abstract_model::M
+    abstract2concrete_state::F
+    concrete2abstract_state::H
+    grid_size::G
+    disturbance_space::D
+    epsilon::Float64
+end
+
 function theorem2_abstraction(
     system::S,
     C::AbstractMatrix,
@@ -226,7 +249,7 @@ function theorem2_abstraction(
                     (1:numregions(state_abstraction)) .* numinputs(input_abstraction) .+ 1]
 
     # Transition probabilities
-    interval_prob = theorem2_transition_prob(
+    interval_prob, V̂, delR = theorem2_transition_prob(
         dynamics(system),
         state_abstraction,
         input_abstraction,
@@ -260,21 +283,22 @@ function theorem2_abstraction(
         if i == numregions(state_abstraction) + 1
             return nothing
         else
+            c = center(regions(state_abstraction)[i])
+            region = concretize(Singleton(c) + delR)
+
             # Representative point, region
-            return center(regions(state_abstraction)[i]), regions(state_abstraction)[i]
+            return c, region
         end
     end
 
-    epsilon = epsilon_from_diff_space(C, G)
-
-    simrel = Theorem1SimulationRelation(
+    simrel = Theorem2SimulationRelation(
         system,
         mdp,
         abstract2concrete,
         concrete2abstract,
-        G,
+        delR,
         V̂,
-        epsilon
+        max_output_error
     )
 
     return simrel
@@ -331,7 +355,7 @@ function theorem2_transition_prob(
 
     prob = IntervalProbabilities(; lower=prob_lower, upper=prob_upper)
 
-    return prob
+    return prob, V̂
 end
 
 function theorem2_disturbance_set(
@@ -358,9 +382,11 @@ function theorem2_disturbance_set(
     # G ⊆ delR_radius
     @constraint(model, delR_radius >= radius_hyperrectangle(G))
 
-    # Max output error (L-infinity norm)
+    # Max output error (L-infinity norm)'
+    # TODO: Is this correct?
     for vertex in vertices_list(delR)
         @constraint(model, C * vertex .<= max_output_error)
+        @constraint(model, -C * vertex .<= max_output_error)
     end
 
     # V_radius
@@ -393,8 +419,11 @@ function theorem2_disturbance_set(
     # Extract the disturbance set
     V_radius = value.(V_radius)
     V = Hyperrectangle(zero(V_radius), V_radius)
+
+    delR_radius = value.(delR_radius)
+    delR = Hyperrectangle(zero(delR_radius), delR_radius)
     
-    return V
+    return V, delR
 end
 
 function theorem2_source_action_transition_prob(
