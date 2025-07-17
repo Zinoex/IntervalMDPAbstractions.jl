@@ -19,7 +19,7 @@ TaylorModels = "314ce334-5f6e-57ae-acf6-00b6e903104a"
 [compat]
 HiGHS = "1"
 IntervalArithmetic = "^0.20"
-IntervalMDP = "0.4.6, 0.5"
+IntervalMDP = "0.4.6, 0.5, 0.6"
 IrrationalConstants = "0.2"
 JuMP = "1"
 LazySets = "4.0.1"
