@@ -18,7 +18,7 @@ TaylorModels = "314ce334-5f6e-57ae-acf6-00b6e903104a"
 
 [compat]
 HiGHS = "1"
-IntervalArithmetic = "^0.20, 0.23"
+IntervalArithmetic = "^0.20, 0.23, 1"
 IntervalMDP = "0.4.6, 0.5"
 IrrationalConstants = "0.2"
 JuMP = "1"
