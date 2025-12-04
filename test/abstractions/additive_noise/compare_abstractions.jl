@@ -26,13 +26,13 @@ end
 mdp_direct, spec_direct, mdp_decoupled, spec_decoupled = modified_running_example_compare()
 
 # Value iteration
-prob_direct = Problem(mdp_direct, spec_direct)
+prob_direct = VerificationProblem(mdp_direct, spec_direct)
 
-V_direct, k, res = value_iteration(prob_direct)
+V_direct, k, res = solve(prob_direct)
 @test k == 10
 
-prob_decoupled = Problem(mdp_decoupled, spec_decoupled)
+prob_decoupled = VerificationProblem(mdp_decoupled, spec_decoupled)
 
-V_decoupled, k, res = value_iteration(prob_decoupled)
+V_decoupled, k, res = solve(prob_decoupled)
 @test k == 10
 @test all(V_decoupled[1:(end - 1), 1:(end - 1)] .≥ reshape(V_direct[1:(end - 1)], 10, 10))

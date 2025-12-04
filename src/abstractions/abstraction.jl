@@ -120,16 +120,11 @@ function abstraction(
     sys = system(prob)
     spec = specification(prob)
 
-    # State pointer
-    stateptr = Int32[[1]
-                     (1:numregions(state_abstraction)) .* numinputs(input_abstraction) .+ 1]
-
     # Transition probabilities
     interval_prob = transition_prob(
         dynamics(sys),
         state_abstraction,
         input_abstraction,
-        stateptr,
         target_model
     )
 
@@ -141,7 +136,7 @@ function abstraction(
         end
     end
 
-    mdp = IntervalMarkovDecisionProcess(interval_prob, stateptr, initial_states)
+    mdp = IntervalMarkovDecisionProcess(interval_prob, numinputs(input_abstraction), initial_states)
 
     # Property
     spec = convert_specification(spec, state_abstraction, target_model)
@@ -283,19 +278,10 @@ function abstraction(
     sys = system(prob)
     spec = specification(prob)
 
-    # State pointer
-    stateptr = Int32[1]
-    sizehint!(stateptr, prod(splits(state_abstraction)) + 1)
-
-    for I in CartesianIndices(splits(state_abstraction))
-        push!(stateptr, stateptr[end] + numinputs(input_abstraction))
-    end
-
-    interval_prob = transition_prob(
+    transitions = transition_prob(
         dynamics(sys),
         state_abstraction,
         input_abstraction,
-        stateptr,
         target_model
     )
 
@@ -307,7 +293,13 @@ function abstraction(
         end
     end
 
-    mdp = OrthogonalIntervalMarkovDecisionProcess(interval_prob, stateptr, initial_states)
+    mdp = FactoredRobustMarkovDecisionProcess(  # Orthogonal IMDP
+        splits(state_abstraction) .+ 1,
+        (numinputs(input_abstraction),),
+        splits(state_abstraction),
+        transitions,
+        initial_states
+    )
 
     # Property
     spec = convert_specification(spec, state_abstraction, target_model)

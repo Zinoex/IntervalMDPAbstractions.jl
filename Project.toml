@@ -1,7 +1,7 @@
 name = "IntervalMDPAbstractions"
 uuid = "6214ee8e-79dc-449b-ae00-4c9ff82a02a9"
 authors = ["Frederik Baymler Mathiesen"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
@@ -18,14 +18,14 @@ TaylorModels = "314ce334-5f6e-57ae-acf6-00b6e903104a"
 
 [compat]
 HiGHS = "1"
-IntervalArithmetic = "^0.20, 0.23"
-IntervalMDP = "0.4.6, 0.5"
+IntervalArithmetic = "0.15 - 0.23, 1"
+IntervalMDP = "0.7"
 IrrationalConstants = "0.2"
 JuMP = "1"
-LazySets = "4.0.1, 5"
+LazySets = "5"
 Polyhedra = "0.8.1"
 SpecialFunctions = "2"
-TaylorModels = "0.8"
+TaylorModels = "0.8, 0.9"
 julia = "1.10"
 
 [extras]

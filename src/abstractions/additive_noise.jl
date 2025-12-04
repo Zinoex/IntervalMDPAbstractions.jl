@@ -4,7 +4,6 @@ function transition_prob(
         dyn::AdditiveNoiseDynamics,
         state_abstraction::StateUniformGridSplit,
         input_abstraction::InputAbstraction,
-        stateptr,
         target_model::AbstractIMDPTarget
 )
     # The first state is absorbing, representing transitioning to outside the partitioned.
@@ -37,7 +36,7 @@ function transition_prob(
 
     prob_lower, prob_upper = postprocessprob(target_model, prob_lower, prob_upper)
 
-    prob = IntervalProbabilities(; lower=prob_lower, upper=prob_upper)
+    prob = IntervalAmbiguitySets(; lower=prob_lower, upper=prob_upper)
 
     return prob
 end
@@ -80,7 +79,6 @@ function transition_prob(
         dyn::AdditiveNoiseDynamics,
         state_abstraction::StateUniformGridSplit,
         input_abstraction::InputAbstraction,
-        stateptr,
         target_model::AbstractOrthogonalIMDPTarget
 )
     prepare_nominal(dyn, input_abstraction)
@@ -94,7 +92,7 @@ function transition_prob(
     linear_indices = LinearIndices(splits(state_abstraction))
     Threads.@threads for Icart in CartesianIndices(splits(state_abstraction))
         Ilinear = linear_indices[Icart]
-        srcact_idx = stateptr[Ilinear]
+        srcact_idx = (Ilinear - 1) * ninputs + 1
 
         # Sink states are implicitly endcoded
 
@@ -121,15 +119,17 @@ function transition_prob(
 
     prob_lower, prob_upper = postprocessprob(target_model, prob_lower, prob_upper)
 
-    prob = OrthogonalIntervalProbabilities(
-        Tuple(
-            IntervalProbabilities(; lower=pl, upper=pu) for
-        (pl, pu) in zip(prob_lower, prob_upper)
-        ),
-        Int32.(Tuple(splits(state_abstraction)))
-    )
+    transitions = Tuple(map(zip(prob_lower, prob_upper)) do (pl, pu)
+        Marginal(
+            IntervalAmbiguitySets(; lower=pl, upper=pu),
+            Tuple(axes(splits(state_abstraction))[1]), # state indices (all)
+            (1,), # action indices (one)
+            splits(state_abstraction),
+            (numinputs(input_abstraction),)
+        )
+    end)
 
-    return prob
+    return transitions
 end
 
 function source_action_transition_prob(

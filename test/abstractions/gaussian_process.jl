@@ -93,26 +93,24 @@ input_abs = InputDiscrete([1, 2])
     target_model = OrthogonalIMDPTarget()
     mdp_decoupled, abstract_spec_decoupled = abstraction(prob, state_abs, input_abs, target_model)
 
-    @test num_states(mdp_decoupled) == 3 * 3
-    @test length(stateptr(mdp_decoupled)) == 5  # 4 non-sink states
-    @test stateptr(mdp_decoupled)[end] == 4 * 2 + 1  # 4 non-sink states, 2 control actions
+    @test state_values(mdp_decoupled) == (3, 3)
+    @test action_values(mdp_decoupled) == (2,)  # 2 control actions
 
-    prob_decoupled = Problem(mdp_decoupled, abstract_spec_decoupled)
+    prob_decoupled = VerificationProblem(mdp_decoupled, abstract_spec_decoupled)
 
-    V_decoupled, k, res = value_iteration(prob_decoupled)
+    V_decoupled, k, res = solve(prob_decoupled)
     @test k == 10
 
     # Direct
     target_model = IMDPTarget()
     mdp_direct, abstract_spec_direct = abstraction(prob, state_abs, input_abs, target_model)
 
-    @test num_states(mdp_direct) == 2 * 2 + 1
-    @test length(stateptr(mdp_direct)) == 5  # 4 non-sink states
-    @test stateptr(mdp_direct)[end] == 4 * 2 + 1  # 4 non-sink states, 2 control actions
+    @test state_values(mdp_direct) == (2 * 2 + 1,)
+    @test action_values(mdp_direct) == (2,)  # 2 control actions
 
-    prob_direct = Problem(mdp_direct, abstract_spec_direct)
+    prob_direct = VerificationProblem(mdp_direct, abstract_spec_direct)
 
-    V_direct, k, res = value_iteration(prob_direct)
+    V_direct, k, res = solve(prob_direct)
     @test k == 10
 
     @test all(V_decoupled[1:(end - 1), 1:(end - 1)] .≥ reshape(V_direct[1:(end - 1)], 2, 2))

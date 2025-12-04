@@ -27,24 +27,22 @@ include("example_systems.jl")
 
     # Dense
     mdp_dense, spec_dense = simple_1d_direct()
-    @test num_states(mdp_dense) == 11
-    @test length(stateptr(mdp_dense)) == 11  # 10 non-sink states
-    @test stateptr(mdp_dense)[end] == 11  # No control actions
+    @test state_values(mdp_dense) == (11,)
+    @test action_values(mdp_dense) == (1,)  # No control actions
 
-    prob_dense = Problem(mdp_dense, spec_dense)
+    prob_dense = VerificationProblem(mdp_dense, spec_dense)
 
-    V_dense, k, res = value_iteration(prob_dense)
+    V_dense, k, res = solve(prob_dense)
     @test k == 10
 
     # Sparse
     mdp_sparse, spec_sparse = simple_1d_direct(; sparse=true)
-    @test num_states(mdp_sparse) == 11
-    @test length(stateptr(mdp_sparse)) == 11  # 10 non-sink states
-    @test stateptr(mdp_sparse)[end] == 11  # No control actions
+    @test state_values(mdp_sparse) == (11,)
+    @test action_values(mdp_sparse) == (1,)  # No control actions
 
-    prob_sparse = Problem(mdp_sparse, spec_sparse)
+    prob_sparse = VerificationProblem(mdp_sparse, spec_sparse)
 
-    V_sparse, k, res = value_iteration(prob_sparse)
+    V_sparse, k, res = solve(prob_sparse)
     @test k == 10
     @test all(V_dense .≥ V_sparse)
 
@@ -88,24 +86,22 @@ end
     @testset "dense vs sparse" begin
         # Dense, input grid
         mdp_dense, spec_dense = modified_running_example_direct()
-        @test num_states(mdp_dense) == 101
-        @test length(stateptr(mdp_dense)) == 10 * 10 + 1  # 10 * 10 non-sink states
-        @test stateptr(mdp_dense)[end] == 10 * 10 * 9 + 1  # 10 * 10 non-sink states, 9 actions
+        @test state_values(mdp_dense) == (10 * 10 + 1,)
+        @test action_values(mdp_dense) == (9,)  # 3 * 3 input grid
 
-        prob_dense = Problem(mdp_dense, spec_dense)
+        prob_dense = VerificationProblem(mdp_dense, spec_dense)
 
-        V_dense, k, res = value_iteration(prob_dense)
+        V_dense, k, res = solve(prob_dense)
         @test k == 10
 
         # Sparse, input grid
         mdp_sparse, spec_sparse = modified_running_example_direct(; sparse=true)
-        @test num_states(mdp_sparse) == 101
-        @test length(stateptr(mdp_sparse)) == 10 * 10 + 1  # 10 non-sink states
-        @test stateptr(mdp_sparse)[end] == 10 * 10 * 9 + 1  # 10 * 10 non-sink states, 9 actions
+        @test state_values(mdp_sparse) == (10 * 10 + 1,)
+        @test action_values(mdp_sparse) == (9,)  # 3 * 3 input grid
 
-        prob_sparse = Problem(mdp_sparse, spec_sparse)
+        prob_sparse = VerificationProblem(mdp_sparse, spec_sparse)
 
-        V_sparse, k, res = value_iteration(prob_sparse)
+        V_sparse, k, res = solve(prob_sparse)
         @test k == 10
         @test all(V_dense .≥ V_sparse)
 
@@ -121,20 +117,20 @@ end
     @testset "range vs grid" begin
         # Dense, input grid
         mdp_grid, spec_grid = modified_running_example_direct(; range_vs_grid=:grid)
-        @test num_states(mdp_grid) == 101
-        @test stateptr(mdp_grid)[end] == 10 * 10 * 9 + 1
+        @test state_values(mdp_grid) == (10 * 10 + 1,)
+        @test action_values(mdp_grid) == (9,)  # 3 * 3 input grid
 
-        prob_grid = Problem(mdp_grid, spec_grid)
-        V_grid, k, res = value_iteration(prob_grid)
+        prob_grid = VerificationProblem(mdp_grid, spec_grid)
+        V_grid, k, res = solve(prob_grid)
 
         # Dense, input range
         mdp_range, spec_range = modified_running_example_direct(; range_vs_grid=:range)
-        @test num_states(mdp_range) == 101
-        @test stateptr(mdp_range)[end] == 10 * 10 * 9 + 1
+        @test state_values(mdp_range) == (10 * 10 + 1,)
+        @test action_values(mdp_range) == (9,)  # 3 * 3 input grid
 
-        prob_range = Problem(mdp_range, spec_range)
+        prob_range = VerificationProblem(mdp_range, spec_range)
 
-        V_range, k, res = value_iteration(prob_range)
+        V_range, k, res = solve(prob_range)
         @test k == 10
         @test all(V_range .≥ V_grid)
 

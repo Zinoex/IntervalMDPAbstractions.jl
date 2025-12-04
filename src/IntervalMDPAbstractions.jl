@@ -43,7 +43,7 @@ include("abstractions/target.jl")
 
 include("abstractions/abstraction.jl")
 include("abstractions/additive_noise.jl")
-include("abstractions/mixture.jl")
+# include("abstractions/mixture.jl")
 include("abstractions/gaussian_process.jl")
 
 end

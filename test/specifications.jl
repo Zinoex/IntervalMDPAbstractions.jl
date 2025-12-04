@@ -75,8 +75,8 @@ end
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
 
-            @test isfinitetime(prop) == isfinitetime(abstract_prop)
-            @test isfinitetime(prop) == true
+            @test IntervalMDP.isfinitetime(prop) == IntervalMDP.isfinitetime(abstract_prop)
+            @test IntervalMDP.isfinitetime(prop) == true
             @test time_horizon(prop) == time_horizon(abstract_prop)
             @test time_horizon(prop) == horizon
         end
@@ -102,8 +102,8 @@ end
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
 
-            @test isfinitetime(prop) == isfinitetime(abstract_prop)
-            @test isfinitetime(prop) == true
+            @test IntervalMDP.isfinitetime(prop) == IntervalMDP.isfinitetime(abstract_prop)
+            @test IntervalMDP.isfinitetime(prop) == true
             @test time_horizon(prop) == time_horizon(abstract_prop)
             @test time_horizon(prop) == horizon
         end
@@ -128,8 +128,8 @@ end
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
 
-            @test isfinitetime(prop) == isfinitetime(abstract_prop)
-            @test isfinitetime(prop) == true
+            @test IntervalMDP.isfinitetime(prop) == IntervalMDP.isfinitetime(abstract_prop)
+            @test IntervalMDP.isfinitetime(prop) == true
             @test time_horizon(prop) == time_horizon(abstract_prop)
             @test time_horizon(prop) == horizon
         end
@@ -158,8 +158,8 @@ end
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
 
-            @test isfinitetime(prop) == isfinitetime(abstract_prop)
-            @test isfinitetime(prop) == false
+            @test IntervalMDP.isfinitetime(prop) == IntervalMDP.isfinitetime(abstract_prop)
+            @test IntervalMDP.isfinitetime(prop) == false
             @test convergence_eps(prop) == convergence_eps(abstract_prop)
             @test convergence_eps(prop) == eps
         end
@@ -185,8 +185,8 @@ end
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
 
-            @test isfinitetime(prop) == isfinitetime(abstract_prop)
-            @test isfinitetime(prop) == false
+            @test IntervalMDP.isfinitetime(prop) == IntervalMDP.isfinitetime(abstract_prop)
+            @test IntervalMDP.isfinitetime(prop) == false
             @test convergence_eps(prop) == convergence_eps(abstract_prop)
             @test convergence_eps(prop) == eps
         end
@@ -211,8 +211,8 @@ end
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
 
-            @test isfinitetime(prop) == isfinitetime(abstract_prop)
-            @test isfinitetime(prop) == false
+            @test IntervalMDP.isfinitetime(prop) == IntervalMDP.isfinitetime(abstract_prop)
+            @test IntervalMDP.isfinitetime(prop) == false
             @test convergence_eps(prop) == convergence_eps(abstract_prop)
             @test convergence_eps(prop) == eps
         end
@@ -241,8 +241,8 @@ end
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
 
-            @test isfinitetime(prop) == isfinitetime(abstract_prop)
-            @test isfinitetime(prop) == true
+            @test IntervalMDP.isfinitetime(prop) == IntervalMDP.isfinitetime(abstract_prop)
+            @test IntervalMDP.isfinitetime(prop) == true
             @test time_horizon(prop) == time_horizon(abstract_prop)
             @test time_horizon(prop) == horizon
         end
@@ -268,8 +268,8 @@ end
             mdp, abstract_spec = abstraction(prob, state_abs, input_abs, target_model)
             abstract_prop = system_property(abstract_spec)
 
-            @test isfinitetime(prop) == isfinitetime(abstract_prop)
-            @test isfinitetime(prop) == true
+            @test IntervalMDP.isfinitetime(prop) == IntervalMDP.isfinitetime(abstract_prop)
+            @test IntervalMDP.isfinitetime(prop) == true
             @test time_horizon(prop) == time_horizon(abstract_prop)
             @test time_horizon(prop) == horizon
         end
