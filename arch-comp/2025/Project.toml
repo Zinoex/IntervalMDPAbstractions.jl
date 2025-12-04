@@ -10,4 +10,4 @@ Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 
 [sources]
 ArchCompStochasticModels = {rev = "main", url = "https://github.com/Zinoex/ArchCompStochasticModels.jl"}
-IntervalMDPAbstractions = {path = "../.."}
+IntervalMDPAbstractions = {rev = "v0.1.0", url = "https://github.com/Zinoex/IntervalMDPAbstractions.jl"}

@@ -6,3 +6,4 @@
 /examples/Manifest.toml
 /docs/Manifest.toml
 /docs/build/
+/arch-comp/**/Manifest.toml
